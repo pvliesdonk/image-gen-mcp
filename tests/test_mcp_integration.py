@@ -399,6 +399,15 @@ class TestInfoProvidersResource:
         assert "supported_quality_levels" in data
         assert "standard" in data["supported_quality_levels"]
 
+    async def test_includes_supported_resolutions(self, ro_server) -> None:
+        """info://providers includes supported_resolutions list."""
+        async with Client(ro_server) as client:
+            contents = await client.read_resource("info://providers")
+
+        data = json.loads(contents[0].text)
+        assert "supported_resolutions" in data
+        assert data["supported_resolutions"] == ["standard", "high", "max"]
+
     async def test_includes_supported_backgrounds(self, ro_server) -> None:
         """info://providers includes supported_backgrounds list."""
         async with Client(ro_server) as client:
