@@ -133,3 +133,11 @@ async def test_placeholder_rejects_mask() -> None:
         await PlaceholderImageProvider().generate(
             "x", mask=InputImage(data=b"m", content_type="image/png")
         )
+
+
+async def test_placeholder_accepts_and_ignores_resolution():
+    from image_generation_mcp.providers.placeholder import PlaceholderImageProvider
+
+    provider = PlaceholderImageProvider()
+    result = await provider.generate("a cat", resolution="max")
+    assert result.image_data

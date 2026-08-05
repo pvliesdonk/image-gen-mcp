@@ -108,6 +108,7 @@ class PlaceholderImageProvider:
         negative_prompt: str | None = None,  # noqa: ARG002
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",  # noqa: ARG002
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -122,6 +123,8 @@ class PlaceholderImageProvider:
             negative_prompt: Ignored.
             aspect_ratio: Determines image dimensions.
             quality: Ignored.
+            resolution: Ignored -- this provider renders at a single fixed
+                size.
             background: When ``"transparent"``, generates an RGBA PNG with
                 alpha=0. When ``"opaque"`` (default), generates an RGB PNG.
             model: Ignored by the placeholder provider.

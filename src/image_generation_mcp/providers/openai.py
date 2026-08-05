@@ -240,6 +240,7 @@ class OpenAIImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",  # noqa: ARG002
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -255,6 +256,8 @@ class OpenAIImageProvider:
             aspect_ratio: Maps to OpenAI size parameter.
             quality: ``"standard"`` maps to ``"auto"`` for gpt-image-1
                 (lets OpenAI choose). ``"hd"`` maps to ``"high"``.
+            resolution: Accepted for protocol conformance; tier logic added
+                in a later change.
             background: Background transparency (``opaque``, ``transparent``).
                 Supported for gpt-image-1, gpt-image-1.5, and gpt-image-1-mini;
                 not sent to gpt-image-2 or chatgpt-image-latest (no alpha

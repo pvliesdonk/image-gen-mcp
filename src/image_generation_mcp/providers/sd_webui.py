@@ -283,6 +283,7 @@ class SdWebuiImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",  # noqa: ARG002
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -301,6 +302,8 @@ class SdWebuiImageProvider:
             negative_prompt: Negative prompt (natively supported by SD).
             aspect_ratio: Desired aspect ratio.
             quality: Ignored — SD quality is controlled by steps/cfg.
+            resolution: Ignored -- this provider renders at a single fixed
+                size.
             background: Ignored — SD WebUI does not support background
                 transparency control.
             model: Specific checkpoint name to use for this call. Overrides

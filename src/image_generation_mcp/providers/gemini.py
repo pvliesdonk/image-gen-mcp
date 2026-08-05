@@ -145,6 +145,7 @@ class GeminiImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",  # noqa: ARG002
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -164,6 +165,8 @@ class GeminiImageProvider:
                 On thinking-capable models, also enables
                 thinking_level=High and text+image response modalities
                 for improved composition.
+            resolution: Accepted for protocol conformance; tier logic added
+                in a later change.
             background: Ignored — Gemini does not support transparent backgrounds.
             model: Override the default model for this call.
             reference_images: Optional list of reference images for
