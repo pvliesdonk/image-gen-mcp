@@ -161,6 +161,7 @@ def test_imagerecord_rejects_inconsistent_pairing(
             negative_prompt=None,
             aspect_ratio="",
             quality="",
+            resolution="",
             original_dimensions=(4, 4),
             provider_metadata={},
             created_at=0.0,
