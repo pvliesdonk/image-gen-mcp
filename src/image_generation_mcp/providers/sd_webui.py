@@ -302,8 +302,10 @@ class SdWebuiImageProvider:
             negative_prompt: Negative prompt (natively supported by SD).
             aspect_ratio: Desired aspect ratio.
             quality: Ignored — SD quality is controlled by steps/cfg.
-            resolution: Ignored -- this provider renders at a single fixed
-                size.
+            resolution: Ignored for rendering -- this provider renders at a
+                single fixed size. The returned ``provider_metadata``
+                always reports ``"resolution": "standard"`` (its
+                always-delivered tier), regardless of what was requested.
             background: Ignored — SD WebUI does not support background
                 transparency control.
             model: Specific checkpoint name to use for this call. Overrides
@@ -447,6 +449,10 @@ class SdWebuiImageProvider:
             "size": f"{width}x{height}",
             "steps": effective_preset.steps,
             "prompt_style": effective_preset.prompt_style,
+            # Always-delivered tier: SD WebUI has no higher tier, so it
+            # reports "standard" regardless of the requested resolution to
+            # keep the delivered-tier contract truthful.
+            "resolution": "standard",
         }
         if seed is not None:
             metadata["seed"] = seed

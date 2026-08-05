@@ -808,7 +808,14 @@ class TestGenerateImageResolutionParameter:
         self, service: ImageService
     ) -> None:
         """resolution='high' reaches service.generate/register_image via
-        _start_background_generation and lands on the persisted record."""
+        _start_background_generation and completes successfully.
+
+        The persisted record reflects the DELIVERED tier reported by the
+        provider (via ``provider_metadata["resolution"]``), not necessarily
+        the requested one. The placeholder provider has no higher tier than
+        "standard", so it reports "standard" as delivered even though
+        "high" was requested -- see providers/placeholder.py.
+        """
         result = await self._call_generate(service, resolution="high")
         text_items = [c for c in result.content if isinstance(c, TextContent)]
         image_id = json.loads(text_items[0].text)["image_id"]
@@ -821,7 +828,7 @@ class TestGenerateImageResolutionParameter:
             await asyncio.sleep(0.02)
 
         assert pending is not None and pending.status == "completed"
-        assert service.get_image(image_id).resolution == "high"
+        assert service.get_image(image_id).resolution == "standard"
 
 
 # ---------------------------------------------------------------------------

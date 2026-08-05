@@ -182,6 +182,31 @@ class TestSdWebuiProvider:
         assert result.image_data == b"fake-png-data"
         assert result.content_type == "image/png"
 
+    async def test_generate_reports_standard_delivered_resolution(
+        self, httpx_mock
+    ) -> None:
+        """SD WebUI always delivers 'standard', regardless of the request.
+
+        It has no higher tier, so it must report its always-delivered tier in
+        provider_metadata rather than silently defaulting to the requested
+        one.
+        """
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        response_data = {
+            "images": [b64_image],
+            "info": json.dumps({"seed": 42, "sd_model_name": "dreamshaper_8"}),
+        }
+
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json=response_data,
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        result = await provider.generate("a cat, masterpiece", resolution="max")
+
+        assert result.provider_metadata["resolution"] == "standard"
+
     async def test_generate_with_model_override(self, httpx_mock) -> None:
         b64_image = base64.b64encode(b"data").decode()
         response_data = {"images": [b64_image], "info": "{}"}

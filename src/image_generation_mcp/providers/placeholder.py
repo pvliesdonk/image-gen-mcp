@@ -123,8 +123,10 @@ class PlaceholderImageProvider:
             negative_prompt: Ignored.
             aspect_ratio: Determines image dimensions.
             quality: Ignored.
-            resolution: Ignored -- this provider renders at a single fixed
-                size.
+            resolution: Ignored for rendering -- this provider renders at a
+                single fixed size. The returned ``provider_metadata``
+                always reports ``"resolution": "standard"`` (its
+                always-delivered tier), regardless of what was requested.
             background: When ``"transparent"``, generates an RGBA PNG with
                 alpha=0. When ``"opaque"`` (default), generates an RGB PNG.
             model: Ignored by the placeholder provider.
@@ -170,6 +172,10 @@ class PlaceholderImageProvider:
                 "quality": "placeholder",
                 "size": f"{width}x{height}",
                 "color": f"#{r:02x}{g:02x}{b:02x}",
+                # Always-delivered tier: the placeholder has no higher tier,
+                # so it reports "standard" regardless of the requested
+                # resolution to keep the delivered-tier contract truthful.
+                "resolution": "standard",
             },
         )
 

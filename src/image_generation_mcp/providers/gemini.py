@@ -76,6 +76,11 @@ _KNOWN_IMAGE_MODELS: list[tuple[str, str]] = [
     ("gemini-2.5-flash-image", "Gemini 2.5 Flash Image"),
 ]
 
+# NOTE: insertion order encodes tier rank, lowest to highest (standard <
+# high < max). Do not reorder -- the clamp's best-available-tier selection
+# (``max(model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index)``)
+# relies on this dict's iteration order to find the highest tier a model
+# supports.
 _RESOLUTION_TO_IMAGE_SIZE: dict[str, str] = {
     "standard": "1K",
     "high": "2K",

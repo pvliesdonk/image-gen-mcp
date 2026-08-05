@@ -303,6 +303,38 @@ def test_resolution_round_trips_through_sidecar(
     assert reloaded.resolution == "max"
 
 
+def test_load_registry_defaults_resolution_for_legacy_sidecar(
+    tmp_path: Path,
+) -> None:
+    """_load_registry defaults resolution to 'standard' for pre-feature sidecars.
+
+    Sidecars written before the resolution feature existed omit the
+    ``resolution`` key entirely. The load path must fall back to
+    ``"standard"`` rather than raising or leaving the field unset.
+    """
+    (tmp_path / "bbbbbbbbbbbb-original.png").write_bytes(_png_bytes())
+    (tmp_path / "bbbbbbbbbbbb.json").write_text(
+        json.dumps(
+            {
+                "id": "bbbbbbbbbbbb",
+                "prompt": "p",
+                "negative_prompt": None,
+                "provider": "gemini",
+                "aspect_ratio": "1:1",
+                "quality": "standard",
+                "content_type": "image/png",
+                "original_filename": "bbbbbbbbbbbb-original.png",
+                "original_dimensions": [4, 4],
+                "provider_metadata": {},
+                "created_at": "2026-01-01T00:00:00+00:00",
+                # "resolution" intentionally omitted -- pre-feature record.
+            }
+        )
+    )
+    service = ImageService(scratch_dir=tmp_path)
+    assert service.get_image("bbbbbbbbbbbb").resolution == "standard"
+
+
 def test_register_pending_carries_resolution(service: ImageService) -> None:
     """register_pending threads the requested resolution onto PendingGeneration."""
     pending = service.register_pending(

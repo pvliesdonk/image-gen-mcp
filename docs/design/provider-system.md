@@ -156,7 +156,12 @@ the first place.
   `ImageService.register_image()` persists that delivered value on the
   `ImageRecord.resolution` field when the provider sets one, falling back to
   the requested `resolution` otherwise, so a client reading back a generated
-  image sees what was actually rendered, not merely what was asked for.
+  image sees what was actually rendered, not merely what was asked for. Every
+  live provider sets this key uniformly: Gemini and OpenAI report the
+  post-clamp tier; Placeholder and SD WebUI have no tier above `"standard"`
+  and always report `"standard"` regardless of what was requested. The
+  requested-value fallback in `register_image()` therefore only applies to
+  genuinely legacy or imported records that predate this contract.
 
 ### ImageResult
 

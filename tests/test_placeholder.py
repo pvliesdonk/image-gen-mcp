@@ -141,3 +141,14 @@ async def test_placeholder_accepts_and_ignores_resolution():
     provider = PlaceholderImageProvider()
     result = await provider.generate("a cat", resolution="max")
     assert result.image_data
+
+
+async def test_placeholder_reports_standard_delivered_resolution() -> None:
+    """The placeholder always delivers 'standard', regardless of the request.
+
+    It has no higher tier, so it must report its always-delivered tier in
+    provider_metadata rather than silently defaulting to the requested one.
+    """
+    provider = PlaceholderImageProvider()
+    result = await provider.generate("a cat", resolution="max")
+    assert result.provider_metadata["resolution"] == "standard"
