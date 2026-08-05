@@ -31,6 +31,7 @@ from image_generation_mcp.providers.types import (
     SUPPORTED_ASPECT_RATIOS,
     SUPPORTED_BACKGROUNDS,
     SUPPORTED_QUALITY_LEVELS,
+    SUPPORTED_RESOLUTIONS,
     ImageProviderError,
 )
 
@@ -74,9 +75,18 @@ _PROMPT_GUIDE = """\
 `9:16` for portraits and mobile, `3:2` for photos, `1:1` for icons and avatars.
 
 **Quality levels:** Use `standard` for fast drafts and iteration. Use `hd` for
-final output — on **Gemini**, enables model reasoning (thinking) and 2K
-resolution for significantly better composition; on **OpenAI**, selects the
-`high` quality tier. SD WebUI and placeholder ignore this parameter.
+final output — on **Gemini**, enables model reasoning (thinking) for
+significantly better composition; on **OpenAI**, selects the `high` quality
+tier. SD WebUI and placeholder ignore this parameter.
+
+**Resolution tiers:** Independent of `quality`, use `resolution` to control
+output size. `standard` (default) uses each provider's normal size. `high`
+and `max` unlock higher resolutions where supported — on **Gemini**, 2K and
+4K, except the 1K-only `gemini-3.1-flash-lite-image` and
+`gemini-2.5-flash-image`, which clamp down to 1K; on **OpenAI**, only
+`gpt-image-2` goes beyond standard (up to 4K). Every other model ignores
+this. Check `supported_resolutions` in `list_providers` before relying on
+`high`/`max` for a specific model.
 
 **Negative prompts:** Use them when you want to explicitly exclude unwanted
 elements. Most effective on SD WebUI (native CLIP support). On OpenAI and
@@ -124,6 +134,10 @@ metal, fabric) and precise text on objects. Strong general-purpose generation.
 **Quality levels:** `standard` maps to OpenAI's `auto` quality (lets the model
 choose). `hd` maps to `high` for maximum detail.
 
+**Resolution tiers:** Only `gpt-image-2` honors `resolution="high"`/`"max"`
+(up to 4K, print-oriented output); every other model renders at its standard
+size regardless of `resolution`.
+
 ## Gemini
 
 **Lineup:** `gemini-3.1-flash-image` (default GA — Nano Banana 2, fast
@@ -143,10 +157,17 @@ palette adherence, and multi-element compositions. The `hd` quality level
 activates model reasoning (thinking) which plans composition before rendering —
 dramatically improves output on complex prompts.
 
-**Quality levels:** `standard` generates at 1K resolution with minimal thinking
-(fast, free tier). `hd` enables thinking (High), 2K resolution, and text+image
-response modalities for significantly better output quality and prompt adherence.
-Note: `hd` uses thinking tokens which are billed.
+**Quality levels:** `standard` uses minimal thinking (fast, free tier). `hd`
+enables thinking (High) and text+image response modalities for significantly
+better output quality and prompt adherence. Note: `hd` uses thinking tokens
+which are billed.
+
+**Resolution tiers:** Independent of `quality`, `resolution` controls output
+size: `standard` is 1K, `high` is 2K, `max` is 4K. Only
+`gemini-3.1-flash-image` and `gemini-3-pro-image` support the full range;
+`gemini-3.1-flash-lite-image` and `gemini-2.5-flash-image` clamp down to 1K
+regardless of the requested tier. Higher tiers may bill more even on the free
+tier.
 
 **Aspect ratios:** Gemini supports 14 aspect ratios including ultra-wide options
 (`4:1`, `8:1`, `21:9`) useful for banners and panoramas.
@@ -2035,6 +2056,7 @@ def register_resources(mcp: FastMCP) -> None:
                 "providers": providers,
                 "supported_aspect_ratios": SUPPORTED_ASPECT_RATIOS,
                 "supported_quality_levels": SUPPORTED_QUALITY_LEVELS,
+                "supported_resolutions": SUPPORTED_RESOLUTIONS,
                 "supported_backgrounds": SUPPORTED_BACKGROUNDS,
             },
             indent=2,

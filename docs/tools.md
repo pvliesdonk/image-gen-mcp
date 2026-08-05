@@ -21,7 +21,8 @@ Generate an image from a text prompt. Returns immediately with a `status: "gener
 | `provider` | str | `"auto"` | Provider name (`openai`, `sd_webui`, `placeholder`) or `"auto"` for keyword-based selection |
 | `negative_prompt` | str | `null` | Things to avoid in the image. Native support on SD WebUI (SD 1.5/SDXL only; Flux models do NOT support negative prompts); appended as "Avoid:" on OpenAI. |
 | `aspect_ratio` | str | `"1:1"` | Desired ratio: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`. Gemini also supports: `3:4`, `4:3`, `4:5`, `5:4`, `4:1`, `1:4`, `8:1`, `1:8`, `21:9` |
-| `quality` | str | `"standard"` | Quality level: `standard` (fast, lower cost) or `hd` (higher quality, enables model reasoning + 2K on Gemini, `high` tier on OpenAI) |
+| `quality` | str | `"standard"` | Quality level: `standard` (fast, lower cost) or `hd` (higher quality, enables model reasoning on Gemini, `high` tier on OpenAI). Independent of `resolution`, which controls output size. |
+| `resolution` | str | `"standard"` | Output size tier: `standard`, `high`, or `max`. `high`/`max` unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only `gemini-3.1-flash-lite-image` and `gemini-2.5-flash-image`, which clamp down to 1K); on OpenAI, only `gpt-image-2` goes beyond standard (up to 4K). Every other model ignores this. Check `supported_resolutions` in `list_providers` before relying on `high`/`max` for a specific model. |
 | `background` | str | `"opaque"` | Background mode: `opaque` or `transparent`. Supported by OpenAI's `gpt-image-1` / `gpt-image-1.5` / `gpt-image-1-mini` (not `gpt-image-2` or `chatgpt-image-latest`, which drop transparency) and Placeholder. SD WebUI ignores this parameter. |
 | `model` | str | `null` | Specific model to use (such as an SD WebUI checkpoint name or `"dall-e-3"` for OpenAI). Overrides the provider's default. Use `list_providers` to see available model IDs. |
 
@@ -116,7 +117,8 @@ For task-oriented walkthroughs (editing, composition, masking, and SD `strength`
 | `provider` | str | `"auto"` | Provider to use, or `"auto"`. Image-to-image needs a provider that reports `supports_image_input` in `list_providers` |
 | `negative_prompt` | str | `null` | Things to avoid in the result (provider support varies) |
 | `aspect_ratio` | str | `"1:1"` | Desired aspect ratio of the output image |
-| `quality` | str | `"standard"` | Quality level: `standard` or `hd` |
+| `quality` | str | `"standard"` | Quality level: `standard` or `hd`. Independent of `resolution`, which controls output size. |
+| `resolution` | str | `"standard"` | Output size tier: `standard`, `high`, or `max`. `high`/`max` unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only `gemini-3.1-flash-lite-image` and `gemini-2.5-flash-image`, which clamp down to 1K); on OpenAI, only `gpt-image-2` goes beyond standard (up to 4K). Every other model ignores this. Check `supported_resolutions` in `list_providers` before relying on `high`/`max` for a specific model. |
 | `background` | str | `"opaque"` | Background mode: `opaque` or `transparent` (provider-dependent) |
 | `model` | str | `null` | Specific model ID; see `list_providers` |
 | `strength` | float | `null` | SD WebUI only: denoising strength for image-to-image (0.0 to 1.0, default 0.75 when omitted). Lower values preserve more of the reference image; higher values regenerate more. Other providers ignore it. Has no effect without a reference image. |
@@ -620,6 +622,7 @@ JSON object with a `refreshed_at` ISO 8601 timestamp and provider names, availab
             "supports_mask": false,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -649,6 +652,7 @@ JSON object with a `refreshed_at` ISO 8601 timestamp and provider names, availab
             "supports_mask": true,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard", "hd"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png", "jpeg", "webp"],
             "supports_negative_prompt": false,
             "supports_background": true,
