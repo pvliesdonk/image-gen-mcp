@@ -24,6 +24,7 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
+    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageInputUnsupported,
     ImageProviderConnectionError,
@@ -56,6 +57,46 @@ _DALLE3_SIZES: dict[str, str] = {
     "3:2": "1792x1024",
     "2:3": "1024x1792",
 }
+
+# gpt-image-2 only: resolution="high"/"max" tiers. Verified against
+# developers.openai.com/api/docs/guides/image-generation (checked 2026-07-31):
+# gpt-image-2 accepts any WIDTHxHEIGHT satisfying -- both edges /16,
+# long:short <=3:1, total px in [655_360, 8_294_400], max edge <=3840.
+# Output >2560x1440 total px is documented "experimental". See
+# tests/test_openai_provider.py for the mechanical constraint + exact-ratio check.
+_GPT_IMAGE_2_HIGH_SIZES: dict[str, str] = {
+    "1:1": "1920x1920",
+    "16:9": "2560x1440",
+    "9:16": "1440x2560",
+    "3:2": "2304x1536",
+    "2:3": "1536x2304",
+}
+
+_GPT_IMAGE_2_MAX_SIZES: dict[str, str] = {
+    "1:1": "2880x2880",
+    "16:9": "3840x2160",  # OpenAI's named "4K landscape" preset
+    "9:16": "2160x3840",  # OpenAI's named "4K portrait" preset
+    "3:2": "3504x2336",
+    "2:3": "2336x3504",
+}
+
+# Models whose ``size`` accepts arbitrary WIDTHxHEIGHT beyond _GPT_IMAGE_SIZES.
+# gpt-image-2-2026-04-21 is gpt-image-2's dated snapshot, same sizing behavior.
+_ARBITRARY_SIZE_MODELS: frozenset[str] = frozenset(
+    {"gpt-image-2", "gpt-image-2-2026-04-21"}
+)
+
+
+def _effective_resolution(effective_model: str, resolution: str) -> str:
+    """Return the resolution tier the model actually honors.
+
+    Only the gpt-image-2 family has tier-varying size tables; every other model
+    ignores ``resolution`` and renders at its one standard size.
+    """
+    if effective_model in _ARBITRARY_SIZE_MODELS:
+        return resolution
+    return "standard"
+
 
 _FORMAT_TO_CONTENT_TYPE: dict[str, str] = {
     "png": "image/png",
@@ -185,6 +226,7 @@ class OpenAIImageProvider:
         negative_prompt: str | None,
         aspect_ratio: str,
         quality: str,
+        resolution: str,
         background: str,
     ) -> tuple[dict[str, Any], str]:
         """Build the shared gpt-image request kwargs and resolved content type.
@@ -201,6 +243,11 @@ class OpenAIImageProvider:
             negative_prompt: Appended as ``"Avoid: ..."`` when non-None.
             aspect_ratio: Maps to OpenAI size parameter.
             quality: ``"standard"`` or ``"hd"``; mapped to API values.
+            resolution: ``"standard"``, ``"high"``, or ``"max"``. Only honored
+                for the gpt-image-2 family (``_ARBITRARY_SIZE_MODELS``), which
+                selects ``_GPT_IMAGE_2_HIGH_SIZES``/``_GPT_IMAGE_2_MAX_SIZES``
+                in place of the standard size table. Every other model ignores
+                it and renders at its one standard size.
             background: Background transparency (``opaque``, ``transparent``).
 
         Returns:
@@ -210,6 +257,13 @@ class OpenAIImageProvider:
             ImageProviderError: When aspect_ratio is not supported.
         """
         size = _GPT_IMAGE_SIZES.get(aspect_ratio)
+        if resolution != "standard" and effective_model in _ARBITRARY_SIZE_MODELS:
+            table = (
+                _GPT_IMAGE_2_MAX_SIZES
+                if resolution == "max"
+                else _GPT_IMAGE_2_HIGH_SIZES
+            )
+            size = table.get(aspect_ratio)
         if size is None:
             supported = ", ".join(sorted(_GPT_IMAGE_SIZES))
             raise ImageProviderError(
@@ -240,7 +294,7 @@ class OpenAIImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
-        resolution: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -256,8 +310,12 @@ class OpenAIImageProvider:
             aspect_ratio: Maps to OpenAI size parameter.
             quality: ``"standard"`` maps to ``"auto"`` for gpt-image-1
                 (lets OpenAI choose). ``"hd"`` maps to ``"high"``.
-            resolution: Accepted for protocol conformance; tier logic added
-                in a later change.
+            resolution: ``"standard"``, ``"high"``, or ``"max"``. Only the
+                gpt-image-2 family (and its dated alias) honors ``"high"``/
+                ``"max"``, selecting a larger arbitrary-size table (up to
+                3840px). Every other model ignores it and renders at its one
+                standard size; the delivered tier is reported in
+                ``provider_metadata["resolution"]``.
             background: Background transparency (``opaque``, ``transparent``).
                 Supported for gpt-image-1, gpt-image-1.5, and gpt-image-1-mini;
                 not sent to gpt-image-2 or chatgpt-image-latest (no alpha
@@ -288,6 +346,13 @@ class OpenAIImageProvider:
                 non-gpt-image model (dall-e or unknown).
             TooManyInputImages: When more than 16 reference_images are given.
         """
+        if resolution not in SUPPORTED_RESOLUTIONS:
+            raise ImageProviderError(
+                "openai",
+                f"Unsupported resolution: {resolution!r}. "
+                f"Supported: {sorted(SUPPORTED_RESOLUTIONS)}",
+            )
+
         if strength is not None:
             logger.debug("strength_ignored provider=openai reason=unsupported")
 
@@ -298,6 +363,7 @@ class OpenAIImageProvider:
                 negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 quality=quality,
+                resolution=resolution,
                 background=background,
                 model=model,
                 mask=mask,
@@ -318,6 +384,7 @@ class OpenAIImageProvider:
                 negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 quality=quality,
+                resolution=resolution,
                 background=background,
             )
             api_kwargs: dict[str, Any] = {"model": effective_model, **gpt_kwargs}
@@ -375,6 +442,7 @@ class OpenAIImageProvider:
             "size": size,
             "quality": quality,
             "api_quality": api_quality,
+            "resolution": _effective_resolution(effective_model, resolution),
         }
         revised_prompt = getattr(image_item, "revised_prompt", None)
         if revised_prompt:
@@ -396,6 +464,7 @@ class OpenAIImageProvider:
         negative_prompt: str | None,
         aspect_ratio: str,
         quality: str,
+        resolution: str,
         background: str,
         model: str | None,
         mask: InputImage | None = None,
@@ -408,6 +477,9 @@ class OpenAIImageProvider:
             negative_prompt: Appended as ``"Avoid: ..."``.
             aspect_ratio: Maps to OpenAI size parameter.
             quality: ``"standard"`` or ``"hd"``; mapped to API values.
+            resolution: ``"standard"``, ``"high"``, or ``"max"``. Only the
+                gpt-image-2 family honors ``"high"``/``"max"``; every other
+                model ignores it and renders at its one standard size.
             background: Background transparency (``opaque``, ``transparent``).
             model: Override model; must be a gpt-image model.
             mask: Optional inpainting mask forwarded to ``images.edit`` as a
@@ -440,6 +512,7 @@ class OpenAIImageProvider:
             negative_prompt=negative_prompt,
             aspect_ratio=aspect_ratio,
             quality=quality,
+            resolution=resolution,
             background=background,
         )
         kwargs["model"] = effective_model
@@ -485,6 +558,7 @@ class OpenAIImageProvider:
             size=kwargs["size"],
             quality=quality,
             api_quality=kwargs["quality"],
+            resolution=_effective_resolution(effective_model, resolution),
             edited=True,
         )
 
@@ -615,7 +689,8 @@ class OpenAIImageProvider:
                     supported_aspect_ratios=tuple(_GPT_IMAGE_SIZES),
                     supported_formats=("png", "jpeg", "webp"),
                     supported_qualities=("standard", "hd"),
-                    max_resolution=1536,
+                    max_resolution=3840,
+                    supported_resolutions=("standard", "high", "max"),
                     style_profile=resolve_style("openai", "gpt-image-2"),
                 )
             )
