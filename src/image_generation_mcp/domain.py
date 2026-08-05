@@ -744,7 +744,10 @@ class ImageService:
             source_image_ids: IDs of source images this was derived from.
 
         Returns:
-            The created ImageRecord.
+            The created ImageRecord. Its ``resolution`` field reflects the
+            delivered tier from ``result.provider_metadata["resolution"]``
+            when the provider set one, falling back to the requested
+            ``resolution`` otherwise.
         """
         # Use pre-allocated ID or derive from content
         if image_id is None:

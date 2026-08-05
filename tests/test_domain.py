@@ -244,6 +244,24 @@ async def test_generate_forwards_strength_to_provider(tmp_path: Path) -> None:
     assert fake.generate.call_args.kwargs["strength"] == 0.5
 
 
+async def test_generate_forwards_resolution_to_provider(tmp_path: Path) -> None:
+    """generate() forwards resolution to the resolved provider."""
+    from unittest.mock import AsyncMock
+
+    from image_generation_mcp.providers.types import ImageResult
+
+    service = ImageService(scratch_dir=tmp_path, default_provider="fake")
+    fake = AsyncMock()
+    fake.generate = AsyncMock(
+        return_value=ImageResult(image_data=b"x", content_type="image/png")
+    )
+    service.register_provider("fake", fake)
+
+    await service.generate("p", provider="fake", resolution="high")
+
+    assert fake.generate.call_args.kwargs["resolution"] == "high"
+
+
 # ---------------------------------------------------------------------------
 # Delivered resolution persistence
 # ---------------------------------------------------------------------------
