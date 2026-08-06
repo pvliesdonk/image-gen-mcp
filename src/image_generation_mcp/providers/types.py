@@ -118,10 +118,14 @@ class ImageProvider(Protocol):
             aspect_ratio: Desired aspect ratio (e.g., ``16:9``, ``1:1``).
             quality: Quality level (``standard``, ``hd``).
             resolution: Output size tier -- ``"standard"``, ``"high"``, or
-                ``"max"``. Independent of ``quality``. A model that cannot
-                honor the requested tier clamps to its best available tier
-                rather than raising. See
-                :attr:`ModelCapabilities.supported_resolutions`.
+                ``"max"``. Independent of ``quality``. Like ``quality`` and
+                ``background``, the tier is validated against the shared
+                :data:`SUPPORTED_RESOLUTIONS` vocabulary once at the MCP
+                tool boundary; providers receive it as valid-by-contract and
+                never re-validate it themselves. A model that cannot honor
+                the requested tier clamps to its best available tier (or
+                no-ops for providers with no higher tier) rather than
+                raising. See :attr:`ModelCapabilities.supported_resolutions`.
             background: Background transparency (``opaque``, ``transparent``).
                 Only supported by some providers.
             model: Specific model to use (e.g., a checkpoint name for SD WebUI,

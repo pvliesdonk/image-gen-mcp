@@ -173,7 +173,7 @@ The `background` parameter is **not supported** by SD WebUI. When `background="t
 
 ## Resolution
 
-The `resolution` parameter is **not supported** by SD WebUI. The provider always renders at the checkpoint/preset size for the requested aspect ratio (see the per-architecture size tables above) and reports "resolution": "standard" in provider metadata, regardless of the requested tier. When a non-standard tier (`high` or `max`) is requested, it is silently ignored (a debug log is emitted).
+The `resolution` parameter is **not supported** by SD WebUI. The provider always renders at the checkpoint/preset size for the requested aspect ratio (see the per-architecture size tables above) and reports "resolution": "standard" in provider metadata, regardless of the requested tier. When a non-standard tier (`high` or `max`) is requested, it is clamped to `standard` and a WARNING-level `resolution_clamped` log is emitted (matching the Gemini and OpenAI providers).
 
 ## Capability discovery
 

@@ -914,14 +914,6 @@ async def test_gpt_image_2_dated_alias_selects_max_table(
     assert result.provider_metadata["resolution"] == "max"
 
 
-async def test_openai_unrecognized_resolution_raises(
-    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
-) -> None:
-    provider, _mock = openai_gpt2_provider_and_mock
-    with pytest.raises(ImageProviderError, match="Unsupported resolution"):
-        await provider.generate("x", resolution="ultra")
-
-
 async def test_gpt_image_2_edit_threads_resolution(
     openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
 ) -> None:

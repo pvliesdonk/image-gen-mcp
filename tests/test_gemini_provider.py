@@ -731,14 +731,6 @@ async def test_gemini_unknown_model_fails_closed(
     assert result.provider_metadata["resolution"] == "standard"
 
 
-async def test_gemini_unrecognized_resolution_raises(
-    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
-) -> None:
-    provider, _ = gemini_provider_and_mock
-    with pytest.raises(ImageProviderError, match="Unsupported resolution"):
-        await provider.generate("x", resolution="ultra")
-
-
 async def test_gemini_capabilities_resolution_per_model() -> None:
     provider = _make_provider_without_network()
     caps = await provider.discover_capabilities()

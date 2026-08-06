@@ -24,7 +24,6 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
-    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageInputUnsupported,
     ImageProviderConnectionError,
@@ -356,13 +355,6 @@ class OpenAIImageProvider:
                 non-gpt-image model (dall-e or unknown).
             TooManyInputImages: When more than 16 reference_images are given.
         """
-        if resolution not in SUPPORTED_RESOLUTIONS:
-            raise ImageProviderError(
-                "openai",
-                f"Unsupported resolution: {resolution!r}. "
-                f"Supported: {sorted(SUPPORTED_RESOLUTIONS)}",
-            )
-
         if strength is not None:
             logger.debug("strength_ignored provider=openai reason=unsupported")
 

@@ -17,7 +17,6 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
-    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageProviderConnectionError,
     ImageProviderError,
@@ -179,11 +178,13 @@ class GeminiImageProvider:
                 quality no longer controls output size.
             resolution: One of ``"standard"``/``"high"``/``"max"``, mapped to
                 the Gemini ``image_size`` values 1K/2K/4K. Independent of
-                ``quality``. Clamped to the model's best available tier when
-                the requested tier exceeds what the model supports (logged
-                as ``resolution_clamped``); the delivered tier is reported
-                back in ``provider_metadata["resolution"]``. Unrecognized
-                values raise :class:`ImageProviderError`.
+                ``quality``. Validated against the shared vocabulary at the
+                MCP tool boundary (see :class:`ImageProvider`); this provider
+                treats it as valid-by-contract and clamps to the model's best
+                available tier when the requested tier exceeds what the
+                model supports (logged as ``resolution_clamped``). The
+                delivered tier is reported back in
+                ``provider_metadata["resolution"]``.
             background: Ignored — Gemini does not support transparent backgrounds.
             model: Override the default model for this call.
             reference_images: Optional list of reference images for
@@ -225,13 +226,6 @@ class GeminiImageProvider:
             )
 
         effective_model = model or self._model
-
-        if resolution not in SUPPORTED_RESOLUTIONS:
-            raise ImageProviderError(
-                "gemini",
-                f"Unsupported resolution: {resolution!r}. "
-                f"Supported: {sorted(SUPPORTED_RESOLUTIONS)}",
-            )
 
         model_resolutions, _ = _resolution_capabilities(effective_model)
         effective_resolution = resolution
