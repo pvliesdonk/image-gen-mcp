@@ -27,13 +27,6 @@ repos:
         pass_filenames: false
         args: [src/]
 
-      - id: render-model-catalog
-        name: render model catalog
-        language: system
-        entry: uv run python scripts/render_model_catalog.py
-        files: '^(src/image_generation_mcp/providers/model_styles\.py|scripts/render_model_catalog\.py)$'
-        pass_filenames: false
-
       # Structural-health gate: strict ruff structural rules on CHANGED LINES
       # ONLY (diff vs origin/main), mirroring the CI `structure` job. NOTE the
       # base is hardcoded `origin/main` here while CI compares against the PR's
@@ -73,10 +66,17 @@ repos:
   # First commit touching docs/ or .vale.ini auto-runs `vale sync` because
   # the style-pack dirs are missing; subsequent commits are no-ops. Adding a
   # new package to .vale.ini's `Packages =` line, or bumping a pinned URL
-  # version, does NOT re-sync automatically — the four hard-coded pack-dir
-  # checks below don't see the new package, and bumped-version dirs still
+  # version, does NOT re-sync automatically — the hard-coded pack-dir checks
+  # below don't see the new package, and bumped-version dirs still
   # exist on disk. After such .vale.ini edits, run `vale sync` manually
   # (or `rm -rf .vale/styles/<pack>` to force re-sync via the hook).
+  #
+  # `.vale.ini`'s `Packages =` is the source of truth, and THREE places in
+  # this project restate it by hand: the `for p in` list below, `BasedOnStyles`
+  # in .vale.ini, and the cache `path:` in .github/workflows/ci.yml. Change
+  # `Packages =` and all three must change with it — a pack missing from the
+  # list below leaves this hook blind to it, so `vale sync` never fires and
+  # the `vale` hook right after exits `E100 [loadStyles]`.
   - repo: local
     hooks:
       - id: vale-sync
@@ -87,9 +87,14 @@ repos:
         # LAST command, which was `break` (always 0), masking sync failures
         # and "vale: command not found". `command -v vale` plus `exit 1` on
         # sync failure plug both holes — without them the next hook (`vale`)
-        # would run against un-synced packs, where Vale prints E201 config
-        # errors and itself exits 0, the exact silent-pass this hook exists
-        # to prevent.
+        # runs against un-synced packs and fails with a PACKAGING error that
+        # reads like a prose failure. Verified against the pinned Vale
+        # (3.14.2): a missing StylesPath directory gives `E201 Invalid value`
+        # and a present StylesPath missing a BasedOnStyles pack gives
+        # `E100 [loadStyles] … does not exist on StylesPath`; both exit 2.
+        # (An earlier revision of this comment said Vale exits 0 here — a
+        # silent pass. It does not, at this version. The hook still earns its
+        # place: it stops a packs problem being read as prose debt.)
         language: system
         entry: |
           bash -c '
@@ -116,9 +121,9 @@ repos:
     hooks:
       - id: vale
         # MUST run after `vale-sync` above. Pre-commit runs hooks in
-        # declaration order; if vale precedes vale-sync on a fresh clone
-        # the packs aren't populated, Vale prints E201 config errors and
-        # exits 0 — silent pass.
+        # declaration order; if vale precedes vale-sync on a fresh clone the
+        # packs aren't populated and Vale exits 2 with `E201`/`E100` — a
+        # packaging failure wearing the shape of a prose failure.
         # Upstream hook has `types: [text]`; this `files:` scopes to the
         # user-facing docs site plus the README. Net scope: any text file
         # under docs/ (minus the dev-reference subtrees — working specs,
@@ -128,3 +133,19 @@ repos:
         # sync with the CI vale_flags glob; template-ci asserts they match.
         files: ^(docs/|README\.md$)
         exclude: ^docs/(superpowers|design|decisions)/
+
+# DOMAIN-HOOKS-START — add domain-specific hooks (shellcheck, yamllint,
+# project linters, etc.) below as full `- repo:` blocks indented to match the
+# `repos:` list above; kept across copier update. Everything OUTSIDE this
+# block is template-owned and re-rendered on update, which keeps the hook
+# pins and the structural-gate wiring above in lockstep with the re-rendered
+# tests that assert on them.
+  - repo: local
+    hooks:
+      - id: render-model-catalog
+        name: render model catalog
+        language: system
+        entry: uv run python scripts/render_model_catalog.py
+        files: '^(src/image_generation_mcp/providers/model_styles\.py|scripts/render_model_catalog\.py)$'
+        pass_filenames: false
+# DOMAIN-HOOKS-END

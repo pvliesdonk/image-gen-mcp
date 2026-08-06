@@ -13,9 +13,8 @@ All configuration is via environment variables prefixed with `IMAGE_GENERATION_M
 
 ## Server identity
 
-These two are read by the scaffold's `make_server()` (not by
-`ServerConfig`), so an operator can rename an instance or override its
-instructions without editing template-owned code:
+These two let an operator rename an instance or override its
+instructions, with no configuration beyond the variable itself:
 
 - `IMAGE_GENERATION_MCP_SERVER_NAME`: the server name reported to clients and
   by `get_server_info`. Defaults to `image-generation-mcp`.

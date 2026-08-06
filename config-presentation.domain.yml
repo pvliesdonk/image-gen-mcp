@@ -1,0 +1,53 @@
+# Domain presentation layer — YOURS to edit.  Preserved across copier update.
+#
+# Domain env vars are discovered automatically from your ProjectConfig's
+# CONFIG-FIELDS block, using each field's `metadata={"help": ..., "tags": ...}`.
+# Declare a var here only when it is read somewhere the scan cannot see it —
+# a deprecated alias no longer read inside ProjectConfig.from_env, or a var
+# read outside ProjectConfig.from_env entirely.
+#
+# Same shape as the template-owned config-presentation.yml.  `{PREFIX}` is
+# substituted with your env_prefix.
+#
+# A var's `default:` key controls whether it renders required, the same way
+# a dataclass field does: omit `default:` entirely to mark the var required,
+# or give it `default: null` (or a real default) to mark it optional.
+vars:
+  # Deprecated aliases, read via the _legacy_a1111 helper outside
+  # ProjectConfig.from_env (invisible to the AST scan by design).
+  - name: "{PREFIX}_A1111_HOST"
+    type_name: "str"
+    default: null
+    help: >-
+      Deprecated alias for {PREFIX}_SD_WEBUI_HOST; logs a warning when used.
+    tags: [providers]
+    wizard: {control: none}
+  - name: "{PREFIX}_A1111_MODEL"
+    type_name: "str"
+    default: null
+    help: >-
+      Deprecated alias for {PREFIX}_SD_WEBUI_MODEL; logs a warning when used.
+    tags: [providers]
+    wizard: {control: none}
+
+# Extra wizard questions specific to this project.
+wizard_routing: []
+
+# Extra wizard guards specific to this project.
+wizard_guards:
+  - level: warning
+    message: >-
+      No provider is configured — the server will start but cannot generate
+      images. Fill in at least one of: OpenAI API key, Google API key, or SD
+      WebUI host.
+    when:
+      openai_api_key: [""]
+      google_api_key: [""]
+      sd_webui_host: [""]
+  - level: warning
+    message: >-
+      OIDC needs BASE_URL set and (on Linux/Docker) OIDC_JWT_SIGNING_KEY — the
+      default key is ephemeral and invalidates tokens on restart.
+    when:
+      deployment: [server]
+      auth: [oidc, both]

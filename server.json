@@ -20,106 +20,143 @@
       },
       "environmentVariables": [
         {
-          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
-          "description": "When true, write-tagged tools (generate_image) are hidden. Set to false to enable image generation.",
-          "format": "boolean",
-          "default": "true"
+          "name": "IMAGE_GENERATION_MCP_KV_STORE_URL",
+          "description": "Persistent-state backend URL shared by every pvl-core subsystem that needs state. `memory://` is in-process and lost on restart; `file:///path` persists on one server; `redis://`, `dynamodb://` and `mongodb://` each need their matching extra. Defaults to `file:///data/state` when unset.",
+          "default": "file:///data/state"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
-          "description": "Directory for saved generated images. Created automatically on first use.",
-          "format": "filepath"
+          "name": "IMAGE_GENERATION_MCP_SERVER_NAME",
+          "description": "Rename this server instance; defaults to the project name."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
-          "description": "Default provider selection: auto (keyword-based), openai, sd_webui, or placeholder. Deprecated alias 'a1111' is also accepted.",
-          "default": "auto"
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
-          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-1, dall-e-3) when set.",
-          "isSecret": true
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
-          "description": "SD WebUI base URL (e.g. http://localhost:7860). Enables the SD WebUI provider when set."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
-          "description": "SD WebUI checkpoint name for model-aware preset detection (SD 1.5 vs SDXL vs Lightning vs Flux)."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_A1111_HOST",
-          "description": "Deprecated — use SD_WEBUI_HOST instead. Accepted as fallback."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_A1111_MODEL",
-          "description": "Deprecated — use SD_WEBUI_MODEL instead. Accepted as fallback."
+          "name": "IMAGE_GENERATION_MCP_INSTRUCTIONS",
+          "description": "Replaces the default MCP instructions text sent to clients."
         },
         {
           "name": "FASTMCP_LOG_LEVEL",
-          "description": "Log level for FastMCP internals; app loggers default to INFO, -v overrides both to DEBUG.",
+          "description": "Log level for FastMCP internals and app loggers (DEBUG / INFO / WARNING / ERROR / CRITICAL). The -v CLI flag overrides to DEBUG.",
           "default": "INFO",
           "choices": [
             "DEBUG",
             "INFO",
             "WARNING",
-            "ERROR"
+            "ERROR",
+            "CRITICAL"
           ]
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SERVER_NAME",
-          "description": "Server name shown to MCP clients in the initialization response.",
-          "default": "image-generation-mcp"
+          "name": "FASTMCP_ENABLE_RICH_LOGGING",
+          "description": "Set false for plain or structured JSON log output.",
+          "format": "boolean",
+          "default": "true"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_INSTRUCTIONS",
-          "description": "System-level instructions injected into LLM context."
+          "name": "IMAGE_GENERATION_MCP_A1111_HOST",
+          "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_HOST; logs a warning when used."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_BEARER_TOKEN",
-          "description": "Static bearer token for HTTP authentication.",
+          "name": "IMAGE_GENERATION_MCP_A1111_MODEL",
+          "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_MODEL; logs a warning when used."
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
+          "description": "When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them.",
+          "format": "boolean",
+          "default": "true"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
+          "description": "Directory where generated images are saved. Created automatically on first use.",
+          "format": "filepath",
+          "default": "~/.image-generation-mcp/images"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
+          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set.",
           "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_AUTH_MODE",
-          "description": "OIDC auth mode: 'remote' (JWKS validation) or 'oidc-proxy' (OAuth proxy). Auto-detected if not set."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_BASE_URL",
-          "description": "Public base URL for OIDC redirects (e.g. https://mcp.example.com). Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CONFIG_URL",
-          "description": "OIDC discovery endpoint URL. Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_ID",
-          "description": "OIDC client ID. Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
-          "description": "OIDC client secret. Required for OIDC.",
+          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
+          "description": "Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey.",
           "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY",
-          "description": "Signing key for OIDC session JWTs (critical on Linux/Docker).",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
+          "description": "SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_AUDIENCE",
-          "description": "Expected JWT audience claim. Leave unset if your provider does not set one."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
+          "description": "SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES",
-          "description": "Comma-separated required OIDC scopes (default: openid for oidc-proxy mode, none for remote mode)."
+          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
+          "description": "Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider.",
+          "default": "auto"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN",
-          "description": "Verify access token JWT instead of id_token.",
+          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
+          "description": "Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching.",
+          "format": "number",
+          "default": "64"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
+          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation.",
+          "default": "openai"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_STYLES_DIR",
+          "description": "Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist.",
+          "format": "filepath",
+          "default": "~/.image-generation-mcp/styles"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
+          "description": "Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted.",
           "format": "boolean",
           "default": "false"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
+          "description": "Maximum accepted input image size in bytes.",
+          "format": "number",
+          "default": "20971520"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
+          "description": "Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only.",
+          "format": "number",
+          "default": "3600.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
+          "description": "Ceiling in seconds a caller-requested transfer-link lifetime is clamped to.",
+          "format": "number",
+          "default": "86400.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
+          "description": "Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry.",
+          "format": "number",
+          "default": "60.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
+          "description": "Reclaim window in seconds for an in-flight transfer whose handler crashed.",
+          "format": "number",
+          "default": "60.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
+          "description": "Per-upload size cap in bytes for create_upload_link bodies.",
+          "format": "number",
+          "default": "104857600"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
+          "description": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs).",
+          "format": "number",
+          "default": "30.0"
         }
       ]
     },
@@ -140,134 +177,228 @@
       ],
       "environmentVariables": [
         {
-          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
-          "description": "When true, write-tagged tools (generate_image) are hidden. Set to false to enable image generation.",
-          "format": "boolean",
-          "default": "true"
+          "name": "IMAGE_GENERATION_MCP_BASE_URL",
+          "description": "Public base URL of the deployed server, e.g. `https://mcp.example.com`. Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset.",
+          "placeholder": "https://mcp.example.com"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
-          "description": "Directory for saved generated images inside the container.",
-          "format": "filepath",
-          "default": "/data/scratch"
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
-          "description": "Default provider selection: auto (keyword-based), openai, sd_webui, or placeholder. Deprecated alias 'a1111' is also accepted.",
-          "default": "auto"
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
-          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-1, dall-e-3) when set.",
+          "name": "IMAGE_GENERATION_MCP_BEARER_TOKEN",
+          "description": "Single shared bearer token; enables bearer auth unless `bearer_tokens_file` is set, which takes precedence.",
+          "placeholder": "<secret>",
           "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
-          "description": "SD WebUI base URL (e.g. http://localhost:7860). Enables the SD WebUI provider when set."
+          "name": "IMAGE_GENERATION_MCP_OIDC_CONFIG_URL",
+          "description": "OIDC discovery document URL, e.g. `https://auth.example.com/.well-known/openid-configuration`.",
+          "placeholder": "https://auth.example.com/.well-known/openid-configuration"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
-          "description": "SD WebUI checkpoint name for model-aware preset detection (SD 1.5 vs SDXL vs Lightning vs Flux)."
+          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_ID",
+          "description": "OIDC client identifier registered with the provider.",
+          "placeholder": "mcp-client"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_A1111_HOST",
-          "description": "Deprecated — use SD_WEBUI_HOST instead. Accepted as fallback."
+          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
+          "description": "OIDC client secret registered with the provider.",
+          "placeholder": "your-client-secret",
+          "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_A1111_MODEL",
-          "description": "Deprecated — use SD_WEBUI_MODEL instead. Accepted as fallback."
+          "name": "IMAGE_GENERATION_MCP_OIDC_AUDIENCE",
+          "description": "Expected `aud` claim; tokens issued for another audience are rejected.",
+          "placeholder": "mcp-api"
         },
         {
-          "name": "FASTMCP_LOG_LEVEL",
-          "description": "Log level for FastMCP internals; app loggers default to INFO, -v overrides both to DEBUG.",
-          "default": "INFO",
-          "choices": [
-            "DEBUG",
-            "INFO",
-            "WARNING",
-            "ERROR"
-          ]
+          "name": "IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES",
+          "description": "Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.",
+          "default": "openid"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY",
+          "description": "Signing key for issued JWTs; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart — but rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.",
+          "default": "derived",
+          "isSecret": true
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN",
+          "description": "Validate the access token instead of the id token.",
+          "format": "boolean",
+          "default": "false"
         },
         {
           "name": "IMAGE_GENERATION_MCP_KV_STORE_URL",
-          "description": "Persistent-state backend URL for pvl-core subsystems. Schemes: file:///path (survives restarts), memory:// (dev/ephemeral).",
+          "description": "Persistent-state backend URL shared by every pvl-core subsystem that needs state. `memory://` is in-process and lost on restart; `file:///path` persists on one server; `redis://`, `dynamodb://` and `mongodb://` each need their matching extra. Defaults to `file:///data/state` when unset.",
           "default": "file:///data/state"
         },
         {
+          "name": "IMAGE_GENERATION_MCP_APP_DOMAIN",
+          "description": "MCP Apps iframe domain, used for CSP sandboxing. Overrides the host derived from `base_url`."
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_AUTH_MODE",
+          "description": "Explicit auth-mode override, accepting `remote` or `oidc-proxy` (case- and whitespace-insensitive). When unset the mode is auto-detected from which auth variables are set; the override exists because having all four OIDC variables set is ambiguous between those two modes. Other values are ignored with a warning."
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_BEARER_TOKENS_FILE",
+          "description": "Path to a TOML file mapping bearer tokens to subjects; overrides the single-token `bearer_token` mode.",
+          "format": "filepath",
+          "placeholder": "/etc/image-generation-mcp/tokens.toml"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_BEARER_DEFAULT_SUBJECT",
+          "description": "Subject assigned to the single-token bearer mode; ignored when `bearer_tokens_file` is set, since mapped mode carries per-token subjects.",
+          "default": "bearer-anon"
+        },
+        {
           "name": "IMAGE_GENERATION_MCP_SERVER_NAME",
-          "description": "Server name shown to MCP clients in the initialization response.",
-          "default": "image-generation-mcp"
+          "description": "Rename this server instance; defaults to the project name."
         },
         {
           "name": "IMAGE_GENERATION_MCP_INSTRUCTIONS",
-          "description": "System-level instructions injected into LLM context."
+          "description": "Replaces the default MCP instructions text sent to clients."
         },
         {
           "name": "IMAGE_GENERATION_MCP_HTTP_PATH",
-          "description": "HTTP endpoint mount path for streamable-HTTP transport.",
+          "description": "Mount path for the MCP endpoint.",
           "default": "/mcp"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_EVENT_STORE_URL",
-          "description": "EventStore backend for SSE session resumability. file:///path (file-backed, survives restarts) or memory:// (in-process only, dev mode).",
-          "default": "file:///data/state/events"
-        },
-        {
           "name": "PUID",
-          "description": "Run as this UID (Docker entrypoint).",
+          "description": "Run the server process as this UID; the container entrypoint chowns writable paths to match.",
           "format": "number",
           "default": "1000"
         },
         {
           "name": "PGID",
-          "description": "Run as this GID (Docker entrypoint).",
+          "description": "Run the server process as this GID; pair with PUID to match the owner of a mounted volume.",
           "format": "number",
           "default": "1000"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_BEARER_TOKEN",
-          "description": "Static bearer token for HTTP authentication.",
+          "name": "FASTMCP_LOG_LEVEL",
+          "description": "Log level for FastMCP internals and app loggers (DEBUG / INFO / WARNING / ERROR / CRITICAL). The -v CLI flag overrides to DEBUG.",
+          "default": "INFO",
+          "choices": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL"
+          ]
+        },
+        {
+          "name": "FASTMCP_ENABLE_RICH_LOGGING",
+          "description": "Set false for plain or structured JSON log output.",
+          "format": "boolean",
+          "default": "true"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_A1111_HOST",
+          "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_HOST; logs a warning when used."
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_A1111_MODEL",
+          "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_MODEL; logs a warning when used."
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
+          "description": "When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them.",
+          "format": "boolean",
+          "default": "true"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
+          "description": "Directory where generated images are saved. Created automatically on first use.",
+          "format": "filepath",
+          "default": "~/.image-generation-mcp/images"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
+          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set.",
           "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_AUTH_MODE",
-          "description": "OIDC auth mode: 'remote' (JWKS validation) or 'oidc-proxy' (OAuth proxy). Auto-detected if not set."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_BASE_URL",
-          "description": "Public base URL for OIDC redirects (e.g. https://mcp.example.com). Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CONFIG_URL",
-          "description": "OIDC discovery endpoint URL. Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_ID",
-          "description": "OIDC client ID. Required for OIDC."
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
-          "description": "OIDC client secret. Required for OIDC.",
+          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
+          "description": "Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey.",
           "isSecret": true
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY",
-          "description": "Signing key for OIDC session JWTs (critical on Linux/Docker).",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
+          "description": "SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_AUDIENCE",
-          "description": "Expected JWT audience claim. Leave unset if your provider does not set one."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
+          "description": "SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES",
-          "description": "Comma-separated required OIDC scopes (default: openid for oidc-proxy mode, none for remote mode)."
+          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
+          "description": "Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider.",
+          "default": "auto"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN",
-          "description": "Verify access token JWT instead of id_token.",
+          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
+          "description": "Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching.",
+          "format": "number",
+          "default": "64"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
+          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation.",
+          "default": "openai"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_STYLES_DIR",
+          "description": "Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist.",
+          "format": "filepath",
+          "default": "~/.image-generation-mcp/styles"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
+          "description": "Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted.",
           "format": "boolean",
           "default": "false"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
+          "description": "Maximum accepted input image size in bytes.",
+          "format": "number",
+          "default": "20971520"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
+          "description": "Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only.",
+          "format": "number",
+          "default": "3600.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
+          "description": "Ceiling in seconds a caller-requested transfer-link lifetime is clamped to.",
+          "format": "number",
+          "default": "86400.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
+          "description": "Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry.",
+          "format": "number",
+          "default": "60.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
+          "description": "Reclaim window in seconds for an in-flight transfer whose handler crashed.",
+          "format": "number",
+          "default": "60.0"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
+          "description": "Per-upload size cap in bytes for create_upload_link bodies.",
+          "format": "number",
+          "default": "104857600"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
+          "description": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs).",
+          "format": "number",
+          "default": "30.0"
         }
       ]
     }

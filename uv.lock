@@ -807,15 +807,15 @@ tasks = [
 
 [[package]]
 name = "fastmcp-pvl-core"
-version = "4.4.0"
+version = "4.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastmcp" },
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/2c/6882781e2ab49e934fe0a1d3caeedf13a5e13c048350a3d27052dc516aad/fastmcp_pvl_core-4.4.0.tar.gz", hash = "sha256:5210c369be60468275f3ebe498740c1ca47c7b849eda19a0ef9707a911d41e32", size = 411682, upload-time = "2026-07-05T11:22:21.394Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/5c/5d1ea65b94bd2c31a4c778f4a887c763082e9e25075d61486c214825c845/fastmcp_pvl_core-4.5.0.tar.gz", hash = "sha256:a271ce9d177c5c0ff6d3f447633615cedd1d7d9c0aae88f49e7b08ac2bd80413", size = 426242, upload-time = "2026-07-25T15:37:33.868Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/e0/c7592e52b8d9910abb3fa491bc602b9a413ab8b7d25a0ca9020ae4d1b904/fastmcp_pvl_core-4.4.0-py3-none-any.whl", hash = "sha256:550544bf9f2153c752aa420aa13c78ec9648332de3c13570901df1cf79dad99f", size = 80135, upload-time = "2026-07-05T11:22:20.053Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/53/b43f7f64d4159a55d3810823ea5e9d6136afb78257afcda9a5821d3fc1c1/fastmcp_pvl_core-4.5.0-py3-none-any.whl", hash = "sha256:bca8cf2d3078f87b1a9fb676b70307db44eeaad7cf2e0131d86cbfaf9c2d06f5", size = 82987, upload-time = "2026-07-25T15:37:32.549Z" },
 ]
 
 [package.optional-dependencies]
@@ -1133,7 +1133,7 @@ docs = [
 requires-dist = [
     { name = "fastmcp", extras = ["tasks"], marker = "extra == 'all'", specifier = ">=3.0,<4" },
     { name = "fastmcp", extras = ["tasks"], marker = "extra == 'mcp'", specifier = ">=3.0,<4" },
-    { name = "fastmcp-pvl-core", specifier = ">=4.4.0,<5" },
+    { name = "fastmcp-pvl-core", specifier = ">=4.5.0,<5" },
     { name = "fastmcp-pvl-core", extras = ["debug"], marker = "extra == 'debug'" },
     { name = "google-genai", marker = "extra == 'all'", specifier = ">=1.0" },
     { name = "google-genai", marker = "extra == 'google-genai'", specifier = ">=1.0" },

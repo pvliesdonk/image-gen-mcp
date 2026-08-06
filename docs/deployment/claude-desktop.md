@@ -36,9 +36,7 @@ Otherwise, add the server to your Claude Desktop configuration file. The path va
     "image-generation-mcp": {
       "command": "image-generation-mcp",
       "args": ["serve"],
-      "env": {
-        "IMAGE_GENERATION_MCP_READ_ONLY": "true"
-      }
+      "env": {}
     }
   }
 }
@@ -76,9 +74,7 @@ macOS/Linux:
     "image-generation-mcp": {
       "command": "/Users/me/.venvs/mcp/bin/image-generation-mcp",
       "args": ["serve"],
-      "env": {
-        "IMAGE_GENERATION_MCP_READ_ONLY": "true"
-      }
+      "env": {}
     }
   }
 }
@@ -92,9 +88,7 @@ Windows (`Scripts\` not `bin\`, `.exe` suffix):
     "image-generation-mcp": {
       "command": "C:\\Users\\me\\.venvs\\mcp\\Scripts\\image-generation-mcp.exe",
       "args": ["serve"],
-      "env": {
-        "IMAGE_GENERATION_MCP_READ_ONLY": "true"
-      }
+      "env": {}
     }
   }
 }
