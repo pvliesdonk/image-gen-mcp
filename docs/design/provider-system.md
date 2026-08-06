@@ -135,16 +135,27 @@ the first place.
   `max_resolution` (the pixel ceiling); neither is derived from the other.
 - **Clamp, not reject:** requesting a tier a model does not support does not
   raise. Each provider clamps the request down to the highest tier the
-  resolved model actually supports (Gemini: `_resolution_capabilities()`
-  picks the model's ceiling via
-  `max(model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index)`; OpenAI:
-  `_effective_resolution()` returns `"standard"` for every model outside the
-  gpt-image-2 family regardless of the requested tier). This mirrors the
-  MCP tool layer's own posture: the tool validates `resolution` against the
-  global `SUPPORTED_RESOLUTIONS` vocabulary (`"standard"`/`"high"`/`"max"`,
-  raising `ValueError` for anything outside it), while a valid-but-unsupported
-  tier for a specific *model* is a provider-level clamp, not a tool-level
-  rejection.
+  resolved model actually supports. Gemini: `GeminiImageProvider.generate()`
+  picks the model's ceiling inline via
+  `max(model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index)`, where
+  `model_resolutions` is the supported-tier tuple returned by
+  `_resolution_capabilities()` (that function only looks up the tuple; it
+  does not perform the clamp itself). OpenAI: `_gpt_image_request()` performs
+  the size-table clamp for the gpt-image family, falling back to the
+  standard `_GPT_IMAGE_SIZES` table for any model outside
+  `_ARBITRARY_SIZE_MODELS` (i.e. every gpt-image model except gpt-image-2 and
+  its dated alias); the dall-e branch in `generate()` is a separate code path
+  that never reads `resolution` for sizing at all, since dall-e has no tier
+  table to begin with. Neither provider's metadata-reporting step performs
+  the clamp itself: Gemini reuses the `effective_resolution` local variable
+  the clamp above already computed, and OpenAI's `_effective_resolution()`
+  is a separate, clamp-free helper that only *reports* the delivered tier
+  (`"standard"` for any model outside `_ARBITRARY_SIZE_MODELS`, including
+  dall-e) for `provider_metadata`. This mirrors the MCP tool layer's own
+  posture: the tool validates `resolution` against the global `SUPPORTED_RESOLUTIONS`
+  vocabulary (`"standard"`/`"high"`/`"max"`, raising `ValueError` for
+  anything outside it), while a valid-but-unsupported tier for a specific
+  *model* is a provider-level clamp, not a tool-level rejection.
 - **Fail-closed unknown-model default:** a model absent from a provider's
   per-model resolution table is treated as `standard`-only rather than
   assumed to support the full range. New models must be added explicitly

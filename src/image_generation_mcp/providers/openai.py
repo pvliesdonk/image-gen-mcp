@@ -401,6 +401,13 @@ class OpenAIImageProvider:
             api_quality = gpt_kwargs["quality"]
         else:
             # dall-e-3 only produces PNG; has its own size table
+            if resolution != "standard":
+                logger.warning(
+                    "resolution_clamped provider=openai model=%s requested=%s "
+                    "effective=standard",
+                    effective_model,
+                    resolution,
+                )
             sizes = _DALLE3_SIZES
             size = sizes.get(aspect_ratio)
             if size is None:

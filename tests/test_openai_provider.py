@@ -81,6 +81,23 @@ def openai_gpt1_provider_and_mock() -> Generator[
 
 
 @pytest.fixture
+def openai_gpt2_dated_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=gpt-image-2-2026-04-21, the dated alias) with mocked
+    ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("gpt-image-2-2026-04-21")
+
+
+@pytest.fixture
+def openai_dalle3_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=dall-e-3) with mocked ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("dall-e-3")
+
+
+@pytest.fixture
 def openai_discovery_mock() -> Generator[OpenAIImageProvider, None, None]:
     """Provider whose mocked ``models.list()`` reports every known image model."""
     mock_client = MagicMock()
@@ -847,6 +864,54 @@ async def test_non_gpt_image_2_does_not_log_for_standard_resolution(
     with caplog.at_level(logging.WARNING):
         await provider.generate("x", aspect_ratio="1:1", resolution="standard")
     assert "resolution_clamped" not in caplog.text
+
+
+async def test_dalle3_logs_resolution_clamped_at_warning(
+    openai_dalle3_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """dall-e-3 has no tier table either -- the else branch must log too.
+
+    Pairs with test_non_gpt_image_2_logs_resolution_clamped_at_warning:
+    that test covers the gpt-image (non-arbitrary-size) branch of
+    _gpt_image_request; this one covers the sibling dall-e (else) branch
+    in generate() itself, which has its own size table and previously had
+    no log at all.
+    """
+    provider, _mock = openai_dalle3_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        result = await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert (
+        "resolution_clamped provider=openai model=dall-e-3 "
+        "requested=max effective=standard" in caplog.text
+    )
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_dalle3_does_not_log_for_standard_resolution(
+    openai_dalle3_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No downgrade log fires on dall-e-3 when the requested tier is 'standard'."""
+    provider, _mock = openai_dalle3_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="standard")
+    assert "resolution_clamped" not in caplog.text
+
+
+async def test_gpt_image_2_dated_alias_selects_max_table(
+    openai_gpt2_dated_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    """The dated gpt-image-2-2026-04-21 alias honors high/max like gpt-image-2.
+
+    Guards the "gpt-image-2-2026-04-21 is gpt-image-2's dated snapshot, same
+    sizing behavior" claim in _ARBITRARY_SIZE_MODELS' comment against a
+    future refactor that matches on the bare model name only.
+    """
+    provider, mock = openai_gpt2_dated_provider_and_mock
+    result = await provider.generate("x", aspect_ratio="16:9", resolution="max")
+    assert mock.images.generate.call_args.kwargs["size"] == "3840x2160"
+    assert result.provider_metadata["resolution"] == "max"
 
 
 async def test_openai_unrecognized_resolution_raises(

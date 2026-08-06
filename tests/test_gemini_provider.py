@@ -663,6 +663,23 @@ async def test_gemini_resolution_independent_of_quality(
     assert result.provider_metadata["resolution"] == "max"
 
 
+async def test_gemini_hd_quality_and_high_resolution_coexist(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    """quality and resolution are independent axes that must both take effect.
+
+    The default model (gemini-3.1-flash-image) is both thinking-capable and
+    full-range, so quality="hd" (-> thinking on) and resolution="high"
+    (-> 2K) must coexist rather than one clobbering the other.
+    """
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", quality="hd", resolution="high")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "2K"
+    assert config.thinking_config is not None
+    assert result.provider_metadata["resolution"] == "high"
+
+
 async def test_gemini_clamps_on_1k_only_model(
     gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
     caplog: pytest.LogCaptureFixture,
