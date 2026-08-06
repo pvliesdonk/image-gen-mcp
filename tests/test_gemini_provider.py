@@ -700,10 +700,10 @@ async def test_gemini_clamps_to_intermediate_tier(
 ) -> None:
     """The clamp picks the highest tier a model supports, not just standard.
 
-    Locks the ordering-dependent ``max(model_resolutions,
-    key=list(_RESOLUTION_TO_IMAGE_SIZE).index)`` selection: a model that
-    supports an intermediate range (standard + high, but not max) must
-    clamp a "max" request down to "high", not all the way to "standard".
+    Locks the rank-based selection (ranked by the authoritative
+    SUPPORTED_RESOLUTIONS order): a model that supports an intermediate
+    range (standard + high, but not max) must clamp a "max" request down to
+    "high", not all the way to "standard".
     """
     monkeypatch.setitem(
         _RESOLUTION_CAPS_BY_MODEL,
@@ -717,6 +717,31 @@ async def test_gemini_clamps_to_intermediate_tier(
     config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
     assert config.image_config.image_size == "2K"
     assert result.provider_metadata["resolution"] == "high"
+
+
+async def test_gemini_clamp_is_provably_downward_on_gapped_set(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The clamp never picks a tier ABOVE the requested one, even on a gap.
+
+    A model supporting a non-contiguous set like ("standard", "max") --
+    "high" is absent -- must clamp a "high" request DOWN to "standard", the
+    highest supported tier that does not exceed the requested rank. The old
+    global-max(model_resolutions) selection would have picked "max" here
+    (the globally highest supported tier), clamping UP and violating the
+    "clamp down, never up" contract documented in types.py/tools.py.
+    """
+    monkeypatch.setitem(
+        _RESOLUTION_CAPS_BY_MODEL,
+        "gemini-test-gapped",
+        (("standard", "max"), 3840),
+    )
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", model="gemini-test-gapped", resolution="high")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "1K"
+    assert result.provider_metadata["resolution"] == "standard"
 
 
 async def test_gemini_unknown_model_fails_closed(

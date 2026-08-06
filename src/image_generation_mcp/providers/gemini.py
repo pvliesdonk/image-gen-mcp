@@ -17,6 +17,7 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
+    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageProviderConnectionError,
     ImageProviderError,
@@ -76,11 +77,10 @@ _KNOWN_IMAGE_MODELS: list[tuple[str, str]] = [
     ("gemini-2.5-flash-image", "Gemini 2.5 Flash Image"),
 ]
 
-# NOTE: insertion order encodes tier rank, lowest to highest (standard <
-# high < max). Do not reorder -- the clamp's best-available-tier selection
-# (``max(model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index)``)
-# relies on this dict's iteration order to find the highest tier a model
-# supports.
+# Tier -> Gemini ``image_size`` value. The clamp in generate() ranks tiers
+# via the authoritative SUPPORTED_RESOLUTIONS order, not this dict's
+# iteration order, so this mapping carries no ordering requirement of its
+# own.
 _RESOLUTION_TO_IMAGE_SIZE: dict[str, str] = {
     "standard": "1K",
     "high": "2K",
@@ -230,10 +230,23 @@ class GeminiImageProvider:
         model_resolutions, _ = _resolution_capabilities(effective_model)
         effective_resolution = resolution
         if resolution not in model_resolutions:
-            # Clamp to the model's best available tier rather than rejecting,
-            # matching the "all providers, graceful no-op elsewhere" decision.
+            # Clamp DOWN to the highest tier the model supports that does not
+            # exceed the requested tier, rather than rejecting -- matching
+            # the "all providers, graceful no-op elsewhere" decision. Ranked
+            # by the authoritative SUPPORTED_RESOLUTIONS order (not by
+            # _RESOLUTION_TO_IMAGE_SIZE's insertion order), so this is
+            # provably downward for any model_resolutions shape, including a
+            # non-contiguous set like ("standard", "max"): "standard" (rank
+            # 0) is always in model_resolutions and 0 <= any requested rank,
+            # so the generator is never empty. resolution is valid-by-contract
+            # here (validated once at the MCP tool boundary; see
+            # ImageProvider.generate's docstring), so indexing it directly
+            # is safe.
+            _rank = SUPPORTED_RESOLUTIONS.index
+            requested_rank = _rank(resolution)
             effective_resolution = max(
-                model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index
+                (t for t in model_resolutions if _rank(t) <= requested_rank),
+                key=_rank,
             )
             logger.warning(
                 "resolution_clamped provider=%s model=%s requested=%s effective=%s",

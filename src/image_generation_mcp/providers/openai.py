@@ -97,6 +97,18 @@ def _effective_resolution(effective_model: str, resolution: str) -> str:
     return "standard"
 
 
+def _supported_resolutions(model_id: str) -> tuple[str, ...]:
+    """Tiers a model honors, derived from the single ``_ARBITRARY_SIZE_MODELS``
+    source of truth -- the same membership check that governs size-table
+    selection in :func:`_effective_resolution` and ``_gpt_image_request``.
+    Keeps capability advertising and runtime delivery from silently
+    diverging.
+    """
+    if model_id in _ARBITRARY_SIZE_MODELS:
+        return ("standard", "high", "max")
+    return ("standard",)
+
+
 _FORMAT_TO_CONTENT_TYPE: dict[str, str] = {
     "png": "image/png",
     "jpeg": "image/jpeg",
@@ -700,7 +712,7 @@ class OpenAIImageProvider:
                     supported_formats=("png", "jpeg", "webp"),
                     supported_qualities=("standard", "hd"),
                     max_resolution=3840,
-                    supported_resolutions=("standard", "high", "max"),
+                    supported_resolutions=_supported_resolutions("gpt-image-2"),
                     style_profile=resolve_style("openai", "gpt-image-2"),
                 )
             )

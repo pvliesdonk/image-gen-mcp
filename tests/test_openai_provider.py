@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from image_generation_mcp.providers.openai import (
+    _ARBITRARY_SIZE_MODELS,
     _DALLE3_SIZES,
     _GPT_IMAGE_SIZES,
     OpenAIImageProvider,
@@ -935,3 +936,33 @@ async def test_gpt_image_2_capability_reports_resolutions(
     gpt2 = next(m for m in caps.models if m.model_id == "gpt-image-2")
     assert gpt2.supported_resolutions == ("standard", "high", "max")
     assert gpt2.max_resolution == 3840
+
+
+async def test_advertised_high_max_implies_arbitrary_size_membership(
+    openai_discovery_mock: OpenAIImageProvider,
+) -> None:
+    """Single-source-of-truth guard: advertised implies deliverable.
+
+    Any discovered model whose supported_resolutions includes "high" or
+    "max" must be in _ARBITRARY_SIZE_MODELS -- the same membership check
+    that governs actual size-table selection at generate time (see
+    _effective_resolution / _gpt_image_request). Prevents
+    discover_capabilities from silently drifting out of sync with the
+    runtime by re-introducing a hand-written high/max literal.
+
+    Deliberately NOT bidirectional: gpt-image-2-2026-04-21 is in
+    _ARBITRARY_SIZE_MODELS by design but has no discovered capability
+    entry of its own (issue #338, out of scope here) -- asserting the
+    reverse direction would wrongly fail on that gap.
+    """
+    provider = openai_discovery_mock
+    caps = await provider.discover_capabilities()
+    for model in caps.models:
+        if (
+            "high" in model.supported_resolutions
+            or "max" in model.supported_resolutions
+        ):
+            assert model.model_id in _ARBITRARY_SIZE_MODELS, (
+                f"{model.model_id} advertises high/max but is not in "
+                "_ARBITRARY_SIZE_MODELS, so generate() cannot deliver it"
+            )
