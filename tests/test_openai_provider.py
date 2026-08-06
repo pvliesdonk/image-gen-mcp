@@ -814,8 +814,9 @@ async def test_gpt_image_2_high_selects_high_table(
     openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
 ) -> None:
     provider, mock = openai_gpt2_provider_and_mock
-    await provider.generate("x", aspect_ratio="1:1", resolution="high")
+    result = await provider.generate("x", aspect_ratio="1:1", resolution="high")
     assert mock.images.generate.call_args.kwargs["size"] == "1920x1920"
+    assert result.provider_metadata["resolution"] == "high"
 
 
 async def test_non_gpt_image_2_ignores_resolution(

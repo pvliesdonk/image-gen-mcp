@@ -637,18 +637,20 @@ async def test_gemini_resolution_max_maps_to_4k(
 ) -> None:
     # provider default model gemini-3.1-flash-image supports full range
     provider, mock_client = gemini_provider_and_mock
-    await provider.generate("x", resolution="max")
+    result = await provider.generate("x", resolution="max")
     config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
     assert config.image_config.image_size == "4K"
+    assert result.provider_metadata["resolution"] == "max"
 
 
 async def test_gemini_resolution_high_maps_to_2k(
     gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
 ) -> None:
     provider, mock_client = gemini_provider_and_mock
-    await provider.generate("x", resolution="high")
+    result = await provider.generate("x", resolution="high")
     config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
     assert config.image_config.image_size == "2K"
+    assert result.provider_metadata["resolution"] == "high"
 
 
 async def test_gemini_resolution_independent_of_quality(
