@@ -171,6 +171,10 @@ The `strength` parameter controls `denoising_strength` in the SD WebUI API paylo
 
 The `background` parameter is **not supported** by SD WebUI. When `background="transparent"` is passed, it is silently ignored (a debug log is emitted). Stable Diffusion does not natively support transparent background generation.
 
+## Resolution
+
+The `resolution` parameter is **not supported** by SD WebUI. The provider always renders at the checkpoint/preset size for the requested aspect ratio (see the per-architecture size tables above) and reports "resolution": "standard" in provider metadata, regardless of the requested tier. When a non-standard tier (`high` or `max`) is requested, it is silently ignored (a debug log is emitted).
+
 ## Capability discovery
 
 At startup, the provider calls:

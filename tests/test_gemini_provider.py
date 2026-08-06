@@ -9,6 +9,7 @@ import pytest
 
 from image_generation_mcp.providers.gemini import (
     _ASPECT_RATIOS,
+    _RESOLUTION_CAPS_BY_MODEL,
     _THINKING_MODELS,
     GeminiImageProvider,
 )
@@ -674,6 +675,31 @@ async def test_gemini_clamps_on_1k_only_model(
     assert config.image_config.image_size == "1K"
     assert result.provider_metadata["resolution"] == "standard"
     assert "resolution_clamped" in caplog.text
+
+
+async def test_gemini_clamps_to_intermediate_tier(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The clamp picks the highest tier a model supports, not just standard.
+
+    Locks the ordering-dependent ``max(model_resolutions,
+    key=list(_RESOLUTION_TO_IMAGE_SIZE).index)`` selection: a model that
+    supports an intermediate range (standard + high, but not max) must
+    clamp a "max" request down to "high", not all the way to "standard".
+    """
+    monkeypatch.setitem(
+        _RESOLUTION_CAPS_BY_MODEL,
+        "gemini-test-intermediate",
+        (("standard", "high"), 2048),
+    )
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate(
+        "x", model="gemini-test-intermediate", resolution="max"
+    )
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "2K"
+    assert result.provider_metadata["resolution"] == "high"
 
 
 async def test_gemini_unknown_model_fails_closed(

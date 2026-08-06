@@ -264,6 +264,15 @@ class OpenAIImageProvider:
                 else _GPT_IMAGE_2_HIGH_SIZES
             )
             size = table.get(aspect_ratio)
+        elif resolution != "standard":
+            # Requested tier is being dropped: this model has no high/max size
+            # table, so it renders at its one standard size regardless.
+            logger.warning(
+                "resolution_clamped provider=openai model=%s requested=%s "
+                "effective=standard",
+                effective_model,
+                resolution,
+            )
         if size is None:
             supported = ", ".join(sorted(_GPT_IMAGE_SIZES))
             raise ImageProviderError(

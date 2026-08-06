@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import math
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -806,6 +807,46 @@ async def test_non_gpt_image_2_ignores_resolution(
     result = await provider.generate("x", aspect_ratio="1:1", resolution="max")
     assert mock.images.generate.call_args.kwargs["size"] == "1024x1024"
     assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_non_gpt_image_2_logs_resolution_clamped_at_warning(
+    openai_gpt1_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A dropped tier request on a non-arbitrary-size model logs at WARNING.
+
+    WARNING mirrors Gemini's resolution_clamped log (both are paid,
+    tier-capable providers where a silent downgrade is worth flagging).
+    """
+    provider, _mock = openai_gpt1_provider_and_mock  # model gpt-image-1
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert (
+        "resolution_clamped provider=openai model=gpt-image-1 "
+        "requested=max effective=standard" in caplog.text
+    )
+
+
+async def test_gpt_image_2_does_not_log_resolution_clamped(
+    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """gpt-image-2 honors high/max natively, so no downgrade is logged."""
+    provider, _mock = openai_gpt2_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert "resolution_clamped" not in caplog.text
+
+
+async def test_non_gpt_image_2_does_not_log_for_standard_resolution(
+    openai_gpt1_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No downgrade log fires when the requested tier is already 'standard'."""
+    provider, _mock = openai_gpt1_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="standard")
+    assert "resolution_clamped" not in caplog.text
 
 
 async def test_openai_unrecognized_resolution_raises(

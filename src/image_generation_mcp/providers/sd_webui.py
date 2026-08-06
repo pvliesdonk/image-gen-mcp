@@ -283,7 +283,7 @@ class SdWebuiImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # noqa: ARG002
-        resolution: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -302,10 +302,11 @@ class SdWebuiImageProvider:
             negative_prompt: Negative prompt (natively supported by SD).
             aspect_ratio: Desired aspect ratio.
             quality: Ignored — SD quality is controlled by steps/cfg.
-            resolution: Ignored for rendering -- this provider renders at a
-                single fixed size. The returned ``provider_metadata``
-                always reports ``"resolution": "standard"`` (its
-                always-delivered tier), regardless of what was requested.
+            resolution: Ignored. This provider offers no higher-resolution
+                tier; it always renders at the checkpoint/preset size for the
+                requested aspect ratio and reports ``"resolution":
+                "standard"`` in provider metadata regardless of the
+                requested tier.
             background: Ignored — SD WebUI does not support background
                 transparency control.
             model: Specific checkpoint name to use for this call. Overrides
@@ -344,6 +345,8 @@ class SdWebuiImageProvider:
             logger.debug(
                 "SD WebUI does not support background transparency control, ignoring"
             )
+        if resolution != "standard":
+            logger.debug("resolution_ignored provider=sd_webui reason=unsupported")
 
         payload, width, height = self._build_payload(
             prompt=prompt,

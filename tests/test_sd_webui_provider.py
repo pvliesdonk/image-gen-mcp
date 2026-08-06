@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -206,6 +207,42 @@ class TestSdWebuiProvider:
         result = await provider.generate("a cat, masterpiece", resolution="max")
 
         assert result.provider_metadata["resolution"] == "standard"
+
+    async def test_generate_logs_resolution_ignored_at_debug(
+        self, httpx_mock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A non-standard resolution request logs the downgrade at DEBUG.
+
+        Mirrors this file's own strength_ignored DEBUG handling -- SD WebUI
+        is tier-less, so the drop is observable but not alarming.
+        """
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json={"images": [b64_image], "info": "{}"},
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        with caplog.at_level(logging.DEBUG):
+            await provider.generate("a cat, masterpiece", resolution="max")
+
+        assert "resolution_ignored provider=sd_webui reason=unsupported" in caplog.text
+
+    async def test_generate_does_not_log_for_standard_resolution(
+        self, httpx_mock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """No downgrade log fires when the requested tier is already 'standard'."""
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json={"images": [b64_image], "info": "{}"},
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        with caplog.at_level(logging.DEBUG):
+            await provider.generate("a cat, masterpiece", resolution="standard")
+
+        assert "resolution_ignored" not in caplog.text
 
     async def test_generate_with_model_override(self, httpx_mock) -> None:
         b64_image = base64.b64encode(b"data").decode()
