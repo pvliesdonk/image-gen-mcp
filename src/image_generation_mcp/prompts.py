@@ -51,7 +51,9 @@ Choose the best provider for the user's request based on these guidelines.
 - **Also strong at:** Photoreal still life, material fidelity (glass, metal,
   fabric), precise text on objects, complex multi-clause prompts.
 - **Supports:** Negative prompt (as "Avoid:" clause — weaker than native),
-  quality levels (`standard`=auto, `hd`=high).
+  quality levels (`standard`=auto, `hd`=high). `resolution="high"`/`"max"`
+  (up to 4K) is honored only by `gpt-image-2`; every other model renders at
+  its standard size regardless of `resolution`.
 - **Prompt style:** Descriptive natural-language paragraphs; tag-soup
   underperforms.
 
@@ -69,10 +71,15 @@ Choose the best provider for the user's request based on these guidelines.
 - **Best for:** Infographics, diagrams, structured layouts, complex
   illustrations, visual storytelling, multi-element compositions, character
   consistency across iterations.
-- **Supports:** `quality="hd"` enables thinking (Pro/3.x variants) and 2K
-  resolution — dramatically improves output on complex prompts (10s → 55s).
+- **Supports:** `quality="hd"` enables thinking (Pro/3.x variants) —
+  dramatically improves output on complex prompts (10s → 55s). Independent
+  of quality, `resolution="high"`/`"max"` selects 2K/4K output on
+  `gemini-3.1-flash-image` and `gemini-3-pro-image`; `gemini-3.1-flash-lite-image`
+  and `gemini-2.5-flash-image` clamp down to 1K regardless of the requested
+  tier.
 - **Cost:** Generous free tier at `standard` quality; `hd` uses thinking
-  tokens (billed).
+  tokens (billed). Higher `resolution` tiers may bill more even on the free
+  tier.
 - **Prompt style:** Descriptive natural-language. Don't use SD-style
   comma-separated tag lists — Google's docs explicitly call this the wrong
   pattern.

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import io
 from typing import TYPE_CHECKING
 
 import pytest
+from PIL import Image
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,7 +15,14 @@ import json
 
 from image_generation_mcp.domain import ImageService
 from image_generation_mcp.providers.placeholder import PlaceholderImageProvider
-from image_generation_mcp.providers.types import ImageProviderError
+from image_generation_mcp.providers.types import ImageProviderError, ImageResult
+
+
+def _png_bytes(color: str = "red", size: tuple[int, int] = (4, 4)) -> bytes:
+    """Return raw PNG bytes for a small solid-color image."""
+    buf = io.BytesIO()
+    Image.new("RGB", size, color).save(buf, format="PNG")
+    return buf.getvalue()
 
 
 @pytest.fixture
@@ -233,3 +242,102 @@ async def test_generate_forwards_strength_to_provider(tmp_path: Path) -> None:
     await service.generate("p", provider="fake", strength=0.5)
 
     assert fake.generate.call_args.kwargs["strength"] == 0.5
+
+
+async def test_generate_forwards_resolution_to_provider(tmp_path: Path) -> None:
+    """generate() forwards resolution to the resolved provider."""
+    from unittest.mock import AsyncMock
+
+    from image_generation_mcp.providers.types import ImageResult
+
+    service = ImageService(scratch_dir=tmp_path, default_provider="fake")
+    fake = AsyncMock()
+    fake.generate = AsyncMock(
+        return_value=ImageResult(image_data=b"x", content_type="image/png")
+    )
+    service.register_provider("fake", fake)
+
+    await service.generate("p", provider="fake", resolution="high")
+
+    assert fake.generate.call_args.kwargs["resolution"] == "high"
+
+
+# ---------------------------------------------------------------------------
+# Delivered resolution persistence
+# ---------------------------------------------------------------------------
+
+
+def test_register_image_persists_delivered_resolution(service: ImageService) -> None:
+    """register_image persists the delivered tier, not the requested one."""
+    result = ImageResult(
+        image_data=_png_bytes(),
+        content_type="image/png",
+        provider_metadata={"resolution": "standard"},  # clamped from "max"
+    )
+    record = service.register_image(result, "gemini", prompt="x", resolution="max")
+    assert record.resolution == "standard"  # delivered, not requested
+
+
+def test_register_image_falls_back_to_requested_resolution(
+    service: ImageService,
+) -> None:
+    """When a provider does not report a delivered tier, the requested one persists."""
+    result = ImageResult(image_data=_png_bytes(), content_type="image/png")
+    record = service.register_image(result, "sd_webui", prompt="x", resolution="high")
+    assert record.resolution == "high"
+
+
+def test_resolution_round_trips_through_sidecar(
+    service: ImageService, scratch_dir: Path
+) -> None:
+    """The delivered resolution survives a sidecar write + registry reload."""
+    result = ImageResult(
+        image_data=_png_bytes(),
+        content_type="image/png",
+        provider_metadata={"resolution": "max"},
+    )
+    record = service.register_image(result, "openai", prompt="x", resolution="max")
+
+    reloaded_service = ImageService(scratch_dir=scratch_dir)
+    reloaded = reloaded_service.get_image(record.id)
+    assert reloaded.resolution == "max"
+
+
+def test_load_registry_defaults_resolution_for_legacy_sidecar(
+    tmp_path: Path,
+) -> None:
+    """_load_registry defaults resolution to 'standard' for pre-feature sidecars.
+
+    Sidecars written before the resolution feature existed omit the
+    ``resolution`` key entirely. The load path must fall back to
+    ``"standard"`` rather than raising or leaving the field unset.
+    """
+    (tmp_path / "bbbbbbbbbbbb-original.png").write_bytes(_png_bytes())
+    (tmp_path / "bbbbbbbbbbbb.json").write_text(
+        json.dumps(
+            {
+                "id": "bbbbbbbbbbbb",
+                "prompt": "p",
+                "negative_prompt": None,
+                "provider": "gemini",
+                "aspect_ratio": "1:1",
+                "quality": "standard",
+                "content_type": "image/png",
+                "original_filename": "bbbbbbbbbbbb-original.png",
+                "original_dimensions": [4, 4],
+                "provider_metadata": {},
+                "created_at": "2026-01-01T00:00:00+00:00",
+                # "resolution" intentionally omitted -- pre-feature record.
+            }
+        )
+    )
+    service = ImageService(scratch_dir=tmp_path)
+    assert service.get_image("bbbbbbbbbbbb").resolution == "standard"
+
+
+def test_register_pending_carries_resolution(service: ImageService) -> None:
+    """register_pending threads the requested resolution onto PendingGeneration."""
+    pending = service.register_pending(
+        service.allocate_image_id(), "x", "gemini", resolution="high"
+    )
+    assert pending.resolution == "high"

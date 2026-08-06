@@ -108,6 +108,7 @@ class PlaceholderImageProvider:
         negative_prompt: str | None = None,  # noqa: ARG002
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -122,6 +123,10 @@ class PlaceholderImageProvider:
             negative_prompt: Ignored.
             aspect_ratio: Determines image dimensions.
             quality: Ignored.
+            resolution: Ignored. This provider offers no higher-resolution
+                tier; it always renders at its normal aspect-ratio-determined
+                size and reports ``"resolution": "standard"`` in provider
+                metadata regardless of the requested tier.
             background: When ``"transparent"``, generates an RGBA PNG with
                 alpha=0. When ``"opaque"`` (default), generates an RGB PNG.
             model: Ignored by the placeholder provider.
@@ -146,6 +151,12 @@ class PlaceholderImageProvider:
             raise ImageInputUnsupported("placeholder", model)
         if strength is not None:
             logger.debug("strength_ignored provider=placeholder reason=unsupported")
+        if resolution != "standard":
+            # Intentionally DEBUG, not the real providers' WARNING
+            # resolution_clamped: placeholder is a zero-cost test provider, so
+            # an ignored tier is an internal detail, not an operator-facing
+            # degradation.
+            logger.debug("resolution_ignored provider=placeholder reason=unsupported")
         if model is not None:
             logger.debug("Placeholder provider ignores model parameter: %r", model)
         if aspect_ratio not in _ASPECT_RATIO_TO_SIZE:
@@ -167,6 +178,10 @@ class PlaceholderImageProvider:
                 "quality": "placeholder",
                 "size": f"{width}x{height}",
                 "color": f"#{r:02x}{g:02x}{b:02x}",
+                # Always-delivered tier: the placeholder has no higher tier,
+                # so it reports "standard" regardless of the requested
+                # resolution to keep the delivered-tier contract truthful.
+                "resolution": "standard",
             },
         )
 

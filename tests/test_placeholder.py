@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import pytest
 
 from image_generation_mcp.providers.placeholder import PlaceholderImageProvider
@@ -133,3 +135,46 @@ async def test_placeholder_rejects_mask() -> None:
         await PlaceholderImageProvider().generate(
             "x", mask=InputImage(data=b"m", content_type="image/png")
         )
+
+
+async def test_placeholder_accepts_and_ignores_resolution():
+    from image_generation_mcp.providers.placeholder import PlaceholderImageProvider
+
+    provider = PlaceholderImageProvider()
+    result = await provider.generate("a cat", resolution="max")
+    assert result.image_data
+
+
+async def test_placeholder_reports_standard_delivered_resolution() -> None:
+    """The placeholder always delivers 'standard', regardless of the request.
+
+    It has no higher tier, so it must report its always-delivered tier in
+    provider_metadata rather than silently defaulting to the requested one.
+    """
+    provider = PlaceholderImageProvider()
+    result = await provider.generate("a cat", resolution="max")
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_placeholder_logs_resolution_ignored_at_debug(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A non-standard resolution request logs the downgrade at DEBUG.
+
+    Mirrors this file's own strength_ignored DEBUG handling -- placeholder
+    is tier-less, so the drop is observable but not alarming.
+    """
+    provider = PlaceholderImageProvider()
+    with caplog.at_level(logging.DEBUG):
+        await provider.generate("x", resolution="max")
+    assert "resolution_ignored provider=placeholder reason=unsupported" in caplog.text
+
+
+async def test_placeholder_does_not_log_for_standard_resolution(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No downgrade log fires when the requested tier is already 'standard'."""
+    provider = PlaceholderImageProvider()
+    with caplog.at_level(logging.DEBUG):
+        await provider.generate("x", resolution="standard")
+    assert "resolution_ignored" not in caplog.text

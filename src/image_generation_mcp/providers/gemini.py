@@ -17,6 +17,7 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
+    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageProviderConnectionError,
     ImageProviderError,
@@ -75,6 +76,16 @@ _KNOWN_IMAGE_MODELS: list[tuple[str, str]] = [
     ("gemini-3.1-flash-lite-image", "Gemini 3.1 Flash Lite Image"),
     ("gemini-2.5-flash-image", "Gemini 2.5 Flash Image"),
 ]
+
+# Tier -> Gemini ``image_size`` value. The clamp in generate() ranks tiers
+# via the authoritative SUPPORTED_RESOLUTIONS order, not this dict's
+# iteration order, so this mapping carries no ordering requirement of its
+# own.
+_RESOLUTION_TO_IMAGE_SIZE: dict[str, str] = {
+    "standard": "1K",
+    "high": "2K",
+    "max": "4K",
+}
 
 _SUPPORTED_ASPECT_RATIOS: tuple[str, ...] = tuple(_ASPECT_RATIOS)
 _SUPPORTED_QUALITIES: tuple[str, ...] = ("standard", "hd")
@@ -145,6 +156,7 @@ class GeminiImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -159,11 +171,20 @@ class GeminiImageProvider:
             negative_prompt: Appended as ``"\\n\\nAvoid: {negative_prompt}"``
                 (Gemini has no native negative prompt support).
             aspect_ratio: One of the supported ratios (14 total).
-            quality: ``"standard"`` uses default settings (1K, minimal
-                thinking). ``"hd"`` enables higher resolution (2K).
-                On thinking-capable models, also enables
+            quality: ``"standard"`` uses minimal settings (no thinking).
+                ``"hd"`` on thinking-capable models enables
                 thinking_level=High and text+image response modalities
-                for improved composition.
+                for improved composition. Independent of ``resolution`` --
+                quality no longer controls output size.
+            resolution: One of ``"standard"``/``"high"``/``"max"``, mapped to
+                the Gemini ``image_size`` values 1K/2K/4K. Independent of
+                ``quality``. Validated against the shared vocabulary at the
+                MCP tool boundary (see :class:`ImageProvider`); this provider
+                treats it as valid-by-contract and clamps to the model's best
+                available tier when the requested tier exceeds what the
+                model supports (logged as ``resolution_clamped``). The
+                delivered tier is reported back in
+                ``provider_metadata["resolution"]``.
             background: Ignored — Gemini does not support transparent backgrounds.
             model: Override the default model for this call.
             reference_images: Optional list of reference images for
@@ -206,6 +227,35 @@ class GeminiImageProvider:
 
         effective_model = model or self._model
 
+        model_resolutions, _ = _resolution_capabilities(effective_model)
+        effective_resolution = resolution
+        if resolution not in model_resolutions:
+            # Clamp DOWN to the highest tier the model supports that does not
+            # exceed the requested tier, rather than rejecting -- matching
+            # the "all providers, graceful no-op elsewhere" decision. Ranked
+            # by the authoritative SUPPORTED_RESOLUTIONS order (not by
+            # _RESOLUTION_TO_IMAGE_SIZE's insertion order), so this is
+            # provably downward for any model_resolutions shape, including a
+            # non-contiguous set like ("standard", "max"): "standard" (rank
+            # 0) is always in model_resolutions and 0 <= any requested rank,
+            # so the generator is never empty. resolution is valid-by-contract
+            # here (validated once at the MCP tool boundary; see
+            # ImageProvider.generate's docstring), so indexing it directly
+            # is safe.
+            _rank = SUPPORTED_RESOLUTIONS.index
+            requested_rank = _rank(resolution)
+            effective_resolution = max(
+                (t for t in model_resolutions if _rank(t) <= requested_rank),
+                key=_rank,
+            )
+            logger.warning(
+                "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                "gemini",
+                effective_model,
+                resolution,
+                effective_resolution,
+            )
+
         max_refs = _max_input_images(effective_model)
         if reference_images and len(reference_images) > max_refs:
             raise TooManyInputImages(
@@ -235,7 +285,7 @@ class GeminiImageProvider:
             response_modalities=["TEXT", "IMAGE"] if use_thinking else ["IMAGE"],
             image_config=types.ImageConfig(
                 aspect_ratio=_ASPECT_RATIOS[aspect_ratio],
-                image_size="2K" if is_hd else "1K",
+                image_size=_RESOLUTION_TO_IMAGE_SIZE[effective_resolution],
             ),
             thinking_config=thinking_config,
         )
@@ -269,6 +319,7 @@ class GeminiImageProvider:
                             "model": effective_model,
                             "quality": quality,
                             "aspect_ratio": aspect_ratio,
+                            "resolution": effective_resolution,
                         },
                     )
 
@@ -286,23 +337,7 @@ class GeminiImageProvider:
         discovered_at = time.time()
         try:
             models = tuple(
-                ModelCapabilities(
-                    model_id=model_id,
-                    display_name=display_name,
-                    can_generate=True,
-                    can_edit=False,
-                    supported_aspect_ratios=_SUPPORTED_ASPECT_RATIOS,
-                    supported_qualities=_SUPPORTED_QUALITIES,
-                    supported_formats=("image/png",),
-                    supports_negative_prompt=False,
-                    supports_background=False,
-                    supports_image_input=True,
-                    max_input_images=_max_input_images(model_id),
-                    prompt_style="natural_language",
-                    style_profile=resolve_style("gemini", model_id),
-                    # SynthID watermark: see docs/providers/gemini.md.
-                    watermark="synthid",
-                )
+                self._build_model_capabilities(model_id, display_name)
                 for model_id, display_name in _KNOWN_IMAGE_MODELS
             )
             return ProviderCapabilities(
@@ -314,6 +349,40 @@ class GeminiImageProvider:
         except Exception:
             logger.exception("Gemini capability discovery failed")
             return make_degraded("gemini", discovered_at)
+
+    def _build_model_capabilities(
+        self, model_id: str, display_name: str
+    ) -> ModelCapabilities:
+        """Build the :class:`ModelCapabilities` entry for one known model.
+
+        Args:
+            model_id: Model identifier (e.g. ``"gemini-3-pro-image"``).
+            display_name: Human-readable display name.
+
+        Returns:
+            ModelCapabilities describing this model's supported ratios,
+            qualities, resolution tiers, and other generation limits.
+        """
+        supported_resolutions, max_resolution = _resolution_capabilities(model_id)
+        return ModelCapabilities(
+            model_id=model_id,
+            display_name=display_name,
+            can_generate=True,
+            can_edit=False,
+            supported_aspect_ratios=_SUPPORTED_ASPECT_RATIOS,
+            supported_qualities=_SUPPORTED_QUALITIES,
+            supported_resolutions=supported_resolutions,
+            supported_formats=("image/png",),
+            supports_negative_prompt=False,
+            supports_background=False,
+            supports_image_input=True,
+            max_input_images=_max_input_images(model_id),
+            max_resolution=max_resolution,
+            prompt_style="natural_language",
+            style_profile=resolve_style("gemini", model_id),
+            # SynthID watermark: see docs/providers/gemini.md.
+            watermark="synthid",
+        )
 
     def _handle_error(self, exc: Exception) -> NoReturn:
         """Convert exceptions to ImageProviderError subtypes.
@@ -342,3 +411,36 @@ class GeminiImageProvider:
             raise ImageProviderConnectionError("gemini", str(exc)) from exc
 
         raise ImageProviderError("gemini", str(exc)) from exc
+
+
+# Per-model resolution ceiling. Only Gemini 3 Pro Image and Gemini 3.1 Flash
+# Image are listed here as full 1K/2K/4K. ai.google.dev/gemini-api/docs/
+# image-generation attributes multi-resolution output to the "Gemini 3 image
+# family" without a per-model breakdown, so every model not listed below --
+# including gemini-3.1-flash-lite-image and gemini-2.5-flash-image -- falls
+# through to the standard-only fail-closed default, the same conservative
+# stance this file takes for unknown/future models. A model is promoted to
+# full-range only once its higher-tier support is explicitly confirmed and
+# added here.
+# [unverified] Whether the non-listed models (lite, 2.5-flash) support high/max
+# is not separately documented in that source; they are treated as standard-only
+# by the fail-closed default rather than asserted incapable. This is deliberately
+# stricter than the fail-open assumption the sibling _DEFAULT_MAX_INPUT_IMAGES
+# note makes for the same lite model, because delivering an unrequested lower
+# resolution is a safer failure than an unexpected billed 4K generation.
+# [unverified] 1024/3840 are the conventional 1K/4K long-edge pixel figures;
+# ai.google.dev names the tiers without publishing per-tier pixel dimensions.
+_FULL_RANGE_RESOLUTIONS: tuple[str, ...] = ("standard", "high", "max")
+_RESOLUTION_CAPS_BY_MODEL: dict[str, tuple[tuple[str, ...], int]] = {
+    "gemini-3.1-flash-image": (_FULL_RANGE_RESOLUTIONS, 3840),
+    "gemini-3-pro-image": (_FULL_RANGE_RESOLUTIONS, 3840),
+}
+_DEFAULT_RESOLUTION_CAPS: tuple[tuple[str, ...], int] = (("standard",), 1024)
+
+
+def _resolution_capabilities(model: str) -> tuple[tuple[str, ...], int]:
+    """Return ``(supported_resolutions, max_resolution)`` for a Gemini model.
+
+    Unknown models fail closed to standard-only.
+    """
+    return _RESOLUTION_CAPS_BY_MODEL.get(model, _DEFAULT_RESOLUTION_CAPS)

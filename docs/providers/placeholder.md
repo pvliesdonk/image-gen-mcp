@@ -32,6 +32,7 @@ The placeholder provider is **always registered**: no configuration or API key i
 - **prompt:** used to determine the output color (via SHA-256 hash index into a 6-color palette)
 - **negative_prompt:** ignored
 - **quality:** ignored
+- **resolution:** ignored. This provider has no higher-resolution tier; it reports "resolution": "standard" in provider metadata regardless of the requested tier.
 - **aspect_ratio:** maps to pixel sizes above
 - **background:** `"opaque"` (default) produces RGB PNG; `"transparent"` produces RGBA PNG with alpha channel set to 0
 

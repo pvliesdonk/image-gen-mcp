@@ -310,3 +310,17 @@ def test_model_caps_image_input_in_to_dict() -> None:
     d = cap.to_dict()
     assert d["supports_image_input"] is True
     assert d["max_input_images"] == 1
+
+
+def test_model_capabilities_supported_resolutions_default():
+    from image_generation_mcp.providers.capabilities import ModelCapabilities
+
+    cap = ModelCapabilities(model_id="m", display_name="M")
+    assert cap.supported_resolutions == ("standard",)
+    assert cap.to_dict()["supported_resolutions"] == ["standard"]
+
+
+def test_supported_resolutions_vocabulary():
+    from image_generation_mcp.providers.types import SUPPORTED_RESOLUTIONS
+
+    assert SUPPORTED_RESOLUTIONS == ("standard", "high", "max")

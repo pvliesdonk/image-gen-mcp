@@ -182,7 +182,8 @@ class TestDiscoverGptImage2Fields:
         assert "webp" in m.supported_formats
         assert "standard" in m.supported_qualities
         assert "hd" in m.supported_qualities
-        assert m.max_resolution == 1536
+        assert m.max_resolution == 3840
+        assert m.supported_resolutions == ("standard", "high", "max")
         assert m.style_profile is not None
         assert "OpenAI GPT Image 2" in m.style_profile.label
 

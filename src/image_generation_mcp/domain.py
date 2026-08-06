@@ -97,6 +97,7 @@ class ImageRecord:
     negative_prompt: str | None
     aspect_ratio: str
     quality: str
+    resolution: str
     original_dimensions: tuple[int, int]
     provider_metadata: dict[
         str, Any
@@ -135,6 +136,7 @@ class _PersistMeta:
     negative_prompt: str | None
     aspect_ratio: str
     quality: str
+    resolution: str
     background: str  # persisted to the sidecar only; not a field on ImageRecord
     provider_metadata: dict[str, Any]
     source_image_ids: list[str]
@@ -164,6 +166,7 @@ class PendingGeneration:
     negative_prompt: str | None = None
     aspect_ratio: str = "1:1"
     quality: str = "standard"
+    resolution: str = "standard"
     background: str = "opaque"
     model: str | None = None
     status: str = "generating"  # "generating", "completed", "failed"
@@ -504,6 +507,7 @@ class ImageService:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -519,6 +523,8 @@ class ImageService:
             negative_prompt: Things to avoid in the image.
             aspect_ratio: Desired aspect ratio.
             quality: Quality level.
+            resolution: Requested resolution tier. Passed through to the
+                provider, which may clamp it to a lower delivered tier.
             background: Background transparency (``opaque``, ``transparent``).
                 Provider support varies.
             model: Specific model to use (e.g., a checkpoint name for SD WebUI,
@@ -568,6 +574,7 @@ class ImageService:
             negative_prompt=negative_prompt,
             aspect_ratio=aspect_ratio,
             quality=quality,
+            resolution=resolution,
             background=background,
             model=model,
             reference_images=reference_images,
@@ -599,6 +606,7 @@ class ImageService:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
     ) -> PendingGeneration:
@@ -611,6 +619,7 @@ class ImageService:
             negative_prompt: Negative prompt (if any).
             aspect_ratio: Requested aspect ratio.
             quality: Requested quality level.
+            resolution: Requested resolution tier.
             background: Requested background mode.
             model: Specific model to use.
 
@@ -624,6 +633,7 @@ class ImageService:
             negative_prompt=negative_prompt,
             aspect_ratio=aspect_ratio,
             quality=quality,
+            resolution=resolution,
             background=background,
             model=model,
         )
@@ -706,6 +716,7 @@ class ImageService:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         image_id: str | None = None,
         source_image_ids: list[str] | None = None,
@@ -722,6 +733,10 @@ class ImageService:
             negative_prompt: Things to avoid (if any).
             aspect_ratio: Requested aspect ratio.
             quality: Requested quality level.
+            resolution: Requested resolution tier. The persisted record
+                reflects the *delivered* tier reported by the provider in
+                ``result.provider_metadata["resolution"]`` when present,
+                falling back to this requested value otherwise.
             background: Requested background transparency.
             image_id: Pre-allocated image ID (from :meth:`allocate_image_id`).
                 If ``None``, a content-addressed ID is derived from the
@@ -729,11 +744,17 @@ class ImageService:
             source_image_ids: IDs of source images this was derived from.
 
         Returns:
-            The created ImageRecord.
+            The created ImageRecord. Its ``resolution`` field reflects the
+            delivered tier from ``result.provider_metadata["resolution"]``
+            when the provider set one, falling back to the requested
+            ``resolution`` otherwise.
         """
         # Use pre-allocated ID or derive from content
         if image_id is None:
             image_id = hashlib.sha256(result.image_data).hexdigest()[:12]
+        effective_resolution = str(
+            result.provider_metadata.get("resolution", resolution)
+        )
         return self._persist_image(
             image_id=image_id,
             data=result.image_data,
@@ -744,6 +765,7 @@ class ImageService:
                 negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 quality=quality,
+                resolution=effective_resolution,
                 background=background,
                 provider_metadata=result.provider_metadata,
                 source_image_ids=list(source_image_ids or []),
@@ -797,6 +819,7 @@ class ImageService:
                 negative_prompt=None,
                 aspect_ratio="",
                 quality="",
+                resolution="",
                 background="opaque",
                 provider_metadata={},
                 source_image_ids=[],
@@ -837,6 +860,7 @@ class ImageService:
             negative_prompt=meta.negative_prompt,
             aspect_ratio=meta.aspect_ratio,
             quality=meta.quality,
+            resolution=meta.resolution,
             original_dimensions=original_dimensions,
             provider_metadata=meta.provider_metadata,
             created_at=time.time(),
@@ -854,6 +878,7 @@ class ImageService:
             "provider": record.provider,
             "aspect_ratio": record.aspect_ratio,
             "quality": record.quality,
+            "resolution": record.resolution,
             "background": meta.background,
             "content_type": record.content_type,
             "original_filename": original_filename,
@@ -1122,6 +1147,7 @@ class ImageService:
                     negative_prompt=data.get("negative_prompt"),
                     aspect_ratio=data.get("aspect_ratio", "1:1"),
                     quality=data.get("quality", "standard"),
+                    resolution=data.get("resolution", "standard"),
                     original_dimensions=tuple(data["original_dimensions"]),
                     provider_metadata=data.get("provider_metadata", {}),
                     created_at=created_at,

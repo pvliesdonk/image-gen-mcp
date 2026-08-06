@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from image_generation_mcp.providers.gemini import (
     _ASPECT_RATIOS,
+    _RESOLUTION_CAPS_BY_MODEL,
     _THINKING_MODELS,
     GeminiImageProvider,
 )
@@ -17,6 +19,55 @@ from image_generation_mcp.providers.types import (
     ImageProviderConnectionError,
     ImageProviderError,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+
+def _make_provider_without_network() -> GeminiImageProvider:
+    """Construct a ``GeminiImageProvider`` without a real Gemini client.
+
+    Patches ``_create_client`` (the same seam ``conftest._mock_genai`` uses)
+    so construction needs neither real credentials nor connectivity.
+    """
+    with patch(
+        "image_generation_mcp.providers.gemini.GeminiImageProvider._create_client"
+    ):
+        return GeminiImageProvider(api_key="AIza-test")
+
+
+@pytest.fixture
+def gemini_provider_and_mock() -> Generator[
+    tuple[GeminiImageProvider, MagicMock], None, None
+]:
+    """Provider with a mocked client but the real ``google.genai.types`` module.
+
+    Unlike the class-level ``_mock_genai`` fixture (which replaces
+    ``google.genai`` itself with ``MagicMock`` objects), this fixture keeps
+    the real SDK types so the ``GenerateContentConfig``/``ImageConfig``
+    objects built by ``generate()`` carry real attribute values — needed to
+    assert ``config.image_config.image_size`` directly rather than only the
+    constructor call kwargs.
+    """
+    fake_image_bytes = b"fake-png-data"
+    mock_inline = MagicMock()
+    mock_inline.data = fake_image_bytes
+    mock_inline.mime_type = "image/png"
+    mock_part = MagicMock()
+    mock_part.inline_data = mock_inline
+    mock_response = MagicMock()
+    mock_response.parts = [mock_part]
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+
+    with patch(
+        "image_generation_mcp.providers.gemini.GeminiImageProvider._create_client",
+        return_value=mock_client,
+    ):
+        provider = GeminiImageProvider(api_key="AIza-test")
+
+    yield provider, mock_client
 
 
 @pytest.mark.usefixtures("_mock_genai")
@@ -81,7 +132,11 @@ class TestGeminiProvider:
         assert result.provider_metadata["quality"] == "standard"
 
     async def test_generate_hd_quality(self) -> None:
-        """hd quality on a thinking model enables thinking, 2K, and TEXT+IMAGE."""
+        """hd quality on a thinking model enables thinking and TEXT+IMAGE.
+
+        Resolution is independent of quality (see test_gemini_provider.py's
+        module-level resolution tests) — hd no longer implies 2K.
+        """
         provider = GeminiImageProvider(
             api_key="AIza-test", model="gemini-3.1-flash-image"
         )
@@ -120,10 +175,10 @@ class TestGeminiProvider:
             thinking_level=types.ThinkingLevel.HIGH
         )
 
-        # image_size should be 2K
+        # image_size follows resolution (default "standard" -> 1K), not quality
         types.ImageConfig.assert_called_once()
         image_config_kwargs = types.ImageConfig.call_args.kwargs
-        assert image_config_kwargs["image_size"] == "2K"
+        assert image_config_kwargs["image_size"] == "1K"
 
     async def test_generate_standard_quality_config(self) -> None:
         """standard quality uses IMAGE-only, 1K, no thinking."""
@@ -194,8 +249,9 @@ class TestGeminiProvider:
         # thinking_config should be None since model doesn't support it
         assert config_kwargs["thinking_config"] is None
 
+        # image_size follows resolution (default "standard" -> 1K), not quality
         image_config_kwargs = types.ImageConfig.call_args.kwargs
-        assert image_config_kwargs["image_size"] == "2K"
+        assert image_config_kwargs["image_size"] == "1K"
 
     async def test_thinking_models_set(self) -> None:
         """Verify the thinking models set is correct."""
@@ -574,3 +630,143 @@ class TestGeminiProvider:
             await provider.generate(
                 "x", mask=InputImage(data=b"m", content_type="image/png")
             )
+
+
+async def test_gemini_resolution_max_maps_to_4k(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    # provider default model gemini-3.1-flash-image supports full range
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", resolution="max")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "4K"
+    assert result.provider_metadata["resolution"] == "max"
+
+
+async def test_gemini_resolution_high_maps_to_2k(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", resolution="high")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "2K"
+    assert result.provider_metadata["resolution"] == "high"
+
+
+async def test_gemini_resolution_independent_of_quality(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", quality="standard", resolution="max")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "4K"
+    # quality="standard" => no thinking
+    assert config.thinking_config is None
+    assert result.provider_metadata["resolution"] == "max"
+
+
+async def test_gemini_hd_quality_and_high_resolution_coexist(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    """quality and resolution are independent axes that must both take effect.
+
+    The default model (gemini-3.1-flash-image) is both thinking-capable and
+    full-range, so quality="hd" (-> thinking on) and resolution="high"
+    (-> 2K) must coexist rather than one clobbering the other.
+    """
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", quality="hd", resolution="high")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "2K"
+    assert config.thinking_config is not None
+    assert result.provider_metadata["resolution"] == "high"
+
+
+async def test_gemini_clamps_on_1k_only_model(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate(
+        "x", model="gemini-2.5-flash-image", resolution="max"
+    )
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "1K"
+    assert result.provider_metadata["resolution"] == "standard"
+    assert "resolution_clamped" in caplog.text
+
+
+async def test_gemini_clamps_to_intermediate_tier(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The clamp picks the highest tier a model supports, not just standard.
+
+    Locks the rank-based selection (ranked by the authoritative
+    SUPPORTED_RESOLUTIONS order): a model that supports an intermediate
+    range (standard + high, but not max) must clamp a "max" request down to
+    "high", not all the way to "standard".
+    """
+    monkeypatch.setitem(
+        _RESOLUTION_CAPS_BY_MODEL,
+        "gemini-test-intermediate",
+        (("standard", "high"), 2048),
+    )
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate(
+        "x", model="gemini-test-intermediate", resolution="max"
+    )
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "2K"
+    assert result.provider_metadata["resolution"] == "high"
+
+
+async def test_gemini_clamp_is_provably_downward_on_gapped_set(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The clamp never picks a tier ABOVE the requested one, even on a gap.
+
+    A model supporting a non-contiguous set like ("standard", "max") --
+    "high" is absent -- must clamp a "high" request DOWN to "standard", the
+    highest supported tier that does not exceed the requested rank. The old
+    global-max(model_resolutions) selection would have picked "max" here
+    (the globally highest supported tier), clamping UP and violating the
+    "clamp down, never up" contract documented in types.py/tools.py.
+    """
+    monkeypatch.setitem(
+        _RESOLUTION_CAPS_BY_MODEL,
+        "gemini-test-gapped",
+        (("standard", "max"), 3840),
+    )
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate("x", model="gemini-test-gapped", resolution="high")
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "1K"
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_gemini_unknown_model_fails_closed(
+    gemini_provider_and_mock: tuple[GeminiImageProvider, MagicMock],
+) -> None:
+    provider, mock_client = gemini_provider_and_mock
+    result = await provider.generate(
+        "x", model="gemini-9-future-image", resolution="max"
+    )
+    config = mock_client.aio.models.generate_content.call_args.kwargs["config"]
+    assert config.image_config.image_size == "1K"
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_gemini_capabilities_resolution_per_model() -> None:
+    provider = _make_provider_without_network()
+    caps = await provider.discover_capabilities()
+    by_id = {m.model_id: m for m in caps.models}
+    assert by_id["gemini-3-pro-image"].supported_resolutions == (
+        "standard",
+        "high",
+        "max",
+    )
+    assert by_id["gemini-3-pro-image"].max_resolution == 3840
+    assert by_id["gemini-2.5-flash-image"].supported_resolutions == ("standard",)
+    assert by_id["gemini-2.5-flash-image"].max_resolution == 1024

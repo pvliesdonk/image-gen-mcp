@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -163,6 +164,91 @@ class TestSdWebuiProvider:
         assert result.content_type == "image/png"
         assert result.provider_metadata["seed"] == 42
         assert result.provider_metadata["steps"] == 30
+
+    async def test_generate_accepts_and_ignores_resolution(self, httpx_mock) -> None:
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        response_data = {
+            "images": [b64_image],
+            "info": json.dumps({"seed": 42, "sd_model_name": "dreamshaper_8"}),
+        }
+
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json=response_data,
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        result = await provider.generate("a cat, masterpiece", resolution="high")
+
+        assert result.image_data == b"fake-png-data"
+        assert result.content_type == "image/png"
+
+    async def test_generate_reports_standard_delivered_resolution(
+        self, httpx_mock
+    ) -> None:
+        """SD WebUI always delivers 'standard', regardless of the request.
+
+        It has no higher tier, so it must report its always-delivered tier in
+        provider_metadata rather than silently defaulting to the requested
+        one.
+        """
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        response_data = {
+            "images": [b64_image],
+            "info": json.dumps({"seed": 42, "sd_model_name": "dreamshaper_8"}),
+        }
+
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json=response_data,
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        result = await provider.generate("a cat, masterpiece", resolution="max")
+
+        assert result.provider_metadata["resolution"] == "standard"
+
+    async def test_generate_logs_resolution_clamped_at_warning(
+        self, httpx_mock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A non-standard resolution request logs the downgrade at WARNING.
+
+        Uses the unified cross-provider format -- identical to gemini's and
+        openai's resolution_clamped WARNING -- since SD WebUI is a real
+        generation path where a silently dropped tier is an operator-facing
+        degradation, not an internal test-provider detail (contrast
+        placeholder, which stays DEBUG by design).
+        """
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json={"images": [b64_image], "info": "{}"},
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        with caplog.at_level(logging.WARNING):
+            await provider.generate("a cat, masterpiece", resolution="max")
+
+        assert (
+            "resolution_clamped provider=sd_webui model=None "
+            "requested=max effective=standard" in caplog.text
+        )
+
+    async def test_generate_does_not_log_for_standard_resolution(
+        self, httpx_mock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """No downgrade log fires when the requested tier is already 'standard'."""
+        b64_image = base64.b64encode(b"fake-png-data").decode()
+        httpx_mock.post(
+            "http://localhost:7860/sdapi/v1/txt2img",
+            json={"images": [b64_image], "info": "{}"},
+        )
+
+        provider = SdWebuiImageProvider(host="http://localhost:7860")
+        with caplog.at_level(logging.WARNING):
+            await provider.generate("a cat, masterpiece", resolution="standard")
+
+        assert "resolution_clamped" not in caplog.text
 
     async def test_generate_with_model_override(self, httpx_mock) -> None:
         b64_image = base64.b64encode(b"data").decode()

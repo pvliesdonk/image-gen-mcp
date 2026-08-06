@@ -30,6 +30,10 @@ class ModelCapabilities:
         supports_mask: Supports inpainting masks (an alpha-channel mask image).
         supported_aspect_ratios: Aspect ratio strings this model accepts.
         supported_qualities: Quality level strings this model accepts.
+        supported_resolutions: Resolution tiers this model actually honors
+            beyond ``"standard"``. Most models are ``("standard",)`` --
+            ``"high"``/``"max"`` are silent no-ops. Independent of
+            ``max_resolution``: do not derive one from the other.
         supported_formats: Output format strings (e.g., ``"png"``, ``"webp"``).
         supports_negative_prompt: Accepts negative prompt parameter.
         supports_background: Supports background transparency control.
@@ -62,6 +66,7 @@ class ModelCapabilities:
     supports_mask: bool = False
     supported_aspect_ratios: tuple[str, ...] = ()
     supported_qualities: tuple[str, ...] = ()
+    supported_resolutions: tuple[str, ...] = ("standard",)
     supported_formats: tuple[str, ...] = ()
     supports_negative_prompt: bool = False
     supports_background: bool = False
@@ -89,6 +94,7 @@ class ModelCapabilities:
             "supports_mask": self.supports_mask,
             "supported_aspect_ratios": list(self.supported_aspect_ratios),
             "supported_qualities": list(self.supported_qualities),
+            "supported_resolutions": list(self.supported_resolutions),
             "supported_formats": list(self.supported_formats),
             "supports_negative_prompt": self.supports_negative_prompt,
             "supports_background": self.supports_background,

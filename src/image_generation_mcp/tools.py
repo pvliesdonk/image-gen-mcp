@@ -68,6 +68,7 @@ from .providers.types import (
     SUPPORTED_ASPECT_RATIOS,
     SUPPORTED_BACKGROUNDS,
     SUPPORTED_QUALITY_LEVELS,
+    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageProviderConnectionError,
     ImageProviderError,
@@ -192,6 +193,7 @@ def _start_background_generation(
     negative_prompt: str | None,
     aspect_ratio: str,
     quality: str,
+    resolution: str,
     background: str,
     model: str | None,
     reference_images: Sequence[InputImage] | None = None,
@@ -214,6 +216,9 @@ def _start_background_generation(
         negative_prompt: Things to avoid in the image, or ``None``.
         aspect_ratio: Desired aspect ratio (e.g. ``"1:1"``).
         quality: Quality level (``"standard"`` or ``"hd"``).
+        resolution: Output size tier (``"standard"``, ``"high"``, or
+            ``"max"``). Passed through to the provider, which may clamp it
+            to a lower delivered tier.
         background: Background transparency (``"opaque"`` or ``"transparent"``).
         model: Specific model override, or ``None``.
         reference_images: Optional reference images for image-to-image tasks.
@@ -235,6 +240,7 @@ def _start_background_generation(
         negative_prompt=negative_prompt,
         aspect_ratio=aspect_ratio,
         quality=quality,
+        resolution=resolution,
         background=background,
         model=model,
     )
@@ -259,6 +265,7 @@ def _start_background_generation(
                 negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 quality=quality,
+                resolution=resolution,
                 background=background,
                 model=model,
                 reference_images=reference_images,
@@ -274,6 +281,7 @@ def _start_background_generation(
                 negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 quality=quality,
+                resolution=resolution,
                 background=background,
                 image_id=image_id,
                 source_image_ids=source_image_ids or [],
@@ -378,6 +386,7 @@ def register_tools(mcp: FastMCP) -> None:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         service: ImageService = Depends(get_service),
@@ -437,9 +446,21 @@ def register_tools(mcp: FastMCP) -> None:
                 (``3:4``, ``4:3``, ``4:1``, ``1:4``, etc.).
             quality: Quality level. ``"standard"`` uses default settings
                 (fast, lower cost). ``"hd"`` enables higher quality:
-                on **Gemini**, activates model reasoning (thinking) and
-                2K resolution; on **OpenAI**, selects the ``"high"``
-                quality tier. SD WebUI and placeholder ignore this.
+                on **Gemini**, activates model reasoning (thinking),
+                which plans composition before rendering; on **OpenAI**,
+                selects the ``"high"`` quality tier. SD WebUI and
+                placeholder ignore this. Independent of ``resolution``,
+                which controls output size.
+            resolution: Output size tier. ``"standard"`` (default) uses
+                each provider's normal size. ``"high"`` and ``"max"``
+                unlock higher resolutions where supported: on Gemini, 2K
+                and 4K (independent of quality) except the 1K-only
+                gemini-3.1-flash-lite-image and gemini-2.5-flash-image,
+                which clamp down to 1K; on OpenAI, only gpt-image-2 goes
+                beyond standard (up to 4K) for print output. Every other
+                model ignores this. Check supported_resolutions in
+                list_providers before relying on high/max for a specific
+                model.
             background: Background transparency. ``"opaque"`` (default)
                 generates a solid background. ``"transparent"`` requests
                 an image with a transparent background. Supported by
@@ -467,6 +488,12 @@ def register_tools(mcp: FastMCP) -> None:
             msg = (
                 f"Unsupported quality '{quality}'. "
                 f"Supported: {list(SUPPORTED_QUALITY_LEVELS)}"
+            )
+            raise ValueError(msg)
+        if resolution not in SUPPORTED_RESOLUTIONS:
+            msg = (
+                f"Unsupported resolution '{resolution}'. "
+                f"Supported: {list(SUPPORTED_RESOLUTIONS)}"
             )
             raise ValueError(msg)
         if background not in SUPPORTED_BACKGROUNDS:
@@ -500,6 +527,7 @@ def register_tools(mcp: FastMCP) -> None:
             negative_prompt=negative_prompt,
             aspect_ratio=aspect_ratio,
             quality=quality,
+            resolution=resolution,
             background=background,
             model=model,
         )
@@ -564,6 +592,7 @@ def register_tools(mcp: FastMCP) -> None:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         strength: float | None = None,
@@ -613,7 +642,18 @@ def register_tools(mcp: FastMCP) -> None:
             negative_prompt: Things to avoid in the result (provider
                 support varies).
             aspect_ratio: Desired aspect ratio of the output image.
-            quality: ``"standard"`` or ``"hd"``.
+            quality: ``"standard"`` or ``"hd"``. Independent of
+                ``resolution``, which controls output size.
+            resolution: Output size tier. ``"standard"`` (default) uses
+                each provider's normal size. ``"high"`` and ``"max"``
+                unlock higher resolutions where supported: on Gemini, 2K
+                and 4K (independent of quality) except the 1K-only
+                gemini-3.1-flash-lite-image and gemini-2.5-flash-image,
+                which clamp down to 1K; on OpenAI, only gpt-image-2 goes
+                beyond standard (up to 4K) for print output. Every other
+                model ignores this. Check supported_resolutions in
+                list_providers before relying on high/max for a specific
+                model.
             background: ``"opaque"`` or ``"transparent"``
                 (provider-dependent).
             model: Specific model id; see ``list_providers``.
@@ -644,6 +684,12 @@ def register_tools(mcp: FastMCP) -> None:
             msg = (
                 f"Unsupported quality '{quality}'. "
                 f"Supported: {list(SUPPORTED_QUALITY_LEVELS)}"
+            )
+            raise ValueError(msg)
+        if resolution not in SUPPORTED_RESOLUTIONS:
+            msg = (
+                f"Unsupported resolution '{resolution}'. "
+                f"Supported: {list(SUPPORTED_RESOLUTIONS)}"
             )
             raise ValueError(msg)
         if background not in SUPPORTED_BACKGROUNDS:
@@ -808,6 +854,7 @@ def register_tools(mcp: FastMCP) -> None:
             negative_prompt=negative_prompt,
             aspect_ratio=aspect_ratio,
             quality=quality,
+            resolution=resolution,
             background=background,
             model=model,
             reference_images=resolved,

@@ -770,6 +770,68 @@ class TestGenerateImageParameterValidation:
 
 
 # ---------------------------------------------------------------------------
+# generate_image — resolution parameter
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateImageResolutionParameter:
+    """generate_image validates and threads the resolution parameter."""
+
+    async def _call_generate(
+        self, service: ImageService, *, resolution: str = "standard"
+    ) -> ToolResult:
+        mcp = FastMCP("test")
+        register_tools(mcp)
+        tool = await mcp.get_tool("generate_image")
+        assert tool is not None
+
+        ctx = MagicMock()
+        ctx.report_progress = AsyncMock()
+        cfg = MagicMock()
+        cfg.paid_providers = frozenset()
+
+        return await tool.fn(
+            prompt="test image",
+            provider="placeholder",
+            resolution=resolution,
+            service=service,
+            config=cfg,
+            ctx=ctx,
+        )
+
+    async def test_invalid_resolution_raises(self, service: ImageService) -> None:
+        """Unsupported resolution tier raises ValueError."""
+        with pytest.raises(ValueError, match="Unsupported resolution"):
+            await self._call_generate(service, resolution="ultra")
+
+    async def test_valid_resolution_threads_to_persisted_record(
+        self, service: ImageService
+    ) -> None:
+        """resolution='high' reaches service.generate/register_image via
+        _start_background_generation and completes successfully.
+
+        The persisted record reflects the DELIVERED tier reported by the
+        provider (via ``provider_metadata["resolution"]``), not necessarily
+        the requested one. The placeholder provider has no higher tier than
+        "standard", so it reports "standard" as delivered even though
+        "high" was requested -- see providers/placeholder.py.
+        """
+        result = await self._call_generate(service, resolution="high")
+        text_items = [c for c in result.content if isinstance(c, TextContent)]
+        image_id = json.loads(text_items[0].text)["image_id"]
+
+        pending = None
+        for _ in range(100):
+            pending = service.get_pending(image_id)
+            if pending and pending.status in ("completed", "failed"):
+                break
+            await asyncio.sleep(0.02)
+
+        assert pending is not None and pending.status == "completed"
+        assert service.get_image(image_id).resolution == "standard"
+
+
+# ---------------------------------------------------------------------------
 # generate_image — error handling (content policy, connection)
 # ---------------------------------------------------------------------------
 
@@ -1517,6 +1579,74 @@ class TestTransformImageTool:
         # reference_images[0] is an InputImage; verify its source_id matches
         assert reference_images[0].source_id == source_image_id
 
+    async def test_transform_image_threads_resolution_to_generate(
+        self, tmp_path: Path
+    ) -> None:
+        """resolution parameter reaches service.generate with the requested tier."""
+        svc = ImageService(scratch_dir=tmp_path)
+        provider = PlaceholderImageProvider()
+        svc.register_provider("placeholder", provider)
+
+        svc._capabilities["placeholder"] = ProviderCapabilities(
+            provider_name="placeholder",
+            models=(
+                ModelCapabilities(
+                    model_id="placeholder",
+                    display_name="Placeholder",
+                    supports_image_input=True,
+                    max_input_images=4,
+                ),
+            ),
+            discovered_at=1000.0,
+        )
+
+        src_result = await provider.generate("source image", aspect_ratio="1:1")
+        src_record = svc.register_image(
+            src_result, "placeholder", prompt="source image"
+        )
+        source_image_id = src_record.id
+
+        stub_result = await provider.generate("make it blue", aspect_ratio="1:1")
+
+        async def _fake_generate(
+            *_args: object, **_kwargs: object
+        ) -> tuple[str, ImageResult]:
+            return "placeholder", stub_result
+
+        mock_generate = AsyncMock(side_effect=_fake_generate)
+        svc.generate = mock_generate  # type: ignore[assignment]
+
+        mcp = FastMCP("test")
+        register_tools(mcp)
+        tool = await mcp.get_tool("transform_image")
+        assert tool is not None
+
+        ctx = await self._make_ctx()
+        cfg = await self._make_cfg()
+
+        result = await tool.fn(
+            prompt="make it blue",
+            reference_images=[source_image_id],
+            provider="placeholder",
+            resolution="high",
+            service=svc,
+            config=cfg,
+            ctx=ctx,
+        )
+        text_items = [c for c in result.content if isinstance(c, TextContent)]
+        image_id = json.loads(text_items[0].text)["image_id"]
+
+        pending = None
+        for _ in range(100):
+            pending = svc.get_pending(image_id)
+            if pending and pending.status in ("completed", "failed"):
+                break
+            await asyncio.sleep(0.02)
+
+        assert pending is not None and pending.status == "completed"
+        assert mock_generate.await_count >= 1
+        assert mock_generate.call_args.kwargs["resolution"] == "high"
+
     async def test_transform_image_auto_routes_to_capable_provider(
         self, tmp_path: Path
     ) -> None:
@@ -1854,6 +1984,7 @@ class TestTransformImageTool:
         [
             ("aspect_ratio", "5:4", "Unsupported aspect_ratio"),
             ("quality", "ultra", "Unsupported quality"),
+            ("resolution", "ultra", "Unsupported resolution"),
             ("background", "blurred", "Unsupported background"),
         ],
     )

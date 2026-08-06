@@ -283,6 +283,7 @@ class SdWebuiImageProvider:
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # noqa: ARG002
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -301,6 +302,11 @@ class SdWebuiImageProvider:
             negative_prompt: Negative prompt (natively supported by SD).
             aspect_ratio: Desired aspect ratio.
             quality: Ignored — SD quality is controlled by steps/cfg.
+            resolution: Ignored. This provider offers no higher-resolution
+                tier; it always renders at the checkpoint/preset size for the
+                requested aspect ratio and reports ``"resolution":
+                "standard"`` in provider metadata regardless of the
+                requested tier.
             background: Ignored — SD WebUI does not support background
                 transparency control.
             model: Specific checkpoint name to use for this call. Overrides
@@ -338,6 +344,14 @@ class SdWebuiImageProvider:
         if background != "opaque":
             logger.debug(
                 "SD WebUI does not support background transparency control, ignoring"
+            )
+        if resolution != "standard":
+            logger.warning(
+                "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                "sd_webui",
+                effective_model,
+                resolution,
+                "standard",
             )
 
         payload, width, height = self._build_payload(
@@ -444,6 +458,10 @@ class SdWebuiImageProvider:
             "size": f"{width}x{height}",
             "steps": effective_preset.steps,
             "prompt_style": effective_preset.prompt_style,
+            # Always-delivered tier: SD WebUI has no higher tier, so it
+            # reports "standard" regardless of the requested resolution to
+            # keep the delivered-tier contract truthful.
+            "resolution": "standard",
         }
         if seed is not None:
             metadata["seed"] = seed

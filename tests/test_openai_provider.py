@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import base64
+import logging
+import math
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from image_generation_mcp.providers.openai import (
+    _ARBITRARY_SIZE_MODELS,
     _DALLE3_SIZES,
     _GPT_IMAGE_SIZES,
     OpenAIImageProvider,
@@ -21,6 +25,9 @@ from image_generation_mcp.providers.types import (
     InputImage,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 
 @pytest.fixture
 def _mock_openai():
@@ -29,6 +36,95 @@ def _mock_openai():
         "image_generation_mcp.providers.openai.OpenAIImageProvider._create_client"
     ):
         yield
+
+
+def _openai_mock_response(b64: str = "aGk=") -> MagicMock:
+    """Build a mock ``images.generate``/``images.edit`` response."""
+    item = MagicMock()
+    item.b64_json = b64
+    item.revised_prompt = None
+    resp = MagicMock()
+    resp.data = [item]
+    return resp
+
+
+def _openai_provider_and_mock(
+    model: str,
+) -> Generator[tuple[OpenAIImageProvider, MagicMock], None, None]:
+    """Yield a provider for ``model`` with mocked ``images.generate``/``.edit``."""
+    mock_client = MagicMock()
+    mock_client.images.generate = AsyncMock(return_value=_openai_mock_response())
+    mock_client.images.edit = AsyncMock(return_value=_openai_mock_response())
+
+    with patch(
+        "image_generation_mcp.providers.openai.OpenAIImageProvider._create_client",
+        return_value=mock_client,
+    ):
+        provider = OpenAIImageProvider(api_key="sk-test", model=model)
+
+    yield provider, mock_client
+
+
+@pytest.fixture
+def openai_gpt2_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=gpt-image-2) with mocked ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("gpt-image-2")
+
+
+@pytest.fixture
+def openai_gpt1_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=gpt-image-1) with mocked ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("gpt-image-1")
+
+
+@pytest.fixture
+def openai_gpt2_dated_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=gpt-image-2-2026-04-21, the dated alias) with mocked
+    ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("gpt-image-2-2026-04-21")
+
+
+@pytest.fixture
+def openai_dalle3_provider_and_mock() -> Generator[
+    tuple[OpenAIImageProvider, MagicMock], None, None
+]:
+    """Provider (model=dall-e-3) with mocked ``images.generate``/``.edit``."""
+    yield from _openai_provider_and_mock("dall-e-3")
+
+
+@pytest.fixture
+def openai_discovery_mock() -> Generator[OpenAIImageProvider, None, None]:
+    """Provider whose mocked ``models.list()`` reports every known image model."""
+    mock_client = MagicMock()
+    model_items = [
+        MagicMock(id=model_id)
+        for model_id in (
+            "gpt-image-1",
+            "gpt-image-1-mini",
+            "gpt-image-1.5",
+            "gpt-image-2",
+            "chatgpt-image-latest",
+            "dall-e-3",
+            "dall-e-2",
+        )
+    ]
+    mock_response = MagicMock()
+    mock_response.data = model_items
+    mock_client.models.list = AsyncMock(return_value=mock_response)
+
+    with patch(
+        "image_generation_mcp.providers.openai.OpenAIImageProvider._create_client",
+        return_value=mock_client,
+    ):
+        provider = OpenAIImageProvider(api_key="sk-test")
+
+    yield provider
 
 
 @pytest.mark.usefixtures("_mock_openai")
@@ -673,4 +769,201 @@ class TestOpenAIEdit:
             await provider.generate(
                 "txt2img with a stray mask",
                 mask=InputImage(data=b"msk", content_type="image/png"),
+            )
+
+
+def _parse(size: str) -> tuple[int, int]:
+    w, h = size.split("x")
+    return int(w), int(h)
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "high",
+        "max",
+    ],
+)
+def test_gpt_image_2_tables_satisfy_constraints(table: str) -> None:
+    from image_generation_mcp.providers.openai import (
+        _GPT_IMAGE_2_HIGH_SIZES,
+        _GPT_IMAGE_2_MAX_SIZES,
+    )
+
+    sizes = _GPT_IMAGE_2_HIGH_SIZES if table == "high" else _GPT_IMAGE_2_MAX_SIZES
+    exact = {"1:1": 1.0, "16:9": 16 / 9, "9:16": 9 / 16, "3:2": 3 / 2, "2:3": 2 / 3}
+    for ratio, size in sizes.items():
+        w, h = _parse(size)
+        assert w % 16 == 0 and h % 16 == 0, f"{ratio} not /16"
+        assert max(w, h) <= 3840, f"{ratio} edge >3840"
+        assert 655_360 <= w * h <= 8_294_400, f"{ratio} px out of range"
+        assert max(w, h) / min(w, h) <= 3.0 + 1e-9, f"{ratio} ratio >3:1"
+        assert math.isclose(w / h, exact[ratio], rel_tol=1e-9), f"{ratio} not exact"
+
+
+async def test_gpt_image_2_max_selects_max_table(
+    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    provider, mock = openai_gpt2_provider_and_mock
+    result = await provider.generate("x", aspect_ratio="16:9", resolution="max")
+    assert mock.images.generate.call_args.kwargs["size"] == "3840x2160"
+    assert result.provider_metadata["resolution"] == "max"
+
+
+async def test_gpt_image_2_high_selects_high_table(
+    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    provider, mock = openai_gpt2_provider_and_mock
+    result = await provider.generate("x", aspect_ratio="1:1", resolution="high")
+    assert mock.images.generate.call_args.kwargs["size"] == "1920x1920"
+    assert result.provider_metadata["resolution"] == "high"
+
+
+async def test_non_gpt_image_2_ignores_resolution(
+    openai_gpt1_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    provider, mock = openai_gpt1_provider_and_mock  # model gpt-image-1
+    result = await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert mock.images.generate.call_args.kwargs["size"] == "1024x1024"
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_non_gpt_image_2_logs_resolution_clamped_at_warning(
+    openai_gpt1_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A dropped tier request on a non-arbitrary-size model logs at WARNING.
+
+    WARNING mirrors Gemini's resolution_clamped log (both are paid,
+    tier-capable providers where a silent downgrade is worth flagging).
+    """
+    provider, _mock = openai_gpt1_provider_and_mock  # model gpt-image-1
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert (
+        "resolution_clamped provider=openai model=gpt-image-1 "
+        "requested=max effective=standard" in caplog.text
+    )
+
+
+async def test_gpt_image_2_does_not_log_resolution_clamped(
+    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """gpt-image-2 honors high/max natively, so no downgrade is logged."""
+    provider, _mock = openai_gpt2_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert "resolution_clamped" not in caplog.text
+
+
+async def test_non_gpt_image_2_does_not_log_for_standard_resolution(
+    openai_gpt1_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No downgrade log fires when the requested tier is already 'standard'."""
+    provider, _mock = openai_gpt1_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="standard")
+    assert "resolution_clamped" not in caplog.text
+
+
+async def test_dalle3_logs_resolution_clamped_at_warning(
+    openai_dalle3_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """dall-e-3 has no tier table either -- the else branch must log too.
+
+    Pairs with test_non_gpt_image_2_logs_resolution_clamped_at_warning:
+    that test covers the gpt-image (non-arbitrary-size) branch of
+    _gpt_image_request; this one covers the sibling dall-e (else) branch
+    in generate() itself, which has its own size table and previously had
+    no log at all.
+    """
+    provider, _mock = openai_dalle3_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        result = await provider.generate("x", aspect_ratio="1:1", resolution="max")
+    assert (
+        "resolution_clamped provider=openai model=dall-e-3 "
+        "requested=max effective=standard" in caplog.text
+    )
+    assert result.provider_metadata["resolution"] == "standard"
+
+
+async def test_dalle3_does_not_log_for_standard_resolution(
+    openai_dalle3_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No downgrade log fires on dall-e-3 when the requested tier is 'standard'."""
+    provider, _mock = openai_dalle3_provider_and_mock
+    with caplog.at_level(logging.WARNING):
+        await provider.generate("x", aspect_ratio="1:1", resolution="standard")
+    assert "resolution_clamped" not in caplog.text
+
+
+async def test_gpt_image_2_dated_alias_selects_max_table(
+    openai_gpt2_dated_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    """The dated gpt-image-2-2026-04-21 alias honors high/max like gpt-image-2.
+
+    Guards the "gpt-image-2-2026-04-21 is gpt-image-2's dated snapshot, same
+    sizing behavior" claim in _ARBITRARY_SIZE_MODELS' comment against a
+    future refactor that matches on the bare model name only.
+    """
+    provider, mock = openai_gpt2_dated_provider_and_mock
+    result = await provider.generate("x", aspect_ratio="16:9", resolution="max")
+    assert mock.images.generate.call_args.kwargs["size"] == "3840x2160"
+    assert result.provider_metadata["resolution"] == "max"
+
+
+async def test_gpt_image_2_edit_threads_resolution(
+    openai_gpt2_provider_and_mock: tuple[OpenAIImageProvider, MagicMock],
+) -> None:
+    provider, mock = openai_gpt2_provider_and_mock
+
+    ref = InputImage(data=b"\x89PNG", content_type="image/png")
+    result = await provider.generate(
+        "x", aspect_ratio="16:9", resolution="max", reference_images=[ref]
+    )
+    assert mock.images.edit.call_args.kwargs["size"] == "3840x2160"
+    assert result.provider_metadata["resolution"] == "max"
+
+
+async def test_gpt_image_2_capability_reports_resolutions(
+    openai_discovery_mock: OpenAIImageProvider,
+) -> None:
+    provider = openai_discovery_mock  # discovery returns gpt-image-2 in model list
+    caps = await provider.discover_capabilities()
+    gpt2 = next(m for m in caps.models if m.model_id == "gpt-image-2")
+    assert gpt2.supported_resolutions == ("standard", "high", "max")
+    assert gpt2.max_resolution == 3840
+
+
+async def test_advertised_high_max_implies_arbitrary_size_membership(
+    openai_discovery_mock: OpenAIImageProvider,
+) -> None:
+    """Single-source-of-truth guard: advertised implies deliverable.
+
+    Any discovered model whose supported_resolutions includes "high" or
+    "max" must be in _ARBITRARY_SIZE_MODELS -- the same membership check
+    that governs actual size-table selection at generate time (see
+    _effective_resolution / _gpt_image_request). Prevents
+    discover_capabilities from silently drifting out of sync with the
+    runtime by re-introducing a hand-written high/max literal.
+
+    Deliberately NOT bidirectional: gpt-image-2-2026-04-21 is in
+    _ARBITRARY_SIZE_MODELS by design but has no discovered capability
+    entry of its own (issue #338, out of scope here) -- asserting the
+    reverse direction would wrongly fail on that gap.
+    """
+    provider = openai_discovery_mock
+    caps = await provider.discover_capabilities()
+    for model in caps.models:
+        if (
+            "high" in model.supported_resolutions
+            or "max" in model.supported_resolutions
+        ):
+            assert model.model_id in _ARBITRARY_SIZE_MODELS, (
+                f"{model.model_id} advertises high/max but is not in "
+                "_ARBITRARY_SIZE_MODELS, so generate() cannot deliver it"
             )

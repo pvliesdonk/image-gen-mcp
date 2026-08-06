@@ -102,6 +102,7 @@ class ImageProvider(Protocol):
         negative_prompt: str | None = None,
         aspect_ratio: str = "1:1",
         quality: str = "standard",
+        resolution: str = "standard",
         background: str = "opaque",
         model: str | None = None,
         reference_images: Sequence[InputImage] | None = None,
@@ -116,6 +117,15 @@ class ImageProvider(Protocol):
             negative_prompt: Things to avoid (provider support varies).
             aspect_ratio: Desired aspect ratio (e.g., ``16:9``, ``1:1``).
             quality: Quality level (``standard``, ``hd``).
+            resolution: Output size tier -- ``"standard"``, ``"high"``, or
+                ``"max"``. Independent of ``quality``. Like ``quality`` and
+                ``background``, the tier is validated against the shared
+                :data:`SUPPORTED_RESOLUTIONS` vocabulary once at the MCP
+                tool boundary; providers receive it as valid-by-contract and
+                never re-validate it themselves. A model that cannot honor
+                the requested tier clamps to its best available tier (or
+                no-ops for providers with no higher tier) rather than
+                raising. See :attr:`ModelCapabilities.supported_resolutions`.
             background: Background transparency (``opaque``, ``transparent``).
                 Only supported by some providers.
             model: Specific model to use (e.g., a checkpoint name for SD WebUI,
@@ -163,6 +173,14 @@ SUPPORTED_ASPECT_RATIOS: tuple[str, ...] = ("1:1", "16:9", "9:16", "3:2", "2:3")
 
 SUPPORTED_QUALITY_LEVELS: tuple[str, ...] = ("standard", "hd")
 """Quality levels supported across providers."""
+
+SUPPORTED_RESOLUTIONS: tuple[str, ...] = ("standard", "high", "max")
+"""Resolution tiers accepted as input across providers. ``standard`` is each
+provider's existing default size; ``high``/``max`` unlock higher tiers where a
+model supports them (Gemini 2K/4K; OpenAI gpt-image-2's larger sizes) and are a
+no-op elsewhere. This is the input-*validation* vocabulary; for which specific
+models honor ``high``/``max`` see
+:attr:`~image_generation_mcp.providers.capabilities.ModelCapabilities.supported_resolutions`."""
 
 SUPPORTED_BACKGROUNDS: tuple[str, ...] = ("opaque", "transparent")
 """Background transparency modes supported across providers."""

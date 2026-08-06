@@ -27,6 +27,7 @@ Provider capabilities and supported features.
             "supports_mask": false,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -56,6 +57,7 @@ Provider capabilities and supported features.
             "supports_mask": true,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard", "hd"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png", "jpeg", "webp"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -74,6 +76,7 @@ Provider capabilities and supported features.
   },
   "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
   "supported_quality_levels": ["standard", "hd"],
+  "supported_resolutions": ["standard", "high", "max"],
   "supported_backgrounds": ["opaque", "transparent"]
 }
 ```
@@ -94,7 +97,7 @@ Provider-specific prompt writing guidance for LLM clients. Read this resource to
 
 Markdown document covering:
 
-- **General tips:** aspect ratio selection and quality levels; when and how to use negative prompts
+- **General tips:** aspect ratio selection and quality/resolution tiers; when and how to use negative prompts
 - **OpenAI:** natural-language prompts, style keywords, and text rendering tips
 - **SD WebUI (Stable Diffusion):** CLIP-tag prompting for SD 1.5/SDXL and natural-language prompting for Flux; negative prompts, BREAK syntax, and model-specific advice
 - **Placeholder:** prompt-to-color mapping explanation
