@@ -414,12 +414,20 @@ class GeminiImageProvider:
 
 
 # Per-model resolution ceiling. Only Gemini 3 Pro Image and Gemini 3.1 Flash
-# Image support the full 1K/2K/4K range (ai.google.dev/gemini-api/docs/
-# image-generation attributes multi-resolution output to the Gemini 3 image
-# family). gemini-3.1-flash-lite-image and gemini-2.5-flash-image are 1K-only.
-# Unknown/future models fall back to standard-only (fail closed), matching this
-# file's conservative _DEFAULT_MAX_INPUT_IMAGES stance for undocumented models;
-# a new 4K-capable model is added here explicitly when it ships.
+# Image are listed here as full 1K/2K/4K. ai.google.dev/gemini-api/docs/
+# image-generation attributes multi-resolution output to the "Gemini 3 image
+# family" without a per-model breakdown, so every model not listed below --
+# including gemini-3.1-flash-lite-image and gemini-2.5-flash-image -- falls
+# through to the standard-only fail-closed default, the same conservative
+# stance this file takes for unknown/future models. A model is promoted to
+# full-range only once its higher-tier support is explicitly confirmed and
+# added here.
+# [unverified] Whether the non-listed models (lite, 2.5-flash) support high/max
+# is not separately documented in that source; they are treated as standard-only
+# by the fail-closed default rather than asserted incapable. This is deliberately
+# stricter than the fail-open assumption the sibling _DEFAULT_MAX_INPUT_IMAGES
+# note makes for the same lite model, because delivering an unrequested lower
+# resolution is a safer failure than an unexpected billed 4K generation.
 # [unverified] 1024/3840 are the conventional 1K/4K long-edge pixel figures;
 # ai.google.dev names the tiers without publishing per-tier pixel dimensions.
 _FULL_RANGE_RESOLUTIONS: tuple[str, ...] = ("standard", "high", "max")
