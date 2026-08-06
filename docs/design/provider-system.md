@@ -134,11 +134,16 @@ the first place.
   beyond the always-supported `"standard"`. It is declared independently of
   `max_resolution` (the pixel ceiling); neither is derived from the other.
 - **Clamp, not reject:** requesting a tier a model does not support does not
-  raise. Each provider clamps the request down to the highest tier the
-  resolved model actually supports. Gemini: `GeminiImageProvider.generate()`
-  picks the model's ceiling inline via
-  `max(model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index)`, where
-  `model_resolutions` is the supported-tier tuple returned by
+  raise. Each provider clamps the request down to the highest supported tier
+  that does not exceed the request. Gemini: `GeminiImageProvider.generate()`
+  clamps inline to that tier, ranked by the authoritative
+  `SUPPORTED_RESOLUTIONS` order:
+  `max((t for t in model_resolutions if rank(t) <= rank(resolution)), key=rank)`
+  with `rank = SUPPORTED_RESOLUTIONS.index`. This is provably downward for any
+  `model_resolutions` shape (including a non-contiguous set such as
+  `("standard", "max")`, where a `"high"` request delivers `"standard"`, not
+  `"max"`), and does not depend on `_RESOLUTION_TO_IMAGE_SIZE`'s insertion
+  order. `model_resolutions` is the supported-tier tuple returned by
   `_resolution_capabilities()` (that function only looks up the tuple; it
   does not perform the clamp itself). OpenAI: `_gpt_image_request()` performs
   the size-table clamp for the gpt-image family, falling back to the
@@ -146,7 +151,10 @@ the first place.
   `_ARBITRARY_SIZE_MODELS` (i.e. every gpt-image model except gpt-image-2 and
   its dated alias); the dall-e branch in `generate()` is a separate code path
   that never reads `resolution` for sizing at all, since dall-e has no tier
-  table to begin with. Neither provider's metadata-reporting step performs
+  table to begin with. `_ARBITRARY_SIZE_MODELS` is the single source of truth
+  for OpenAI: a model's advertised `supported_resolutions` is derived from
+  membership in it (via `_supported_resolutions()`), so the capability
+  `list_providers` advertises cannot diverge from what `generate()` delivers. Neither provider's metadata-reporting step performs
   the clamp itself: Gemini reuses the `effective_resolution` local variable
   the clamp above already computed, and OpenAI's `_effective_resolution()`
   is a separate, clamp-free helper that only *reports* the delivered tier
