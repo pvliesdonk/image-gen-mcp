@@ -1225,6 +1225,48 @@ class TestToolAnnotations:
             )
 
 
+class TestFullRegistryTitles:
+    """CLAUDE.md Tool Registration Checklist enforcement (issue #315).
+
+    Every registered tool must carry a non-empty ``annotations.title``.
+    Enumerates the FULL registry via the parent-class accessor — including
+    app-only tools, write-tagged tools hidden in read-only mode, the
+    ``ResourcesAsTools`` bridge tools, and the transfer tools — so a future
+    tool cannot ship its machine name as the client-facing label.
+    """
+
+    async def test_every_registered_tool_has_a_nonempty_title(
+        self, tmp_path: Path
+    ) -> None:
+        from fastmcp_pvl_core import ServerConfig
+
+        from image_generation_mcp.config import ProjectConfig
+        from image_generation_mcp.server import make_server
+
+        server = make_server(
+            transport="http",
+            config=ProjectConfig(
+                server=ServerConfig(
+                    base_url="https://mcp.example.com", kv_store_url="memory://"
+                ),
+                scratch_dir=tmp_path,
+                read_only=True,
+            ),
+        )
+        # Parent-class accessor bypasses FastMCP's model-visibility filter,
+        # the same trick tests._helpers.get_tool_including_app_only uses.
+        tools = await super(FastMCP, server).list_tools()
+        # Sanity: this is the full registry (domain + core + bridge +
+        # transfer tools), not the filtered client-facing listing.
+        assert len(tools) >= 18, [t.name for t in tools]
+        untitled = sorted(
+            t.name
+            for t in tools
+            if t.annotations is None or not (t.annotations.title or "").strip()
+        )
+        assert not untitled, f"tools without annotations.title: {untitled}"
+
+
 # ---------------------------------------------------------------------------
 # edit_image tool
 # ---------------------------------------------------------------------------

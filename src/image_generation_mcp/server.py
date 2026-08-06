@@ -124,6 +124,32 @@ _TRANSFER_TOOL_META: dict[str, tuple[ToolAnnotations, str, str | None]] = {
 }
 
 
+class _TitledResourcesAsTools(ResourcesAsTools):
+    """``ResourcesAsTools`` whose two bridge tools carry ``annotations.title``.
+
+    fastmcp's transform constructs ``list_resources`` / ``read_resource``
+    with title-less annotations; the Tool Registration Checklist requires a
+    non-empty title on every registered tool (enforced by
+    ``tests/test_tools.py``). Overrides the parent's private factory methods —
+    if a fastmcp upgrade renames them, the enforcement test fails loudly
+    rather than shipping untitled bridge tools.
+    """
+
+    def _make_list_resources_tool(self) -> Any:
+        tool = super()._make_list_resources_tool()
+        if tool.annotations is None:  # pragma: no cover — upstream always sets them
+            tool.annotations = ToolAnnotations()
+        tool.annotations.title = "List Resources"
+        return tool
+
+    def _make_read_resource_tool(self) -> Any:
+        tool = super()._make_read_resource_tool()
+        if tool.annotations is None:  # pragma: no cover — upstream always sets them
+            tool.annotations = ToolAnnotations()
+        tool.annotations.title = "Read Resource"
+        return tool
+
+
 def _finalize_transfer_tool_metadata(mcp: FastMCP) -> None:
     """Attach title/hints/icon (and the ``write`` tag) to the transfer tools.
 
@@ -290,7 +316,7 @@ def make_server(
 
     # IG-specific: expose resources as tools for clients without resource support.
     # Apply AFTER all registrations so the transform sees every resource.
-    mcp.add_transform(ResourcesAsTools(mcp))
+    mcp.add_transform(_TitledResourcesAsTools(mcp))
 
     if config.read_only:
         mcp.disable(tags={"write"})
