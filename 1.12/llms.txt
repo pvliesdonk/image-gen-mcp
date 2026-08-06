@@ -1,0 +1,47 @@
+# Image Generation MCP Server
+
+> Multi-provider image generation MCP server built on FastMCP
+
+image-generation-mcp is a multi-provider image generation MCP server supporting OpenAI (gpt-image-1, dall-e-3), SD WebUI (Stable Diffusion WebUI, compatible with AUTOMATIC1111/Forge/reForge), and a zero-cost placeholder provider. Features keyword-based auto-selection, background tasks with progress reporting, and resource-based image transforms.
+
+
+## Getting Started
+
+- [Home](https://pvliesdonk.github.io/image-generation-mcp/1.12/index.md): Overview -- features, providers, quick start
+- [Installation](https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/installation/index.md): Installation from PyPI, uv, source, or Docker
+- [Claude Desktop](https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/claude-desktop/index.md): Claude Desktop MCP configuration
+- [Claude Code](https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/claude-code/index.md): Claude Code MCP configuration
+- [Configuration Generator](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration-generator/index.md): Interactive configuration wizard
+
+## Providers
+
+- [Overview](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/index.md): Provider comparison and selection guide
+- [Gemini](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/gemini/index.md): Gemini provider setup and capabilities
+- [OpenAI](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/openai/index.md): OpenAI provider setup and capabilities
+- [SD WebUI (Stable Diffusion)](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/sd-webui/index.md): SD WebUI (Stable Diffusion WebUI) setup
+- [Model Catalog](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/model-catalog/index.md): Per-model narrative metadata catalog (auto-generated)
+- [Placeholder](https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/placeholder/index.md): Zero-cost placeholder for testing
+
+## Configuration
+
+- [Configuration](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/index.md): All environment variables with types and defaults
+
+## MCP Interface
+
+- [Tools](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/index.md): MCP tools with parameters and examples
+- [Resources](https://pvliesdonk.github.io/image-generation-mcp/1.12/resources/index.md): MCP resources with URI patterns
+- [Prompts](https://pvliesdonk.github.io/image-generation-mcp/1.12/prompts/index.md): MCP prompts with workflow descriptions
+
+## Guides
+
+- [Authentication](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/index.md): Authentication modes -- bearer, OIDC, multi-auth
+- [Image Input (image-to-image)](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/image-input/index.md): Image input -- editing, composition, and masking via transform_image
+- [Prompt Writing](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/prompt-writing/index.md): Provider-specific prompt writing tips
+- [Style Library](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/styles/index.md): Style library -- reusable creative briefs for consistent generation
+
+## Deployment
+
+- [Docker](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/docker/index.md): Docker Compose, Traefik, volumes
+- [Systemd](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/systemd/index.md): Systemd service, .deb/.rpm packages, security hardening
+- [OIDC Authentication](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/index.md): OIDC authentication setup
+

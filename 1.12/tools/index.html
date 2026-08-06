@@ -1,0 +1,4382 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-provider image generation MCP server built on FastMCP">
+      
+      
+      
+        <link rel="canonical" href="https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/">
+      
+      
+        <link rel="prev" href="../configuration/">
+      
+      
+        <link rel="next" href="../resources/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Tools - Image Generation MCP Server</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/config-wizard.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mcp-tools" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Image Generation MCP Server" class="md-header__button md-logo" aria-label="Image Generation MCP Server" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Image Generation MCP Server
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tools
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/pvliesdonk/image-generation-mcp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pvliesdonk/image-generation-mcp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started/installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../providers/" class="md-tabs__link">
+          
+  
+  
+  Providers
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../configuration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Configuration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  MCP Interface
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guides/authentication/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../deployment/docker/" class="md-tabs__link">
+          
+  
+  
+  Deployment
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Image Generation MCP Server" class="md-nav__button md-logo" aria-label="Image Generation MCP Server" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Image Generation MCP Server
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/pvliesdonk/image-generation-mcp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    pvliesdonk/image-generation-mcp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/claude-desktop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Desktop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration-generator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Generator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Providers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/gemini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gemini
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/openai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/sd-webui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SD WebUI (Stable Diffusion)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/model-catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/placeholder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Placeholder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MCP Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generate_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="generate_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fire-and-forget-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fire-and-forget workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-confirmation-elicitation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost confirmation (elicitation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transform_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        transform_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="transform_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-image-input-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference image input forms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check_generation_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_generation_status
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="check_generation_status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        show_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="show_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#edit_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        edit_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="edit_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#editor-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor UI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saved-image-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saved image provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#browse_gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        browse_gallery
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="browse_gallery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gallery_full_image-app-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gallery_full_image (app-only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="gallery_full_image (app-only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#save_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="save_style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete_style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fetch_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingest_base64_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ingest_base64_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ingest_base64_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_providers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="list_providers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_resources-read_resource-auto-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_resources / read_resource (auto-generated)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="list_resources / read_resource (auto-generated)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create_download_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_download_link
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_download_link">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create_upload_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_upload_link
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_upload_link">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-apps-image-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Apps: Image Viewer
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/client-compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/image-input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Input (image-to-image)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/prompt-writing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Writing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/image-assets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Assets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Style Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deployment
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/systemd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Systemd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/oidc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OIDC Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/claude-desktop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Desktop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generate_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="generate_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fire-and-forget-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fire-and-forget workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-confirmation-elicitation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost confirmation (elicitation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transform_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        transform_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="transform_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-image-input-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference image input forms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check_generation_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_generation_status
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="check_generation_status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        show_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="show_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#edit_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        edit_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="edit_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#editor-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor UI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saved-image-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saved image provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#browse_gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        browse_gallery
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="browse_gallery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gallery_full_image-app-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gallery_full_image (app-only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="gallery_full_image (app-only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#save_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="save_style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete_style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fetch_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingest_base64_image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ingest_base64_image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ingest_base64_image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_providers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="list_providers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_resources-read_resource-auto-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_resources / read_resource (auto-generated)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="list_resources / read_resource (auto-generated)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create_download_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_download_link
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_download_link">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create_upload_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_upload_link
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_upload_link">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-value_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-apps-image-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Apps: Image Viewer
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mcp-tools">MCP Tools<a class="headerlink" href="#mcp-tools" title="Permanent link">&para;</a></h1>
+<p>image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.</p>
+<h2 id="generate_image">generate_image<a class="headerlink" href="#generate_image" title="Permanent link">&para;</a></h2>
+<p>Generate an image from a text prompt. Returns immediately with a <code>status: "generating"</code> response while the image is generated in the background (typically 30-90 seconds). Use <code>check_generation_status(image_id)</code> to wait for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the result. Check each model's <code>prompt_style</code> in <code>list_providers</code> to choose CLIP tags vs. natural language prompts.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: false</code>, <code>openWorldHint: true</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td><code>task=True</code> (retained for forward compatibility; no longer blocks)</td>
+</tr>
+<tr>
+<td><strong>Pattern</strong></td>
+<td>Fire-and-forget: returns in under 1 second. Poll via <code>check_generation_status</code>. Display via <code>show_image</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prompt</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Text description of the desired image</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>str</td>
+<td><code>"auto"</code></td>
+<td>Provider name (<code>openai</code>, <code>sd_webui</code>, <code>placeholder</code>) or <code>"auto"</code> for keyword-based selection</td>
+</tr>
+<tr>
+<td><code>negative_prompt</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Things to avoid in the image. Native support on SD WebUI (SD 1.5/SDXL only; Flux models do NOT support negative prompts); appended as "Avoid:" on OpenAI.</td>
+</tr>
+<tr>
+<td><code>aspect_ratio</code></td>
+<td>str</td>
+<td><code>"1:1"</code></td>
+<td>Desired ratio: <code>1:1</code>, <code>16:9</code>, <code>9:16</code>, <code>3:2</code>, <code>2:3</code>. Gemini also supports: <code>3:4</code>, <code>4:3</code>, <code>4:5</code>, <code>5:4</code>, <code>4:1</code>, <code>1:4</code>, <code>8:1</code>, <code>1:8</code>, <code>21:9</code></td>
+</tr>
+<tr>
+<td><code>quality</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Quality level: <code>standard</code> (fast, lower cost) or <code>hd</code> (higher quality, enables model reasoning on Gemini, <code>high</code> tier on OpenAI). Independent of <code>resolution</code>, which controls output size.</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Output size tier: <code>standard</code>, <code>high</code>, or <code>max</code>. <code>high</code>/<code>max</code> unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only <code>gemini-3.1-flash-lite-image</code> and <code>gemini-2.5-flash-image</code>, which clamp down to 1K); on OpenAI, only <code>gpt-image-2</code> goes beyond standard (up to 4K). Every other model ignores this. Check <code>supported_resolutions</code> in <code>list_providers</code> before relying on <code>high</code>/<code>max</code> for a specific model.</td>
+</tr>
+<tr>
+<td><code>background</code></td>
+<td>str</td>
+<td><code>"opaque"</code></td>
+<td>Background mode: <code>opaque</code> or <code>transparent</code>. Supported by OpenAI's <code>gpt-image-1</code> / <code>gpt-image-1.5</code> / <code>gpt-image-1-mini</code> (not <code>gpt-image-2</code> or <code>chatgpt-image-latest</code>, which drop transparency) and Placeholder. SD WebUI ignores this parameter.</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Specific model to use (such as an SD WebUI checkpoint name or <code>"dall-e-3"</code> for OpenAI). Overrides the provider's default. Use <code>list_providers</code> to see available model IDs.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value">Return value<a class="headerlink" href="#return-value" title="Permanent link">&para;</a></h3>
+<p>Returns immediately with a <code>ToolResult</code> containing:</p>
+<ol>
+<li><strong>TextContent</strong>: JSON metadata with <code>status: "generating"</code>:</li>
+<li><strong>ResourceLink</strong>: URI reference to <code>image://{id}/view</code> (image pending)</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generating&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;watercolor painting of a mountain landscape at sunset&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;original_uri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://a1b2c3d4e5f6/view&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">&quot;metadata_uri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://a1b2c3d4e5f6/metadata&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">&quot;resource_template&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://a1b2c3d4e5f6/view{?format,width,height,quality,crop_x,crop_y,crop_w,crop_h,rotate,flip}&quot;</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>Use <code>check_generation_status(image_id)</code> to poll for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the finished image.</p>
+<h3 id="fire-and-forget-workflow">Fire-and-forget workflow<a class="headerlink" href="#fire-and-forget-workflow" title="Permanent link">&para;</a></h3>
+<p>The tool uses a fire-and-forget pattern to avoid client tool-execution timeouts (about 45 seconds on Claude.ai/Desktop/Android):</p>
+<ol>
+<li><strong><code>generate_image</code></strong> returns in under 1 second with <code>"status": "generating"</code> and a pre-allocated <code>image_id</code></li>
+<li><strong>Background task</strong> generates the image and registers it in the scratch directory</li>
+<li><strong><code>check_generation_status</code></strong> polls for status (lightweight, no UI card):<ul>
+<li><code>{"status": "generating", "progress": 0.3, "progress_message": "Step 9/30 (ETA 12s)", ...}</code>: still in progress</li>
+<li><code>{"status": "completed"}</code>: ready to display</li>
+<li><code>{"status": "failed", "error": "..."}</code>: generation failed</li>
+</ul>
+</li>
+<li><strong><code>show_image</code></strong> displays the finished image <strong>once</strong> when status is <code>"completed"</code></li>
+</ol>
+<p>The <code>image://list</code> resource also includes pending generations with their status.</p>
+<div class="admonition tip">
+<p class="admonition-title">Why a separate polling tool?</p>
+<p><code>show_image</code> renders a full image viewer card with thumbnail. Calling it repeatedly to poll creates a distracting stack of cards in the conversation UI. <code>check_generation_status</code> returns minimal JSON text, keeping polling invisible to the user.</p>
+</div>
+<h3 id="cost-confirmation-elicitation">Cost confirmation (elicitation)<a class="headerlink" href="#cost-confirmation-elicitation" title="Permanent link">&para;</a></h3>
+<p>When all of these conditions are met, <code>generate_image</code> asks the user to confirm before calling the provider:</p>
+<ol>
+<li>The resolved provider is in <code>IMAGE_GENERATION_MCP_PAID_PROVIDERS</code> (default: <code>"openai"</code>)</li>
+<li>The MCP client supports <a href="https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation">elicitation</a> (advertised via <code>ClientCapabilities.elicitation</code>)</li>
+</ol>
+<p>If the user declines or cancels, the tool returns a cancellation message without making the API call. If the client does not support elicitation, generation proceeds without confirmation (current behavior preserved).</p>
+<div class="admonition tip">
+<p class="admonition-title">Elicitation client support</p>
+<p>Elicitation was added in the MCP spec 2025-06-18 revision. As of this writing, few clients support it. The confirmation is a progressive enhancement that activates automatically on capable clients and is invisible on others.</p>
+</div>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>User: Generate a watercolor painting of a mountain landscape at sunset
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Tool call: generate_image
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  prompt: &quot;watercolor painting of a mountain landscape at sunset,
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>           warm colors, dramatic sky&quot;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  aspect_ratio: &quot;16:9&quot;
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  quality: &quot;hd&quot;
+</code></pre></div>
+<p>When picking <code>model</code>, consult each entry's <code>style_profile.style_hints</code> and <code>style_profile.incompatible_styles</code> from <code>list_providers</code>; check the top-level <code>warnings</code> array to avoid deprecated models for new work. The <a href="../providers/model-catalog/">Model Catalog</a> lists all known models with their full profiles.</p>
+<hr />
+<h2 id="transform_image">transform_image<a class="headerlink" href="#transform_image" title="Permanent link">&para;</a></h2>
+<p>Edit or transform an existing image using a model that accepts image input (image-to-image). Accepts one or more reference images alongside a prompt describing the desired change. Returns immediately with a <code>status: "generating"</code> response while the transformation runs in the background. Use <code>check_generation_status(image_id)</code> to wait for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the result.</p>
+<p><code>transform_image</code> is distinct from <code>edit_image</code> (which applies local geometry transforms such as crop, rotate, and flip directly in the server) and from <code>generate_image</code> (text-only, no reference image).</p>
+<p>For task-oriented walkthroughs (editing, composition, masking, and SD <code>strength</code>), see the <a href="../guides/image-input/">Image input guide</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: false</code>, <code>openWorldHint: true</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td><code>task=True</code></td>
+</tr>
+<tr>
+<td><strong>Pattern</strong></td>
+<td>Fire-and-forget: returns in under 1 second. Poll via <code>check_generation_status</code>. Display via <code>show_image</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prompt</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Description of the desired edit or transformation (natural language)</td>
+</tr>
+<tr>
+<td><code>reference_images</code></td>
+<td>list[str]</td>
+<td><em>(required)</em></td>
+<td>One or more gallery <code>image_id</code> values, <code>image://</code> URIs, or (when <code>IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT=true</code>) local file paths to use as source images; check <code>max_input_images</code> in <code>list_providers</code> for each provider's reference-count limit (some accept one, others up to 16 for composition)</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>str</td>
+<td><code>"auto"</code></td>
+<td>Provider to use, or <code>"auto"</code>. Image-to-image needs a provider that reports <code>supports_image_input</code> in <code>list_providers</code></td>
+</tr>
+<tr>
+<td><code>negative_prompt</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Things to avoid in the result (provider support varies)</td>
+</tr>
+<tr>
+<td><code>aspect_ratio</code></td>
+<td>str</td>
+<td><code>"1:1"</code></td>
+<td>Desired aspect ratio of the output image</td>
+</tr>
+<tr>
+<td><code>quality</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Quality level: <code>standard</code> or <code>hd</code>. Independent of <code>resolution</code>, which controls output size.</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Output size tier: <code>standard</code>, <code>high</code>, or <code>max</code>. <code>high</code>/<code>max</code> unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only <code>gemini-3.1-flash-lite-image</code> and <code>gemini-2.5-flash-image</code>, which clamp down to 1K); on OpenAI, only <code>gpt-image-2</code> goes beyond standard (up to 4K). Every other model ignores this. Check <code>supported_resolutions</code> in <code>list_providers</code> before relying on <code>high</code>/<code>max</code> for a specific model.</td>
+</tr>
+<tr>
+<td><code>background</code></td>
+<td>str</td>
+<td><code>"opaque"</code></td>
+<td>Background mode: <code>opaque</code> or <code>transparent</code> (provider-dependent)</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Specific model ID; see <code>list_providers</code></td>
+</tr>
+<tr>
+<td><code>strength</code></td>
+<td>float</td>
+<td><code>null</code></td>
+<td>SD WebUI only: denoising strength for image-to-image (0.0 to 1.0, default 0.75 when omitted). Lower values preserve more of the reference image; higher values regenerate more. Other providers ignore it. Has no effect without a reference image.</td>
+</tr>
+<tr>
+<td><code>mask</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Inpainting mask: a gallery <code>image_id</code>, <code>image://</code> URI, or local file path (when <code>IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT=true</code>). The mask defines the region to repaint and is applied against the first reference image. Only providers with <code>supports_mask: true</code> in <code>list_providers</code> accept this parameter (currently OpenAI gpt-image models). At least one <code>reference_images</code> entry is required when a mask is supplied. Providers without mask support return an error if a mask is passed.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reference-image-input-forms">Reference image input forms<a class="headerlink" href="#reference-image-input-forms" title="Permanent link">&para;</a></h3>
+<p>Each entry in <code>reference_images</code> is resolved in order:</p>
+<ol>
+<li><strong>Gallery <code>image_id</code></strong>: a 12-character hex ID from a prior <code>generate_image</code> or <code>transform_image</code> call, such as <code>"a1b2c3d4e5f6"</code>.</li>
+<li><strong><code>image://</code> URI</strong>: a full resource URI, such as <code>"image://a1b2c3d4e5f6/view"</code>.</li>
+<li><strong>Local file path</strong>: absolute path on the server host, such as <code>"/home/user/photo.png"</code>. Only accepted when <code>IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT=true</code>; rejected with an error otherwise.</li>
+</ol>
+<p>A gallery <code>image_id</code> may itself be an <strong>imported</strong> image, brought into the
+gallery from a URL, an upload, or inline bytes via <code>fetch_image</code>,
+<code>ingest_base64_image</code>, or <code>create_upload_link</code>, not only a <code>generate_image</code> /
+<code>transform_image</code> output. See <a href="../guides/image-input/#getting-an-external-image-into-the-gallery">Image input</a>.</p>
+<p>Call <code>list_providers</code> and inspect <code>supports_image_input</code> and <code>max_input_images</code> on each model to confirm which provider can handle your input count. Reference-count limits vary by model: SD WebUI is limited to a single reference, while Gemini supports several (more on the Gemini 3 models) and OpenAI's gpt-image family supports the most for multi-image composition. <code>max_input_images</code> carries the authoritative per-model value; <code>dall-e-3</code> and <code>dall-e-2</code> do not accept reference images. See the <a href="../guides/image-input/">Image input guide</a> for the current capability matrix.</p>
+<h3 id="return-value_1">Return value<a class="headerlink" href="#return-value_1" title="Permanent link">&para;</a></h3>
+<p>Returns immediately with a <code>ToolResult</code> containing:</p>
+<ol>
+<li><strong>TextContent</strong>: JSON metadata with <code>status: "generating"</code>:</li>
+<li><strong>ResourceLink</strong>: URI reference to <code>image://{id}/view</code> (image pending)</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generating&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b2c3d4e5f6a1&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;replace the background with a sunset sky&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gemini&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;source_image_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;original_uri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://b2c3d4e5f6a1/view&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;metadata_uri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://b2c3d4e5f6a1/metadata&quot;</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>The <code>source_image_ids</code> field records the gallery IDs of the resolved reference images for provenance.</p>
+<p>Use <code>check_generation_status(image_id)</code> to poll for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the finished image.</p>
+<h3 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>User: Replace the background of my last image with a sunset sky
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Tool call: transform_image
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  prompt: &quot;Replace the background with a dramatic sunset sky, warm orange and pink tones&quot;
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  reference_images: [&quot;a1b2c3d4e5f6&quot;]
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  provider: &quot;gemini&quot;
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  aspect_ratio: &quot;16:9&quot;
+</code></pre></div>
+<hr />
+<h2 id="check_generation_status">check_generation_status<a class="headerlink" href="#check_generation_status" title="Permanent link">&para;</a></h2>
+<p>Lightweight status check for background image generation. Returns a short JSON string with <code>status</code>, <code>image_id</code>, and progress info (no image data, no heavy UI card).</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none, always visible)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code>, <code>idempotentHint: true</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_id</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>The <code>image_id</code> returned by <code>generate_image</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-values">Return values<a class="headerlink" href="#return-values" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>Next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"generating"</code></td>
+<td>Still in progress</td>
+<td>Wait and check again</td>
+</tr>
+<tr>
+<td><code>"completed"</code></td>
+<td>Image ready</td>
+<td>Call <code>show_image(uri=original_uri)</code></td>
+</tr>
+<tr>
+<td><code>"failed"</code></td>
+<td>Generation failed</td>
+<td>Report <code>error</code> to the user</td>
+</tr>
+<tr>
+<td><code>"unknown"</code></td>
+<td>ID not found</td>
+<td>Invalid or expired <code>image_id</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="show_image">show_image<a class="headerlink" href="#show_image" title="Permanent link">&para;</a></h2>
+<p>Display a completed image with optional on-demand transforms. Accepts a full <code>image://</code> resource URI with transforms encoded in the query string.</p>
+<p><strong>Only call this for completed images.</strong> Use <code>check_generation_status</code> to poll, then call <code>show_image</code> once when status is <code>"completed"</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none, always visible, read-only operation)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>MCP App</strong></td>
+<td><code>ui://image-viewer/view.html</code> (interactive viewer in supported clients)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uri</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Full <code>image://</code> resource URI, such as <code>image://a1b2c3/view?format=webp&amp;width=512</code></td>
+</tr>
+</tbody>
+</table>
+<p>Transforms are encoded in the URI query string using the same parameters as the <code>image://{id}/view</code> resource template: <code>format</code>, <code>width</code>, <code>height</code>, <code>quality</code>.</p>
+<h3 id="return-value_2">Return value<a class="headerlink" href="#return-value_2" title="Permanent link">&para;</a></h3>
+<p>Returns a <code>ToolResult</code> with:</p>
+<ol>
+<li><strong>ImageContent</strong>: a WebP thumbnail preview (max 512 px, always under 1 MB) for inline display in MCP clients. This is always WebP regardless of the requested format.</li>
+<li><strong>TextContent</strong>: JSON metadata with the full-resolution details:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;watercolor painting of a mountain landscape at sunset&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-image-1&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">683</span><span class="p">],</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">&quot;thumbnail_dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">512</span><span class="p">,</span><span class="w"> </span><span class="mi">342</span><span class="p">],</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">&quot;original_size_bytes&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3145728</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">&quot;transforms_applied&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
+</code></pre></div>
+<p>The <code>model</code> field contains the specific model used by the provider (such as <code>"gpt-image-1"</code> or <code>"dreamshaper_xl"</code>), or <code>null</code> if the provider does not report a model name.</p>
+<p><code>show_image</code> returns metadata and an inline thumbnail only; it does not mint a download URL. For an out-of-band full-resolution URL, call <code>create_download_link</code> with the image's <code>image://</code> URI or bare id (HTTP transport only). For in-band full-resolution access, read the <code>image://{id}/view</code> resource, optionally with <code>format</code>/<code>width</code>/<code>height</code>/<code>quality</code> transforms.</p>
+<p>The <code>dimensions</code> field reports the actual image size (or the transformed size if transforms were requested). The <code>thumbnail_dimensions</code> field reports the size of the inline preview, which is capped at 512 px. When <code>dimensions</code> and <code>thumbnail_dimensions</code> differ, the inline preview is a downscaled version; use the <code>image://</code> resource URI or <code>create_download_link</code> for full resolution.</p>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a># Show the original image
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>show_image(uri=&quot;image://a1b2c3d4e5f6/view&quot;)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a># Show resized to 512px wide as WebP
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>show_image(uri=&quot;image://a1b2c3d4e5f6/view?format=webp&amp;width=512&quot;)
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a># Show center-cropped to 256x256
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>show_image(uri=&quot;image://a1b2c3d4e5f6/view?width=256&amp;height=256&quot;)
+</code></pre></div>
+<hr />
+<h2 id="edit_image">edit_image<a class="headerlink" href="#edit_image" title="Permanent link">&para;</a></h2>
+<p>Open an image for interactive editing (crop, rotate, flip) in the image viewer UI. The user edits in the viewer widget and saves as a new image. Always edits the original image (resource template transforms are ephemeral and model-facing; editor transforms are persistent and user-facing).</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none, read-only, always visible)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+<tr>
+<td><strong>MCP App</strong></td>
+<td>Opens <code>ui://image-viewer/view.html</code> widget</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_id</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>ID of the image to edit. Use <code>image://list</code> to browse available image IDs.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_3">Return value<a class="headerlink" href="#return-value_3" title="Permanent link">&para;</a></h3>
+<p>Returns a <code>ToolResult</code> with:</p>
+<ol>
+<li><strong>TextContent</strong>: JSON metadata with <code>editable: true</code> to activate the editor UI:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&quot;editable&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">&quot;content_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">640</span><span class="p">,</span><span class="w"> </span><span class="mi">360</span><span class="p">],</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;watercolor painting of a mountain landscape&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">}</span>
+</code></pre></div>
+<ol>
+<li><strong>ImageContent</strong>: Full-resolution image as base64 (not a thumbnail). The viewer UI uses this to initialize the Cropper.js editor.</li>
+</ol>
+<h3 id="editor-ui">Editor UI<a class="headerlink" href="#editor-ui" title="Permanent link">&para;</a></h3>
+<p>When <code>editable: true</code> is received by the MCP Apps widget, it activates the Cropper.js-based editor with:</p>
+<ul>
+<li><strong>Crop</strong>: Interactive crop box with aspect ratio presets (Free, 1:1, 16:9, 4:3)</li>
+<li><strong>Rotate</strong>: 90° counter-clockwise / clockwise buttons (lossless)</li>
+<li><strong>Flip</strong>: Horizontal and vertical flip buttons (lossless)</li>
+<li><strong>Reset</strong>: Resets all pending edits</li>
+<li><strong>Save as new image</strong>: Applies transforms server-side and saves as a new image record with <code>source_image_id</code> provenance</li>
+<li><strong>Cancel</strong>: Returns to the waiting state</li>
+</ul>
+<p>Saving calls the internal <code>_save_edited_image</code> app-only tool and then shows the new image via <code>show_image</code>.</p>
+<h3 id="saved-image-provenance">Saved image provenance<a class="headerlink" href="#saved-image-provenance" title="Permanent link">&para;</a></h3>
+<p>Saved images include a <code>source_image_id</code> field in their sidecar JSON referencing the original. The <code>image://{id}/metadata</code> resource exposes this field.</p>
+<hr />
+<h2 id="browse_gallery">browse_gallery<a class="headerlink" href="#browse_gallery" title="Permanent link">&para;</a></h2>
+<p>Open an interactive visual gallery of all generated images. The gallery renders a responsive thumbnail grid directly in Claude Desktop / claude.ai via the MCP Apps widget.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none, read-only, always visible)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+<tr>
+<td><strong>MCP App</strong></td>
+<td>Opens <code>ui://image-gallery/view.html</code> widget</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>origin</code></td>
+<td><code>generated</code> | <code>imported</code> | <code>all</code></td>
+<td><code>generated</code></td>
+<td>Which images to show. <code>generated</code> shows images produced by <code>generate_image</code>/<code>edit_image</code> plus any in-progress generations; <code>imported</code> shows images brought in via upload, fetch, or base64 ingestion; <code>all</code> shows both.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_4">Return value<a class="headerlink" href="#return-value_4" title="Permanent link">&para;</a></h3>
+<p>JSON with gallery data (for non-UI clients):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nt">&quot;origin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generated&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">      </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;completed&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a mountain landscape&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">      </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">      </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">1024</span><span class="p">],</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-24T10:00:00+00:00&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">      </span><span class="nt">&quot;thumbnail_b64&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;base64-encoded 128px WebP&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">      </span><span class="nt">&quot;content_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">      </span><span class="nt">&quot;origin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generated&quot;</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="p">}</span>
+</code></pre></div>
+<p>For MCP Apps-capable clients, the gallery widget is rendered inline with:
+- Responsive thumbnail grid (3×3 default, adaptive to available width)
+- Hover overlay showing prompt excerpt and provider badge
+- Download button (<code>downloadFile</code> → <code>openLink</code> fallback)
+- Prev/Next pagination
+- Lightbox view on thumbnail click (see below)</p>
+<hr />
+<h2 id="gallery_full_image-app-only">gallery_full_image (app-only)<a class="headerlink" href="#gallery_full_image-app-only" title="Permanent link">&para;</a></h2>
+<p>Load full-resolution image data for the gallery lightbox. App-only (not shown to the model); called internally by the gallery UI when a thumbnail is clicked.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+<tr>
+<td><strong>MCP App</strong></td>
+<td><code>ui://image-gallery/view.html</code> (app-only, <code>visibility=["app"]</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_id</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Image ID to load</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_5">Return value<a class="headerlink" href="#return-value_5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">&quot;b64&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;base64-encoded image bytes&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nt">&quot;content_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">1024</span><span class="p">],</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a mountain landscape&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-24T10:00:00+00:00&quot;</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>Images larger than 1 MB are resized to 1024 px wide WebP before encoding.</p>
+<hr />
+<h2 id="delete_image">delete_image<a class="headerlink" href="#delete_image" title="Permanent link">&para;</a></h2>
+<p>Permanently delete an image from the scratch directory. Removes the image file and its metadata sidecar. Hidden in read-only mode.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: true</code>, <code>openWorldHint: false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_id</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Image ID to delete (12-character hex string)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_6">Return value<a class="headerlink" href="#return-value_6" title="Permanent link">&para;</a></h3>
+<p>Text confirmation with the deleted image's prompt and provider, e.g.:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Deleted image a1b2c3d4e5f6 (prompt: &#39;a mountain landscape&#39;, provider: openai)
+</code></pre></div>
+<p>Raises an error if the image ID is not found.</p>
+<hr />
+<h2 id="save_style">save_style<a class="headerlink" href="#save_style" title="Permanent link">&para;</a></h2>
+<p>Save a reusable style preset as a markdown file. Styles are creative briefs that the model interprets per-provider (not prompt fragments). Use to capture a visual direction for reuse across conversations.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Style identifier, used as the filename (<code>{name}.md</code>). Allowed characters: letters, numbers, hyphens, and <code>_</code> (underscore character).</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Markdown prose describing the visual direction (the creative brief)</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>list[str]</td>
+<td><code>null</code></td>
+<td>Optional categorization tags for browsing/filtering</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Suggested provider (<code>auto</code>, <code>openai</code>, <code>sd_webui</code>)</td>
+</tr>
+<tr>
+<td><code>aspect_ratio</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Default aspect ratio (such as <code>16:9</code>)</td>
+</tr>
+<tr>
+<td><code>quality</code></td>
+<td>str</td>
+<td><code>null</code></td>
+<td>Default quality level (<code>standard</code> or <code>hd</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_7">Return value<a class="headerlink" href="#return-value_7" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;website&quot;</span><span class="p">,</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">&quot;created&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>created</code> is <code>true</code> for new styles, <code>false</code> when overwriting an existing style.</p>
+<h3 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>User: Save this as my website style
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>Tool call: save_style
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  name: &quot;website&quot;
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  body: &quot;Minimalist flat illustration. Geometric shapes, clean lines.
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>         Brand palette: deep teal, warm cream, coral accent.&quot;
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  tags: [&quot;brand&quot;, &quot;web&quot;]
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  aspect_ratio: &quot;16:9&quot;
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  quality: &quot;hd&quot;
+</code></pre></div>
+<hr />
+<h2 id="delete_style">delete_style<a class="headerlink" href="#delete_style" title="Permanent link">&para;</a></h2>
+<p>Delete a style preset from disk. Permanently removes the style file and its in-memory entry. Hidden in read-only mode.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: true</code>, <code>openWorldHint: false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Style identifier to delete</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_8">Return value<a class="headerlink" href="#return-value_8" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;website&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">&quot;deleted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>Raises an error if the style is not found.</p>
+<hr />
+<h2 id="fetch_image">fetch_image<a class="headerlink" href="#fetch_image" title="Permanent link">&para;</a></h2>
+<p>Fetch an image from an <code>http</code>/<code>https</code> URL into the gallery as an imported entry you can then show, edit, or reference in <code>transform_image</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: false</code>, <code>openWorldHint: true</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>The <code>http(s)</code> URL of the image to fetch.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_9">Return value<a class="headerlink" href="#return-value_9" title="Permanent link">&para;</a></h3>
+<p>Text confirmation with the gallery URI on success:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Fetched image into the gallery: image://a1b2c3d4e5f6/view
+</code></pre></div>
+<p>On failure, a message describing why the fetch was rejected, such as an SSRF-blocked target, an HTTP error, a timeout, an oversized body, or content that is not a decodable image.</p>
+<p>The fetch is SSRF-hardened: URLs targeting private, loopback, link-local, or cloud-metadata addresses are refused, and redirects are not followed. The download is capped at <code>IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES</code> (default 20 MiB) with a request timeout of <code>IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S</code> (default 30 seconds). The stored provenance is the fetched URL with userinfo, query, and fragment stripped, so a secret-bearing URL never persists to the image's sidecar metadata.</p>
+<h3 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>User: Fetch this image and add it to the gallery: https://example.com/photo.png
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Tool call: fetch_image
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  url: &quot;https://example.com/photo.png&quot;
+</code></pre></div>
+<hr />
+<h2 id="ingest_base64_image">ingest_base64_image<a class="headerlink" href="#ingest_base64_image" title="Permanent link">&para;</a></h2>
+<p>Add an inline base64-encoded image to the gallery as an imported entry you can then show, edit, or reference in <code>transform_image</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>The base64-encoded image bytes. Raw base64, a <code>data:&lt;type&gt;;base64,...</code> URI, or line-wrapped base64 are all accepted.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_10">Return value<a class="headerlink" href="#return-value_10" title="Permanent link">&para;</a></h3>
+<p>Text confirmation with the gallery URI on success:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Ingested image into the gallery: image://a1b2c3d4e5f6/view
+</code></pre></div>
+<p>On failure, a message describing why the image could not be ingested: invalid base64 or an oversized image, or bytes that don't decode as an image.</p>
+<p>The decoded size is capped at <code>IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES</code> (default 20 MiB); oversized or invalid base64 is rejected.</p>
+<h3 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>User: Here&#39;s a base64 image, add it to the gallery: iVBORw0KGgoAAAANSUhEUgAA...
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>Tool call: ingest_base64_image
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>  data: &quot;iVBORw0KGgoAAAANSUhEUgAA...&quot;
+</code></pre></div>
+<hr />
+<h2 id="list_providers">list_providers<a class="headerlink" href="#list_providers" title="Permanent link">&para;</a></h2>
+<p>List available image generation providers and their status.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none, always visible)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: true</code>, <code>idempotentHint: false</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>force_refresh</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>When <code>true</code>, re-runs capability discovery on all providers before returning. Use when providers may have changed (such as after loading new SD WebUI checkpoints).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_11">Return value<a class="headerlink" href="#return-value_11" title="Permanent link">&para;</a></h3>
+<p>JSON object with a <code>refreshed_at</code> ISO 8601 timestamp and provider names, availability, and capability information:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">&quot;refreshed_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-03-18T12:00:00+00:00&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="nt">&quot;providers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="nt">&quot;placeholder&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">      </span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Zero-cost solid-color PNG — instant, no API key, for testing and drafts&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">      </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">        </span><span class="nt">&quot;provider_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">        </span><span class="nt">&quot;models&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">          </span><span class="p">{</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="w">            </span><span class="nt">&quot;model_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="w">            </span><span class="nt">&quot;display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Placeholder (solid-color PNG)&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="w">            </span><span class="nt">&quot;can_generate&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="w">            </span><span class="nt">&quot;can_edit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">            </span><span class="nt">&quot;supports_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">            </span><span class="nt">&quot;supported_aspect_ratios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;16:9&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;9:16&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3:2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2:3&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="w">            </span><span class="nt">&quot;supported_qualities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="w">            </span><span class="nt">&quot;supported_resolutions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">640</span><span class="p">,</span>
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="w">          </span><span class="p">}</span>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">        </span><span class="p">],</span>
+<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
+<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a><span class="w">    </span><span class="nt">&quot;openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a><span class="w">      </span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OpenAI (gpt-image-2 / dall-e-3) — best for text, logos, and general-purpose generation&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a><span class="w">      </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a><span class="w">        </span><span class="nt">&quot;provider_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a><span class="w">        </span><span class="nt">&quot;models&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a><span class="w">          </span><span class="p">{</span>
+<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a><span class="w">            </span><span class="nt">&quot;model_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-image-1&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a><span class="w">            </span><span class="nt">&quot;display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GPT Image 1&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-43" name="__codelineno-17-43" href="#__codelineno-17-43"></a><span class="w">            </span><span class="nt">&quot;can_generate&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-44" name="__codelineno-17-44" href="#__codelineno-17-44"></a><span class="w">            </span><span class="nt">&quot;can_edit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-45" name="__codelineno-17-45" href="#__codelineno-17-45"></a><span class="w">            </span><span class="nt">&quot;supports_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a><span class="w">            </span><span class="nt">&quot;supported_aspect_ratios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;16:9&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;9:16&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3:2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2:3&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a><span class="w">            </span><span class="nt">&quot;supported_qualities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hd&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a><span class="w">            </span><span class="nt">&quot;supported_resolutions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;jpeg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;webp&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1536</span><span class="p">,</span>
+<a id="__codelineno-17-53" name="__codelineno-17-53" href="#__codelineno-17-53"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-54" name="__codelineno-17-54" href="#__codelineno-17-54"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-55" name="__codelineno-17-55" href="#__codelineno-17-55"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-17-56" name="__codelineno-17-56" href="#__codelineno-17-56"></a><span class="w">          </span><span class="p">}</span>
+<a id="__codelineno-17-57" name="__codelineno-17-57" href="#__codelineno-17-57"></a><span class="w">        </span><span class="p">],</span>
+<a id="__codelineno-17-58" name="__codelineno-17-58" href="#__codelineno-17-58"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-59" name="__codelineno-17-59" href="#__codelineno-17-59"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-60" name="__codelineno-17-60" href="#__codelineno-17-60"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
+<a id="__codelineno-17-61" name="__codelineno-17-61" href="#__codelineno-17-61"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-17-62" name="__codelineno-17-62" href="#__codelineno-17-62"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-17-63" name="__codelineno-17-63" href="#__codelineno-17-63"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-17-64" name="__codelineno-17-64" href="#__codelineno-17-64"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-17-65" name="__codelineno-17-65" href="#__codelineno-17-65"></a><span class="p">}</span>
+</code></pre></div>
+<p>The response is wrapped in an object with <code>refreshed_at</code> (ISO 8601 timestamp of when the data was produced) and <code>providers</code> (the provider map). Only registered (configured) providers appear in the response. The <code>capabilities</code> key is present after startup discovery completes. Degraded providers (where capability discovery failed) show <code>"degraded": true</code> with an empty model list.</p>
+<p>The <code>prompt_style</code> field on each model indicates the recommended prompt format: <code>"clip"</code> for SD 1.5/SDXL checkpoints (tag-based), <code>"natural_language"</code> for Flux checkpoints, and <code>null</code> for providers that do not set a preference (OpenAI, Placeholder).</p>
+<p>The JSON envelope contains a top-level <code>warnings</code> array (always present, may be empty) listing deprecated or legacy models that are configured. Each entry in <code>models</code> may carry a <code>style_profile</code> sub-object with <code>label</code>, <code>style_hints</code>, <code>incompatible_styles</code>, <code>good_example</code>, <code>bad_example</code>, <code>lifecycle</code>, and (when set) <code>deprecation_note</code>. See <a href="../providers/model-catalog/">Model Catalog</a> for the full registry.</p>
+<p>A <code>watermark</code> field is included on models whose outputs carry a persistent identifier. Currently <code>"synthid"</code> applies to the Google Gemini Image family (Flash + Pro tiers; all variants embed an invisible Google SynthID watermark on every generation). The field is omitted on models without a declared watermark. Surface this to users when bit-perfect originals are required (forensic chain of custody, certain regulatory contexts).</p>
+<h3 id="example_5">Example<a class="headerlink" href="#example_5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>User: Which image providers are available?
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>Tool call: list_providers
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>User: I just loaded a new checkpoint, refresh the list
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>Tool call: list_providers
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>  force_refresh: true
+</code></pre></div>
+<hr />
+<h2 id="list_resources-read_resource-auto-generated">list_resources / read_resource (auto-generated)<a class="headerlink" href="#list_resources-read_resource-auto-generated" title="Permanent link">&para;</a></h2>
+<p>These tools are automatically generated by the <a href="https://gofastmcp.com/servers/transforms/resources-as-tools">ResourcesAsTools</a> transform. They bridge the gap for MCP clients that only support tools (Claude web chat is one such client) and cannot access resources directly.</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>list_resources</code></td>
+<td>Returns JSON describing all available resources and templates</td>
+</tr>
+<tr>
+<td><code>read_resource</code></td>
+<td>Reads a specific resource by URI</td>
+</tr>
+</tbody>
+</table>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Tool call: list_resources
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>  → returns JSON array of all image:// and info:// resources
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>Tool call: read_resource
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>  uri: &quot;image://a1b2c3d4e5f6/view&quot;
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>  → returns the full-resolution image
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>Tool call: read_resource
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>  uri: &quot;image://a1b2c3d4e5f6/metadata&quot;
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  → returns generation metadata JSON
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>Tool call: read_resource
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>  uri: &quot;image://list&quot;
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>  → returns JSON array of all generated images
+</code></pre></div>
+<p>These tools provide access to the same resources documented in <a href="../resources/">Resources</a>, including on-the-fly image transforms via URI template parameters.</p>
+<hr />
+<h2 id="create_download_link">create_download_link<a class="headerlink" href="#create_download_link" title="Permanent link">&para;</a></h2>
+<p>Mint a one-time HTTP download URL for a gallery image. Enables server-to-server image transfer between MCP servers (such as saving to a vault or attaching to email). The link expires after a single download or after <code>ttl_s</code>, whichever comes first.</p>
+<p>Provided by pvl-core's shared capability-link transfer routes. Available only on an HTTP or SSE transport with <code>IMAGE_GENERATION_MCP_BASE_URL</code> configured.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><em>(none)</em></td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: true</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Transport</strong></td>
+<td>HTTP/SSE only (not available on stdio)</td>
+</tr>
+<tr>
+<td><strong>Requires</strong></td>
+<td><code>IMAGE_GENERATION_MCP_BASE_URL</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ref</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>The image to serve: an <code>image://&lt;id&gt;</code> URI or a bare 12-hex image id.</td>
+</tr>
+<tr>
+<td><code>ttl_s</code></td>
+<td>number</td>
+<td>(<code>TRANSFER_TTL_DEFAULT_S</code>, 3600)</td>
+<td>Link lifetime in seconds. Clamped to <code>TRANSFER_TTL_MAX_S</code> (default 24 hours).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_12">Return value<a class="headerlink" href="#return-value_12" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="p">{</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://mcp.example.com/transfer/7f3a...e9b1&quot;</span><span class="p">,</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="nt">&quot;expires_in_s&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>The download URL:
+- Serves the image's <strong>original bytes</strong> once with the appropriate <code>Content-Type</code> (no transforms; for a transformed rendering read the <code>image://{id}/view</code> resource with <code>format</code>/<code>width</code>/<code>height</code>/<code>quality</code>)
+- Returns HTTP 404 after the first download or after the TTL expires
+- Does not require bearer token or OIDC auth (the random token is the auth)</p>
+<h3 id="example-workflow">Example workflow<a class="headerlink" href="#example-workflow" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>User: Generate a photo and save it to my vault
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>1. generate_image(prompt=&quot;sunset photo&quot;)
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>   → {image_id: &quot;a1b2c3...&quot;, status: &quot;generating&quot;, ...}
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>2. check_generation_status(image_id=&quot;a1b2c3...&quot;)
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>   → status: &quot;completed&quot;
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>3. create_download_link(ref=&quot;image://a1b2c3d4e5f6/view&quot;)
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>   → {url: &quot;https://mcp.example.com/transfer/7f3a...&quot;, expires_in_s: 3600}
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>4. vault-mcp: save_artifact_from_url(url=&quot;https://...&quot;, path=&quot;photos/sunset.jpg&quot;)
+</code></pre></div>
+<hr />
+<h2 id="create_upload_link">create_upload_link<a class="headerlink" href="#create_upload_link" title="Permanent link">&para;</a></h2>
+<p>Mint a one-time HTTP upload URL. The caller POSTs image bytes to the URL, and the server ingests them as an imported gallery image (<code>origin="imported"</code>, <code>origin_source="upload"</code>). Enables another MCP server or client to push an image into the gallery without a shared filesystem.</p>
+<p>Provided by pvl-core's shared capability-link transfer routes. Available only on an HTTP or SSE transport with <code>IMAGE_GENERATION_MCP_BASE_URL</code> configured.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tags</strong></td>
+<td><code>write</code> (hidden in read-only mode)</td>
+</tr>
+<tr>
+<td><strong>Annotations</strong></td>
+<td><code>readOnlyHint: false</code></td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Transport</strong></td>
+<td>HTTP/SSE only (not available on stdio)</td>
+</tr>
+<tr>
+<td><strong>Requires</strong></td>
+<td><code>IMAGE_GENERATION_MCP_BASE_URL</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="parameters_14">Parameters<a class="headerlink" href="#parameters_14" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ref</code></td>
+<td>str</td>
+<td><em>(required)</em></td>
+<td>Intended filename or label for the uploaded image (a <code>.png</code>/<code>.jpg</code>/<code>.jpeg</code>/<code>.webp</code> extension is checked when present).</td>
+</tr>
+<tr>
+<td><code>ttl_s</code></td>
+<td>number</td>
+<td>(<code>TRANSFER_TTL_DEFAULT_S</code>, 3600)</td>
+<td>Link lifetime in seconds. Clamped to <code>TRANSFER_TTL_MAX_S</code> (default 24 hours).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-value_13">Return value<a class="headerlink" href="#return-value_13" title="Permanent link">&para;</a></h3>
+<p>The tool returns the upload URL:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="p">{</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://mcp.example.com/transfer/9c2b...a1d4&quot;</span><span class="p">,</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="nt">&quot;expires_in_s&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>After the caller POSTs (or PUTs) the image bytes to that URL, the HTTP response is JSON describing the imported gallery entry:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">{</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b7e9c1a2d3f4&quot;</span><span class="p">,</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="nt">&quot;uri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image://b7e9c1a2d3f4/view&quot;</span><span class="p">,</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="nt">&quot;origin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;imported&quot;</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>The upload URL accepts a single successful upload, then expires. The transfer route is capped at the smaller of <code>TRANSFER_MAX_UPLOAD_BYTES</code> (default 100 MiB) and <code>IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES</code> (default 20 MiB), so an oversized body is rejected with a <code>413</code> at the route boundary rather than accepted and then failed during ingestion. The effective image-upload cap is 20 MiB by default.</p>
+<hr />
+<h2 id="mcp-apps-image-viewer">MCP Apps: Image Viewer<a class="headerlink" href="#mcp-apps-image-viewer" title="Permanent link">&para;</a></h2>
+<p>Clients that support <a href="https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/apps">MCP Apps</a> (Claude Desktop, claude.ai) render an interactive image viewer alongside <code>show_image</code> results.</p>
+<p>The viewer is a custom HTML resource at <code>ui://image-viewer/view.html</code> that:</p>
+<ul>
+<li>Listens for <code>show_image</code> tool results via the <code>@modelcontextprotocol/ext-apps</code> SDK</li>
+<li>Displays the image with metadata (prompt, provider, model name, dimensions, file size)</li>
+<li>Shows generating, failed, and cancelled states with progress indicators</li>
+<li>Integrates with host theming (colors, fonts, safe area insets) via ext-apps SDK</li>
+<li>Caches rendered images in <code>localStorage</code> for instant restore on revisit</li>
+<li>Offers a download button (uses <code>downloadFile</code> API or <code>openLink</code> fallback) for the full-resolution image</li>
+</ul>
+<p>No configuration is needed. The viewer activates automatically on MCP Apps-capable clients. The Claude sandbox domain is auto-computed from <code>BASE_URL</code> (see <a href="../configuration/#server">Configuration</a>). Clients without Apps support see the standard base64 image + metadata response.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/config-wizard/wizard.js" type="module"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,364 @@
+{
+  "version": 1,
+  "meta": {
+    "projectName": "image-generation-mcp",
+    "dockerImage": "ghcr.io/pvliesdonk/image-generation-mcp:latest",
+    "envPrefix": "IMAGE_GENERATION_MCP"
+  },
+  "secretKeys": [
+    "IMAGE_GENERATION_MCP_BEARER_TOKEN",
+    "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
+    "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
+    "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
+    "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY"
+  ],
+  "questions": [
+    {
+      "id": "deployment",
+      "label": "Where will the server run?",
+      "help": "Local stdio for Claude Desktop/Code, or an HTTP server for Docker/systemd.",
+      "type": "select",
+      "options": [
+        { "value": "local", "label": "Local (Claude Desktop / Claude Code, stdio)", "emit": { "IMAGE_GENERATION_MCP_TRANSPORT": "stdio" } },
+        { "value": "server", "label": "Server (HTTP — Docker / Compose / systemd)", "emit": { "IMAGE_GENERATION_MCP_TRANSPORT": "http" } }
+      ]
+    },
+    {
+      "id": "base_url",
+      "label": "Public base URL",
+      "help": "e.g. https://mcp.example.com — required for OIDC and MCP Apps.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_BASE_URL",
+      "showIf": { "deployment": ["server"] }
+    },
+    {
+      "id": "http_path",
+      "label": "HTTP endpoint path",
+      "help": "Mount path for the MCP endpoint, e.g. /mcp. Defaults to /mcp when unset.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_HTTP_PATH",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "Server"
+    },
+    {
+      "id": "host",
+      "label": "Bind host",
+      "help": "Interface the HTTP server binds to. Default 127.0.0.1.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_HOST",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "Server"
+    },
+    {
+      "id": "port",
+      "label": "Port",
+      "help": "TCP port for the HTTP server. Default 8000.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_PORT",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "Server"
+    },
+    {
+      "id": "auth",
+      "label": "Authentication",
+      "type": "select",
+      "showIf": { "deployment": ["server"] },
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "bearer", "label": "Bearer token" },
+        { "value": "oidc", "label": "OIDC" },
+        { "value": "both", "label": "Bearer + OIDC" }
+      ]
+    },
+    {
+      "id": "bearer_token",
+      "label": "Bearer token",
+      "help": "Any non-empty string enables bearer auth. Browser-only.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_BEARER_TOKEN",
+      "showIf": { "deployment": ["server"], "auth": ["bearer", "both"] }
+    },
+    {
+      "id": "oidc_config_url",
+      "label": "OIDC discovery URL",
+      "help": "e.g. https://auth.example.com/.well-known/openid-configuration",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_CONFIG_URL",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] }
+    },
+    {
+      "id": "oidc_client_id",
+      "label": "OIDC client ID",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_CLIENT_ID",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] }
+    },
+    {
+      "id": "oidc_client_secret",
+      "label": "OIDC client secret",
+      "help": "Browser-only; never in the shareable link.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] }
+    },
+    {
+      "id": "oidc_jwt_signing_key",
+      "label": "OIDC JWT signing key",
+      "help": "Required on Linux/Docker — the default is ephemeral and invalidates tokens on restart. Generate: openssl rand -hex 32.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] }
+    },
+    {
+      "id": "oidc_audience",
+      "label": "OIDC audience",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_AUDIENCE",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] },
+      "advancedGroup": "Auth"
+    },
+    {
+      "id": "oidc_required_scopes",
+      "label": "OIDC required scopes (CSV)",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] },
+      "advancedGroup": "Auth"
+    },
+    {
+      "id": "oidc_verify_access_token",
+      "label": "Verify access token (not id token)",
+      "type": "bool",
+      "var": "IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN",
+      "showIf": { "deployment": ["server"], "auth": ["oidc", "both"] },
+      "advancedGroup": "Auth"
+    },
+    {
+      "id": "bearer_tokens_file",
+      "label": "Bearer tokens file (TOML)",
+      "help": "Path to a TOML file of per-token subjects; overrides the single BEARER_TOKEN.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_BEARER_TOKENS_FILE",
+      "showIf": { "deployment": ["server"], "auth": ["bearer", "both"] },
+      "advancedGroup": "Auth"
+    },
+    {
+      "id": "bearer_default_subject",
+      "label": "Bearer default subject",
+      "help": "Subject assigned to the single bearer token. Default bearer-anon.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_BEARER_DEFAULT_SUBJECT",
+      "showIf": { "deployment": ["server"], "auth": ["bearer", "both"] },
+      "advancedGroup": "Auth"
+    },
+    {
+      "id": "kv_store_url",
+      "label": "KV store URL (HTTP session persistence)",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_KV_STORE_URL",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "Persistence"
+    },
+    {
+      "id": "event_store_url",
+      "label": "Event store URL (HTTP resumability)",
+      "help": "Alternative event-store URL for HTTP resumability; prefer KV_STORE_URL for new deployments.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_EVENT_STORE_URL",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "Persistence"
+    },
+    {
+      "id": "app_domain",
+      "label": "MCP Apps domain",
+      "help": "Public domain that serves MCP Apps UI resources.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_APP_DOMAIN",
+      "showIf": { "deployment": ["server"] },
+      "advancedGroup": "MCP Apps"
+    },
+    {
+      "id": "server_name",
+      "label": "Server instance name",
+      "help": "Display name for this server instance. Defaults to image-generation-mcp.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_SERVER_NAME",
+      "advancedGroup": "Server"
+    },
+    {
+      "id": "openai_api_key",
+      "label": "OpenAI API key",
+      "help": "Required for the OpenAI provider (DALL-E 3, GPT-Image-1). Leave blank to skip OpenAI.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_OPENAI_API_KEY"
+    },
+    {
+      "id": "google_api_key",
+      "label": "Google API key (Gemini)",
+      "help": "Required for the Gemini provider (Imagen 3). Leave blank to skip Gemini.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY"
+    },
+    {
+      "id": "sd_webui_host",
+      "label": "SD WebUI host URL",
+      "help": "Base URL of a running AUTOMATIC1111/Forge/reForge instance, e.g. http://localhost:7860. Leave blank to skip SD WebUI.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST"
+    },
+    {
+      "id": "sd_webui_model",
+      "label": "SD WebUI checkpoint",
+      "help": "Checkpoint/model name the SD WebUI provider selects before generating. Leave blank to use the instance's current model.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
+      "advancedGroup": "Providers"
+    },
+    {
+      "id": "default_provider",
+      "label": "Default provider",
+      "help": "Provider used when no keyword triggers auto-selection. \"auto\" picks the first configured provider.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
+      "advancedGroup": "Providers"
+    },
+    {
+      "id": "paid_providers",
+      "label": "Paid providers (CSV)",
+      "help": "Comma-separated provider names billed as paid (used for cost warnings). Default: openai.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
+      "advancedGroup": "Providers"
+    },
+    {
+      "id": "read_only",
+      "label": "Read-only mode",
+      "help": "Disables write tools (generate, transform). Default: true.",
+      "type": "bool",
+      "var": "IMAGE_GENERATION_MCP_READ_ONLY",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "scratch_dir",
+      "label": "Scratch directory",
+      "help": "Directory where generated images are saved. Defaults to ~/.image-generation-mcp/images/.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
+      "dockerPath": "/data/state/images",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "styles_dir",
+      "label": "Styles directory",
+      "help": "Directory holding style-preset files. Defaults to ~/.image-generation-mcp/styles/.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_STYLES_DIR",
+      "dockerPath": "/data/state/styles",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "transform_cache_size",
+      "label": "Transform cache size",
+      "help": "LRU cache size for image transforms. Default: 64.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "max_input_image_bytes",
+      "label": "Max input image bytes",
+      "help": "Maximum accepted input image size in bytes. Default: 20971520 (20 MiB).",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "fetch_timeout_s",
+      "label": "Fetch timeout (s)",
+      "help": "HTTP fetch timeout in seconds, used when fetching remote image URLs. Default: 30.0.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "transfer_ttl_default_s",
+      "label": "Transfer link default TTL (s)",
+      "help": "Default lifetime of a create_download_link/create_upload_link URL when the caller omits one. HTTP transports only. Default: 3600 (1 h).",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
+      "advancedGroup": "Transfer links"
+    },
+    {
+      "id": "transfer_ttl_max_s",
+      "label": "Transfer link max TTL (s)",
+      "help": "Ceiling a caller-requested link TTL is clamped to. Default: 86400 (24 h).",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
+      "advancedGroup": "Transfer links"
+    },
+    {
+      "id": "transfer_grace_ttl_s",
+      "label": "Transfer link grace TTL (s)",
+      "help": "Post-success grace window a one-time link stays reclaimable (survives a stalled download). Default: 60.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
+      "advancedGroup": "Transfer links"
+    },
+    {
+      "id": "transfer_lease_s",
+      "label": "Transfer in-flight lease (s)",
+      "help": "Reclaim window for an in-flight transfer whose handler crashed. Default: 60.",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
+      "advancedGroup": "Transfer links"
+    },
+    {
+      "id": "transfer_max_upload_bytes",
+      "label": "Transfer max upload bytes",
+      "help": "Per-upload size cap for create_upload_link bodies. Default: 104857600 (100 MiB).",
+      "type": "text",
+      "var": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
+      "advancedGroup": "Transfer links"
+    },
+    {
+      "id": "allow_local_file_input",
+      "label": "Allow local file input",
+      "help": "Enable reading input images from local file paths. Default: false.",
+      "type": "bool",
+      "var": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
+      "advancedGroup": "Behaviour"
+    },
+    {
+      "id": "log_level",
+      "label": "Log level",
+      "help": "One of DEBUG, INFO, WARNING, ERROR.",
+      "type": "text",
+      "var": "FASTMCP_LOG_LEVEL",
+      "advancedGroup": "Logging"
+    },
+    {
+      "id": "rich_logging",
+      "label": "Rich logging",
+      "help": "Enable pretty terminal output. Disable for JSON/plain logs in production.",
+      "type": "bool",
+      "var": "FASTMCP_ENABLE_RICH_LOGGING",
+      "advancedGroup": "Logging"
+    }
+  ],
+  "guards": [
+    {
+      "level": "warning",
+      "message": "No provider is configured — the server will start but cannot generate images. Fill in at least one of: OpenAI API key, Google API key, or SD WebUI host.",
+      "when": {
+        "openai_api_key": [""],
+        "google_api_key": [""],
+        "sd_webui_host": [""]
+      }
+    },
+    {
+      "level": "warning",
+      "message": "OIDC needs BASE_URL set and (on Linux/Docker) OIDC_JWT_SIGNING_KEY — the default key is ephemeral and invalidates tokens on restart.",
+      "when": { "deployment": ["server"], "auth": ["oidc", "both"] }
+    }
+  ]
+}

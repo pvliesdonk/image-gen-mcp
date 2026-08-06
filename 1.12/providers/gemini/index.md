@@ -1,0 +1,179 @@
+# Gemini Provider
+
+Image generation via Google's Gemini native `generateContent` API with `responseModalities=["IMAGE"]`. Good for general-purpose generation with a generous free tier.
+
+## Setup
+
+Set your Google API key:
+
+```
+IMAGE_GENERATION_MCP_GOOGLE_API_KEY=AIza...
+```
+
+The provider registers automatically when this variable is set. Get a key at [Google AI Studio](https://aistudio.google.com/apikey).
+
+## Supported models
+
+| Model                         | Notes                                                          |
+| ----------------------------- | -------------------------------------------------------------- |
+| `gemini-3.1-flash-image`      | Default (GA; Nano Banana 2, general workhorse)                 |
+| `gemini-3-pro-image`          | GA (Nano Banana Pro; highest quality, best for complex scenes) |
+| `gemini-3.1-flash-lite-image` | GA (Nano Banana 2 Lite; fastest, lowest cost)                  |
+| `gemini-2.5-flash-image`      | Legacy GA (Nano Banana; superseded by 3.1 flash)               |
+
+Use `list_providers` to see which models are available on your API key.
+
+## Aspect ratios and sizes
+
+Gemini natively supports 14 aspect ratios, all passed through directly:
+
+| Aspect ratio | Notes                |
+| ------------ | -------------------- |
+| `1:1`        | Square (default)     |
+| `16:9`       | Landscape            |
+| `9:16`       | Portrait             |
+| `3:2`        | Photo landscape      |
+| `2:3`        | Photo portrait       |
+| `3:4`        | Portrait             |
+| `4:3`        | Landscape            |
+| `4:5`        | Portrait             |
+| `5:4`        | Landscape            |
+| `4:1`        | Ultra-wide banner    |
+| `1:4`        | Ultra-tall banner    |
+| `8:1`        | Extreme panorama     |
+| `1:8`        | Extreme vertical     |
+| `21:9`       | Cinematic ultra-wide |
+
+## Quality levels
+
+The `quality` parameter controls model reasoning and response modalities. It no longer controls output size, that is `resolution`'s job (see [Resolution tiers](#resolution-tiers) below).
+
+| Quality    | Thinking                                                | Response modalities | Cost                   |
+| ---------- | ------------------------------------------------------- | ------------------- | ---------------------- |
+| `standard` | Minimal (default)                                       | Image only          | Free tier              |
+| `hd`       | High (model reasons about composition before rendering) | Text + Image        | Thinking tokens billed |
+
+**How `hd` works:** When `quality="hd"` is set, the provider enables `thinking_level="High"` on supported models (`gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-3.1-flash-lite-image`). The model reasons through the prompt, plans composition, and may generate interim images before producing the final result. Output quality improves measurably for complex prompts with multiple elements, layouts, or text.
+
+`gemini-2.5-flash-image` does not support thinking. Setting `hd` on this model has no effect: it still renders at whatever `resolution` allows (1K, since it does not support the higher tiers).
+
+## Resolution tiers
+
+The `resolution` parameter controls output size, independently of `quality`:
+
+| Resolution           | Image size |
+| -------------------- | ---------- |
+| `standard` (default) | 1K         |
+| `high`               | 2K         |
+| `max`                | 4K         |
+
+Only the current Gemini 3 image models support the full 1K/2K/4K range:
+
+| Model                         | Supported resolutions     |
+| ----------------------------- | ------------------------- |
+| `gemini-3.1-flash-image`      | `standard`, `high`, `max` |
+| `gemini-3-pro-image`          | `standard`, `high`, `max` |
+| `gemini-3.1-flash-lite-image` | `standard` only           |
+| `gemini-2.5-flash-image`      | `standard` only           |
+
+Requesting `high` or `max` on a `standard`-only model **clamps down** to the model's highest supported tier rather than raising an error; the delivered tier is reported back in the generated image's metadata. Check `supported_resolutions` on each model entry in `list_providers` before relying on `high`/`max` for a specific model.
+
+Higher resolution tiers may increase generation cost even on the free tier; check [Google AI pricing](https://ai.google.dev/pricing) for current limits before generating at `high`/`max` in volume.
+
+## Negative prompts
+
+Gemini does not have native negative prompt support. When a `negative_prompt` is provided, it is appended to the prompt as:
+
+```
+{prompt}
+
+Avoid: {negative_prompt}
+```
+
+## Background transparency
+
+Not supported. The `background` parameter is silently ignored; all images are generated with an opaque background.
+
+## SynthID watermark
+
+All outputs from the Gemini Image family (Flash + Pro tiers) carry an **invisible Google SynthID watermark**: a per-pixel signal embedded at generation time that survives common edits (re-encoding, cropping, light filtering) and identifies the image as AI-generated. The watermark is announced in this provider's capability surface as `watermark: "synthid"` on every model entry returned by `list_providers`.
+
+Gemini outputs are **not suitable for workflows requiring bit-perfect originals**, such as forensic chain of custody, certain regulatory contexts, or pipelines that hash the raw bytes for content addressing. Pick OpenAI or SD WebUI for those use cases; neither family currently embeds a persistent watermark in output bytes.
+
+The watermark is invisible to the human eye and does not affect image quality or aesthetics; it only matters when the binary integrity of the generated bytes is part of the workflow contract.
+
+## Image input (image-to-image)
+
+Gemini models accept one or more reference images alongside a text prompt via the `transform_image` tool. Use this for description-driven edits such as swapping backgrounds or applying a different visual style, and for multi-image composition.
+
+Pass gallery `image_id` values, `image://` URIs, or (when `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT=true`) local file paths in the `reference_images` parameter. Each reference image is sent as an inline image part alongside the prompt. A single-reference edit looks like:
+
+```
+transform_image(
+  prompt="Replace the background with a sunset sky",
+  reference_images=["a1b2c3d4e5f6"],
+  provider="gemini"
+)
+```
+
+### Multi-image composition and character consistency
+
+Supply several reference images to compose a scene from their elements or to keep a character consistent across generations. The per-call reference limit depends on the model:
+
+| Model                         | Max reference images |
+| ----------------------------- | -------------------- |
+| `gemini-2.5-flash-image`      | 3                    |
+| `gemini-3.1-flash-image`      | 14                   |
+| `gemini-3-pro-image`          | 14                   |
+| `gemini-3.1-flash-lite-image` | 14                   |
+
+The Gemini 3 models accept up to 14 reference images. For character consistency, give the model a few clear shots of the same subject and describe the scene you want. Reference order is preserved in the request. Exceeding a model's limit raises an error before the API call; check `max_input_images` in `list_providers` to confirm the cap at runtime, and `supports_image_input` for availability.
+
+```
+transform_image(
+  prompt="Place the character from the first image into the scene of the second",
+  reference_images=["a1b2c3d4e5f6", "0f1e2d3c4b5a", "9a8b7c6d5e4f"],
+  provider="gemini",
+  model="gemini-3-pro-image"
+)
+```
+
+The same fire-and-forget pattern applies: `transform_image` returns immediately with a pending `image_id`; poll `check_generation_status(image_id)` and call `show_image(uri=original_uri)` once completed.
+
+## Prompt style
+
+Gemini works best with natural language descriptions:
+
+```
+A professional product photo of white sneakers on a clean white background,
+studio lighting, sharp focus, commercial photography style
+```
+
+Avoid CLIP-style tag lists (those work better with Stable Diffusion).
+
+## Per-call model selection
+
+The `model` parameter on `generate_image` overrides the provider's default model for a single request:
+
+```
+generate_image(prompt="...", provider="gemini", model="gemini-2.5-flash-image")
+```
+
+Use `list_providers` to discover available models and their capabilities.
+
+## Capability discovery
+
+At startup, the provider returns a static list of known image-capable Gemini models. Unlike OpenAI, the Gemini `models.list()` API does not reliably filter to image-generation models, so the known model list is maintained in the provider code.
+
+## Cost
+
+Gemini has a generous free tier (check [Google AI pricing](https://ai.google.dev/pricing) for current limits). The provider is not in `paid_providers` by default; no confirmation prompt is shown before use. Set `IMAGE_GENERATION_MCP_PAID_PROVIDERS=gemini,openai` to enable cost confirmation for Gemini.
+
+## Error handling
+
+| Error                    | Cause                                | Resolution                                               |
+| ------------------------ | ------------------------------------ | -------------------------------------------------------- |
+| Content policy rejection | Prompt violates Gemini safety policy | Modify the prompt to comply with Google's usage policies |
+| Connection error         | Cannot reach Gemini API              | Check network connectivity and API key validity          |
+| No image in response     | Model returned text instead of image | Try rephrasing the prompt or use a different model       |
+| API error (HTTP 429)     | Rate limited                         | Wait and retry; consider reducing request frequency      |
