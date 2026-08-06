@@ -208,13 +208,16 @@ class TestSdWebuiProvider:
 
         assert result.provider_metadata["resolution"] == "standard"
 
-    async def test_generate_logs_resolution_ignored_at_debug(
+    async def test_generate_logs_resolution_clamped_at_warning(
         self, httpx_mock, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """A non-standard resolution request logs the downgrade at DEBUG.
+        """A non-standard resolution request logs the downgrade at WARNING.
 
-        Mirrors this file's own strength_ignored DEBUG handling -- SD WebUI
-        is tier-less, so the drop is observable but not alarming.
+        Uses the unified cross-provider format -- identical to gemini's and
+        openai's resolution_clamped WARNING -- since SD WebUI is a real
+        generation path where a silently dropped tier is an operator-facing
+        degradation, not an internal test-provider detail (contrast
+        placeholder, which stays DEBUG by design).
         """
         b64_image = base64.b64encode(b"fake-png-data").decode()
         httpx_mock.post(
@@ -223,10 +226,13 @@ class TestSdWebuiProvider:
         )
 
         provider = SdWebuiImageProvider(host="http://localhost:7860")
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.WARNING):
             await provider.generate("a cat, masterpiece", resolution="max")
 
-        assert "resolution_ignored provider=sd_webui reason=unsupported" in caplog.text
+        assert (
+            "resolution_clamped provider=sd_webui model=None "
+            "requested=max effective=standard" in caplog.text
+        )
 
     async def test_generate_does_not_log_for_standard_resolution(
         self, httpx_mock, caplog: pytest.LogCaptureFixture
@@ -239,10 +245,10 @@ class TestSdWebuiProvider:
         )
 
         provider = SdWebuiImageProvider(host="http://localhost:7860")
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.WARNING):
             await provider.generate("a cat, masterpiece", resolution="standard")
 
-        assert "resolution_ignored" not in caplog.text
+        assert "resolution_clamped" not in caplog.text
 
     async def test_generate_with_model_override(self, httpx_mock) -> None:
         b64_image = base64.b64encode(b"data").decode()

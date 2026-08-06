@@ -17,6 +17,7 @@ from image_generation_mcp.providers.capabilities import (
 )
 from image_generation_mcp.providers.model_styles import resolve_style
 from image_generation_mcp.providers.types import (
+    SUPPORTED_RESOLUTIONS,
     ImageContentPolicyError,
     ImageProviderConnectionError,
     ImageProviderError,
@@ -225,11 +226,11 @@ class GeminiImageProvider:
 
         effective_model = model or self._model
 
-        if resolution not in _RESOLUTION_TO_IMAGE_SIZE:
+        if resolution not in SUPPORTED_RESOLUTIONS:
             raise ImageProviderError(
                 "gemini",
                 f"Unsupported resolution: {resolution!r}. "
-                f"Supported: {sorted(_RESOLUTION_TO_IMAGE_SIZE)}",
+                f"Supported: {sorted(SUPPORTED_RESOLUTIONS)}",
             )
 
         model_resolutions, _ = _resolution_capabilities(effective_model)
@@ -241,7 +242,8 @@ class GeminiImageProvider:
                 model_resolutions, key=list(_RESOLUTION_TO_IMAGE_SIZE).index
             )
             logger.warning(
-                "resolution_clamped model=%s requested=%s effective=%s",
+                "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                "gemini",
                 effective_model,
                 resolution,
                 effective_resolution,

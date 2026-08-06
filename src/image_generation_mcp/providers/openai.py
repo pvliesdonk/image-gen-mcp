@@ -268,10 +268,11 @@ class OpenAIImageProvider:
             # Requested tier is being dropped: this model has no high/max size
             # table, so it renders at its one standard size regardless.
             logger.warning(
-                "resolution_clamped provider=openai model=%s requested=%s "
-                "effective=standard",
+                "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                "openai",
                 effective_model,
                 resolution,
+                "standard",
             )
         if size is None:
             supported = ", ".join(sorted(_GPT_IMAGE_SIZES))
@@ -403,10 +404,11 @@ class OpenAIImageProvider:
             # dall-e-3 only produces PNG; has its own size table
             if resolution != "standard":
                 logger.warning(
-                    "resolution_clamped provider=openai model=%s requested=%s "
-                    "effective=standard",
+                    "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                    "openai",
                     effective_model,
                     resolution,
+                    "standard",
                 )
             sizes = _DALLE3_SIZES
             size = sizes.get(aspect_ratio)

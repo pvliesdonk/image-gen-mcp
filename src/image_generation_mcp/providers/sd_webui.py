@@ -346,7 +346,13 @@ class SdWebuiImageProvider:
                 "SD WebUI does not support background transparency control, ignoring"
             )
         if resolution != "standard":
-            logger.debug("resolution_ignored provider=sd_webui reason=unsupported")
+            logger.warning(
+                "resolution_clamped provider=%s model=%s requested=%s effective=%s",
+                "sd_webui",
+                effective_model,
+                resolution,
+                "standard",
+            )
 
         payload, width, height = self._build_payload(
             prompt=prompt,

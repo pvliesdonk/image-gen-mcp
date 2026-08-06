@@ -152,6 +152,10 @@ class PlaceholderImageProvider:
         if strength is not None:
             logger.debug("strength_ignored provider=placeholder reason=unsupported")
         if resolution != "standard":
+            # Intentionally DEBUG, not the real providers' WARNING
+            # resolution_clamped: placeholder is a zero-cost test provider, so
+            # an ignored tier is an internal detail, not an operator-facing
+            # degradation.
             logger.debug("resolution_ignored provider=placeholder reason=unsupported")
         if model is not None:
             logger.debug("Placeholder provider ignores model parameter: %r", model)
