@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.12.0 (2026-08-06)
+
+### Features
+
+- Reachable print-resolution output (resolution tier parameter) (#348)
+  ([#348](https://github.com/pvliesdonk/image-generation-mcp/pull/348),
+  [`0af4ed7`](https://github.com/pvliesdonk/image-generation-mcp/commit/0af4ed7bc0e3508c87bf3ea2944dde83ca5bb26b))
+
+
 ## v1.12.0-rc.1 (2026-07-10)
 
 ### Bug Fixes

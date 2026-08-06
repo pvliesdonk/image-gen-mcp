@@ -3,7 +3,7 @@
   "name": "io.github.pvliesdonk/image-generation-mcp",
   "title": "Image Generation MCP Server",
   "description": "MCP server for AI image generation via OpenAI, Stable Diffusion (SD WebUI), or placeholders.",
-  "version": "1.12.0-rc.1",
+  "version": "1.12.0",
   "websiteUrl": "https://pvliesdonk.github.io/image-generation-mcp/",
   "repository": {
     "url": "https://github.com/pvliesdonk/image-generation-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "pypi",
       "identifier": "image-generation-mcp",
-      "version": "1.12.0-rc.1",
+      "version": "1.12.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -125,7 +125,7 @@
     },
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/pvliesdonk/image-generation-mcp:v1.12.0-rc.1",
+      "identifier": "ghcr.io/pvliesdonk/image-generation-mcp:v1.12.0",
       "transport": {
         "type": "streamable-http",
         "url": "http://localhost:{--port}/mcp"
