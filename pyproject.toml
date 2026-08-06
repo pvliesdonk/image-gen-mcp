@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     # httpx and uvicorn come transitively via fastmcp (pulled by
     # fastmcp-pvl-core).  Don't re-list them here.
-    "fastmcp-pvl-core>=4.4.0,<5",
+    "fastmcp-pvl-core>=4.5.0,<5",
     "typer>=0.12",
 
     # PROJECT-DEPS-START — add domain dependencies below; kept across copier update
@@ -108,6 +108,12 @@ ignore = ["E501"]
 # (which excludes S). If your project needs its own tests/** ignores, EXTEND
 # this list in place — do not add a second "tests/**" key (duplicate TOML key).
 "tests/**" = ["S101", "S603", "S607"]
+# The config-surface generator's bootstrap re-execs itself under `uv run`
+# (os.execvpe with a `shutil.which`-resolved absolute path — see
+# ensure_core_available). S606 flags any no-shell process start for review;
+# here the no-shell form is the safer one, and a `# noqa` instead of this
+# entry would trip RUF100 on the whole-repo pass, where `S` isn't selected.
+"scripts/gen_config_surface.py" = ["S606"]
 
 # PROJECT-RUFF-IGNORES-START — replace, extend, or override the entries below
 # for your project's real source/test paths (split _server_apps.py into

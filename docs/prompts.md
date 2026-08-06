@@ -1,7 +1,9 @@
 # MCP Prompts
 
-image-generation-mcp provides three prompts that give LLM clients guidance on provider selection, prompt formatting, and style application.
+MCP prompts are reusable prompt templates exposed to clients; the ones this
+server provides are listed below.
 
+<!-- DOMAIN-PROMPTS-LIST-START -->
 ## select_provider
 
 Guidelines for selecting the best image generation provider based on the user's request.
@@ -100,3 +102,4 @@ Prompt: apply_style
 If the style is not found, returns an error message suggesting `style://list` to browse available styles.
 
 See the [Style Library Guide](guides/styles.md) for more details on creating and managing styles.
+<!-- DOMAIN-PROMPTS-LIST-END -->

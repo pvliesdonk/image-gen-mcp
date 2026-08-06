@@ -12,14 +12,8 @@ The server listens on port 8000 with HTTP transport by default.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `IMAGE_GENERATION_MCP_READ_ONLY` | `true` | Disable write tools |
-| `IMAGE_GENERATION_MCP_OPENAI_API_KEY` | N/A | OpenAI API key, enables OpenAI provider |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST` | N/A | SD WebUI URL, enables SD WebUI provider |
-| `IMAGE_GENERATION_MCP_SCRATCH_DIR` | `~/.image-generation-mcp/images/` | Image storage directory |
-| `IMAGE_GENERATION_MCP_EVENT_STORE_URL` | `file:///data/state/events` | EventStore backend for SSE session resumability. Uses file-backed store by default (events survive container restarts). Set to `memory://` for dev/test. |
-| `IMAGE_GENERATION_MCP_BEARER_TOKEN` | N/A | Enable bearer token auth |
-| `FASTMCP_LOG_LEVEL` | `INFO` | Log level for FastMCP internals; app loggers use `INFO` unless `-v` is used |
-| `IMAGE_GENERATION_MCP_SERVER_NAME` | `image-generation-mcp` | Server name shown to clients |
+| `IMAGE_GENERATION_MCP_BEARER_TOKEN` | n/a | Enable bearer token auth |
+| `FASTMCP_LOG_LEVEL` | `INFO` | Log level (`DEBUG` / `INFO` / `WARNING` / `ERROR`) |
 | `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | System instructions for LLM context |
 | `IMAGE_GENERATION_MCP_DEBUG_PORT` | N/A | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
 | `IMAGE_GENERATION_MCP_DEBUG_WAIT` | `false` | Block startup until IDE attaches (see [Remote debugging](#remote-debugging)) |

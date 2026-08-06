@@ -3,10 +3,11 @@
 Composes ``fastmcp_pvl_core.ServerConfig`` for transport/auth/event-store
 fields; adds image-generation domain fields below.
 
-Every domain field carries ``metadata={"help": ..., "tags": ...}`` — the
-config-surface generator (``scripts/gen_config_surface.py``) renders that
-metadata into ``.env.example``, the README domain table, the config wizard,
-and ``server.json``.  A field without help text ships undocumented artifacts.
+Add domain-specific fields between the CONFIG-FIELDS sentinels, populate
+them in ``from_env`` between the CONFIG-FROM-ENV sentinels, and enforce
+their invariants in ``__post_init__`` between the CONFIG-VALIDATE
+sentinels; copier update preserves all three blocks across template
+updates.
 """
 
 from __future__ import annotations
@@ -66,7 +67,7 @@ def _legacy_a1111(suffix: str, replacement: str) -> str | None:
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProjectConfig:
     """Image-generation-mcp configuration loaded from environment variables.
 
@@ -281,6 +282,28 @@ class ProjectConfig:
             max_upload_bytes=self.transfer_max_upload_bytes,
         )
 
+    def __post_init__(self) -> None:
+        """Validate composed domain fields.  Raise ``ValueError`` when invalid.
+
+        Runs on EVERY construction path — ``from_env`` and a direct
+        ``ProjectConfig(field=...)`` alike.  That is what makes this the right
+        home for a field invariant: ``env_float`` / ``env_int`` bounds check
+        only the *env-sourced* value, never the default, so a direct
+        construction slips past them.  They also cannot express an exclusive
+        bound (their ``minimum`` / ``maximum`` are inclusive, so "must be > 0"
+        lets ``0`` through) or a cross-field rule (A requires B,
+        mutually-exclusive pairs).  All three belong here.
+
+        The dataclass is ``frozen=True``: read fields freely, but plain
+        assignment raises.  To *normalise* rather than merely check, use
+        ``object.__setattr__(self, "name", value)``.
+        """
+        # CONFIG-VALIDATE-START — validate domain fields below; kept across copier update
+        # Constructing the composed TransferConfig runs its bounds validation
+        # (positive, finite, ttl_default_s <= ttl_max_s) on every path.
+        _ = self.transfer
+        # CONFIG-VALIDATE-END
+
     @classmethod
     def from_env(cls) -> ProjectConfig:
         """Load configuration from environment variables.
@@ -419,7 +442,6 @@ class ProjectConfig:
             ),
             fetch_timeout_s=fetch_timeout_s,
         )
-        _ = config.transfer  # fail at load time on invalid transfer bounds
         # CONFIG-FROM-ENV-END
 
         logger.debug("from_env: read_only=%s", config.read_only)
