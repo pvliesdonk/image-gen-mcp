@@ -62,7 +62,7 @@ instructions, with no configuration beyond the variable itself:
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. Set to empty string to disable confirmation. Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
+| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. An empty value is treated as unset and falls back to the default (`openai`); to disable confirmation entirely, set a value that names no provider (such as `none`). Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
 
 ## Performance
 

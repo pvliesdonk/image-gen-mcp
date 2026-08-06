@@ -170,7 +170,9 @@ class ProjectConfig:
             "help": (
                 "Comma-separated provider names that cost money; "
                 "generate_image asks for confirmation (client elicitation) "
-                "before using them. Set empty to disable confirmation."
+                "before using them. An empty value falls back to this "
+                "default; to disable confirmation, set a value that names "
+                "no provider (such as none)."
             ),
             "tags": ("providers",),
         },

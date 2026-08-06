@@ -101,7 +101,7 @@
         },
         {
           "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
-          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation.",
+          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none).",
           "default": "openai"
         },
         {
@@ -343,7 +343,7 @@
         },
         {
           "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
-          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation.",
+          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none).",
           "default": "openai"
         },
         {

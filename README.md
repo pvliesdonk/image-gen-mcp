@@ -216,7 +216,7 @@ Domain environment variables use the `IMAGE_GENERATION_MCP_` prefix:
 | `IMAGE_GENERATION_MCP_SD_WEBUI_MODEL` | (none) | No | SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model. |
 | `IMAGE_GENERATION_MCP_DEFAULT_PROVIDER` | `auto` | No | Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider. |
 | `IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE` | `64` | No | Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching. |
-| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | `openai` | No | Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation. |
+| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | `openai` | No | Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none). |
 | `IMAGE_GENERATION_MCP_STYLES_DIR` | `~/.image-generation-mcp/styles` | No | Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist. |
 | `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` | `false` | No | Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted. |
 | `IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES` | `20971520` | No | Maximum accepted input image size in bytes. |

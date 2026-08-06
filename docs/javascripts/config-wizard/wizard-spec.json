@@ -421,7 +421,7 @@
       "label": "Paid Providers",
       "type": "text",
       "var": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
-      "help": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. Set empty to disable confirmation."
+      "help": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none)."
     },
     {
       "id": "styles_dir",
