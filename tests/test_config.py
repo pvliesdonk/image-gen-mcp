@@ -49,8 +49,10 @@ class TestLoadConfigDefaults:
         assert config.read_only is True
 
     def test_scratch_dir_default(self) -> None:
+        """`from_env` expands the unexpanded `~` default to an absolute path."""
         config = ProjectConfig.from_env()
-        assert config.scratch_dir == _DEFAULT_SCRATCH_DIR
+        assert config.scratch_dir == _DEFAULT_SCRATCH_DIR.expanduser()
+        assert config.scratch_dir.is_absolute()
 
     def test_openai_api_key_default_none(self) -> None:
         config = ProjectConfig.from_env()

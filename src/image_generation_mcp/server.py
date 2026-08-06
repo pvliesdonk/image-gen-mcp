@@ -168,10 +168,11 @@ def make_server(
         config = ProjectConfig.from_env()
     configure_logging_from_env()
 
-    # Operator override: INSTRUCTIONS replaces the default instructions text
-    # (the override build_instructions' hint advertises), falling back to the
-    # domain default when unset/empty. server_name is resolved from config below
-    # (config.server_name, honouring an injected make_server(config=...)).
+    # Operator overrides: SERVER_NAME renames this instance and INSTRUCTIONS
+    # replaces the default instructions text, both falling back to the domain
+    # default when unset/empty. Read via env() (template-owned, not
+    # ProjectConfig): SERVER_NAME is declared in config-presentation.yml, so a
+    # ProjectConfig field for it would be a duplicate-name generator error.
     instructions = env(_ENV_PREFIX, "INSTRUCTIONS") or build_instructions(
         read_only=config.read_only,
         env_prefix=_ENV_PREFIX,
@@ -197,7 +198,7 @@ def make_server(
     except PackageNotFoundError:
         pkg_ver = "unknown"
 
-    server_name = config.server_name or _DEFAULT_SERVER_NAME
+    server_name = env(_ENV_PREFIX, "SERVER_NAME") or _DEFAULT_SERVER_NAME
 
     logger.info(
         "Server config: name=%s version=%s auth=%s mode=%s",
