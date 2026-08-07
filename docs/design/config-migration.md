@@ -79,6 +79,20 @@ to read the var if it doesn't already, and `__post_init__` (between
 `CONFIG-VALIDATE-START` / `CONFIG-VALIDATE-END`) for any invariant the old
 prose described.
 
+A **top-level** field carries its metadata whether you read it inline in the
+constructor keyword (`cls(read_only=env(_ENV_PREFIX, "READ_ONLY"), ...)`) or
+read it into a local first and pass it by name
+(`read_only = parse(env(...))` then `cls(read_only=read_only)`): core resolves
+a local-read var to the field whose name matches its suffix. A **composed
+sub-config section** field does not get that fallback — its suffix carries the
+section's prefix, which core cannot unambiguously strip — so a section field
+must be read inline in its own constructor keyword
+(`field=env(prefix, "LITERAL")`, with `env_int` / `env_float` for parsed
+numbers) for its help, default, required-ness, and secret masking to reach the
+generated artifacts. A value that genuinely cannot be built inline (a
+deprecation remap of a legacy var name) belongs in `__post_init__`, off the
+scanned path.
+
 ### 3. Declare only what the AST scan cannot see
 
 The generator discovers domain vars by AST-scanning `ProjectConfig.from_env`

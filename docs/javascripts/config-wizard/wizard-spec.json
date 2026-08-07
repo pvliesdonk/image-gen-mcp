@@ -520,19 +520,6 @@
           ""
         ]
       }
-    },
-    {
-      "level": "warning",
-      "message": "OIDC needs BASE_URL set and (on Linux/Docker) OIDC_JWT_SIGNING_KEY — the default key is ephemeral and invalidates tokens on restart.",
-      "when": {
-        "deployment": [
-          "server"
-        ],
-        "auth": [
-          "oidc",
-          "both"
-        ]
-      }
     }
   ]
 }

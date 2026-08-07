@@ -33,7 +33,11 @@ vars:
 # Extra wizard questions specific to this project.
 wizard_routing: []
 
-# Extra wizard guards specific to this project.
+# Extra wizard guards specific to this project.  Keep these to genuinely
+# domain-specific conditions: config-presentation.yml already ships an OIDC
+# guard, and a ported duplicate here renders as a second near-identical
+# warning in the wizard (these entries were inert until template v3.1.x
+# started consuming them, which is why the overlap went unnoticed).
 wizard_guards:
   - level: warning
     message: >-
@@ -44,10 +48,3 @@ wizard_guards:
       openai_api_key: [""]
       google_api_key: [""]
       sd_webui_host: [""]
-  - level: warning
-    message: >-
-      OIDC needs BASE_URL set and (on Linux/Docker) OIDC_JWT_SIGNING_KEY — the
-      default key is ephemeral and invalidates tokens on restart.
-    when:
-      deployment: [server]
-      auth: [oidc, both]

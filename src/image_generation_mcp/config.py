@@ -271,16 +271,17 @@ class ProjectConfig:
         server = ServerConfig.from_env(_ENV_PREFIX)
 
         # CONFIG-FROM-ENV-START — image-generation domain reads; kept across copier update
-        # Every read stays INLINE in its ``cls(...)`` keyword: the config-surface
-        # generator (core's domain_env_surface) links a var to its dataclass
-        # field — and so to that field's help/tags/wizard metadata — only when
-        # the keyword's value expression contains exactly one literal env read.
-        # Reading into a local first and passing it by name silently strips the
-        # var's documentation from every generated artifact, so keep the reads
-        # here rather than hoisting them.  Numeric parsing uses core's
-        # env_int/env_float, which already warn and fall back on a malformed
-        # value; the deprecated DEFAULT_PROVIDER='a1111' remap lives in
-        # __post_init__ so it also covers direct construction.
+        # Reads stay INLINE in their ``cls(...)`` keyword so the config-surface
+        # generator (core's domain_env_surface) links each var to its dataclass
+        # field, and so to that field's help/tags/wizard metadata.  Since core
+        # 4.6.1 a *top-level* field also resolves via a ``name.upper()`` fallback
+        # when its read is hoisted into a local, but the inline form is the
+        # explicit one and stays correct if a field is ever renamed apart from
+        # its env suffix — and it is the only form that resolves a composed
+        # *section* field, whose suffix carries the section's own prefix.
+        # Numeric parsing uses core's env_int/env_float, which already warn and
+        # fall back on a malformed value; the deprecated DEFAULT_PROVIDER='a1111'
+        # remap lives in __post_init__ so it also covers direct construction.
         config = cls(
             server=server,
             read_only=parse_bool(env(_ENV_PREFIX, "READ_ONLY", "true")),
