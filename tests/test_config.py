@@ -133,7 +133,11 @@ class TestLoadConfigEnvVars:
         with caplog.at_level(logging.WARNING):
             config = ProjectConfig.from_env()
         assert config.transform_cache_size == 64
-        assert "Invalid TRANSFORM_CACHE_SIZE" in caplog.text
+        # Wording is core's (env_int) since the read moved inline for the
+        # config-surface generator; assert the contract, not the phrasing:
+        # the warning names the offending var and the default it fell back to.
+        assert "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE" in caplog.text
+        assert "64" in caplog.text
 
     def test_base_url_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("IMAGE_GENERATION_MCP_BASE_URL", "https://mcp.example.com/")
@@ -255,6 +259,20 @@ class TestLoadConfigDeprecatedEnvVars:
         monkeypatch.setenv("IMAGE_GENERATION_MCP_DEFAULT_PROVIDER", "a1111")
         with caplog.at_level(logging.WARNING):
             ProjectConfig.from_env()
+        assert "deprecated" in caplog.text.lower()
+
+    def test_default_provider_a1111_remapped_on_direct_construction(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The remap lives in ``__post_init__``, so it covers every path.
+
+        It used to sit in ``from_env``, which left a direct
+        ``ProjectConfig(default_provider="a1111")`` holding the dead alias —
+        the exact gap the CONFIG-VALIDATE seam exists to close.
+        """
+        with caplog.at_level(logging.WARNING):
+            config = ProjectConfig(default_provider="a1111")
+        assert config.default_provider == "sd_webui"
         assert "deprecated" in caplog.text.lower()
 
 

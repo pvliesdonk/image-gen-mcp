@@ -20,6 +20,8 @@ from fastmcp_pvl_core import (
     ServerConfig,
     TransferConfig,
     env,
+    env_float,
+    env_int,
     parse_bool,
     parse_list,
 )
@@ -239,6 +241,14 @@ class ProjectConfig:
         # The composed TransferConfig validates its own bounds (positive,
         # finite, ttl_default_s <= ttl_max_s) in its __post_init__, on both
         # the from_env and the direct-construction path.
+        #
+        # Normalise the deprecated provider alias here rather than in from_env
+        # so a direct ProjectConfig(default_provider="a1111") is remapped too.
+        if self.default_provider == "a1111":
+            logger.warning(
+                "DEFAULT_PROVIDER='a1111' is deprecated — use 'sd_webui' instead"
+            )
+            object.__setattr__(self, "default_provider", "sd_webui")
         # CONFIG-VALIDATE-END
 
     @classmethod
@@ -261,94 +271,47 @@ class ProjectConfig:
         server = ServerConfig.from_env(_ENV_PREFIX)
 
         # CONFIG-FROM-ENV-START — image-generation domain reads; kept across copier update
-        read_only = parse_bool(env(_ENV_PREFIX, "READ_ONLY", "true"))
-
-        scratch_dir = Path(
-            env(_ENV_PREFIX, "SCRATCH_DIR") or _DEFAULT_SCRATCH_DIR
-        ).expanduser()
-
-        openai_api_key = env(_ENV_PREFIX, "OPENAI_API_KEY")
-        google_api_key = env(_ENV_PREFIX, "GOOGLE_API_KEY")
-
-        sd_webui_host = env(_ENV_PREFIX, "SD_WEBUI_HOST") or _legacy_a1111(
-            "A1111_HOST", "SD_WEBUI_HOST"
-        )
-        sd_webui_model = env(_ENV_PREFIX, "SD_WEBUI_MODEL") or _legacy_a1111(
-            "A1111_MODEL", "SD_WEBUI_MODEL"
-        )
-
-        default_provider = env(_ENV_PREFIX, "DEFAULT_PROVIDER") or "auto"
-        if default_provider == "a1111":
-            logger.warning(
-                "DEFAULT_PROVIDER='a1111' is deprecated — use 'sd_webui' instead"
-            )
-            default_provider = "sd_webui"
-
-        raw_cache = env(_ENV_PREFIX, "TRANSFORM_CACHE_SIZE")
-        transform_cache_size = 64
-        if raw_cache:
-            try:
-                transform_cache_size = int(raw_cache)
-            except ValueError:
-                logger.warning(
-                    "Invalid TRANSFORM_CACHE_SIZE=%r — using default 64", raw_cache
-                )
-
-        raw_paid = env(_ENV_PREFIX, "PAID_PROVIDERS")
-        paid_providers = (
-            frozenset(p.lower() for p in parse_list(raw_paid))
-            if raw_paid is not None
-            else frozenset({"openai"})
-        )
-
-        styles_dir = Path(
-            env(_ENV_PREFIX, "STYLES_DIR") or _DEFAULT_STYLES_DIR
-        ).expanduser()
-
-        allow_local_file_input = parse_bool(
-            env(_ENV_PREFIX, "ALLOW_LOCAL_FILE_INPUT", "false")
-        )
-
-        raw_max_input = env(_ENV_PREFIX, "MAX_INPUT_IMAGE_BYTES")
-        max_input_image_bytes = 20 * 1024 * 1024
-        if raw_max_input:
-            try:
-                max_input_image_bytes = int(raw_max_input)
-            except ValueError:
-                logger.warning(
-                    "Invalid MAX_INPUT_IMAGE_BYTES=%r — using default %d",
-                    raw_max_input,
-                    max_input_image_bytes,
-                )
-
-        raw_fetch_timeout = env(_ENV_PREFIX, "FETCH_TIMEOUT_S")
-        fetch_timeout_s = 30.0
-        if raw_fetch_timeout:
-            try:
-                fetch_timeout_s = float(raw_fetch_timeout)
-            except ValueError:
-                logger.warning(
-                    "Invalid FETCH_TIMEOUT_S=%r — using default %s",
-                    raw_fetch_timeout,
-                    fetch_timeout_s,
-                )
-
+        # Every read stays INLINE in its ``cls(...)`` keyword: the config-surface
+        # generator (core's domain_env_surface) links a var to its dataclass
+        # field — and so to that field's help/tags/wizard metadata — only when
+        # the keyword's value expression contains exactly one literal env read.
+        # Reading into a local first and passing it by name silently strips the
+        # var's documentation from every generated artifact, so keep the reads
+        # here rather than hoisting them.  Numeric parsing uses core's
+        # env_int/env_float, which already warn and fall back on a malformed
+        # value; the deprecated DEFAULT_PROVIDER='a1111' remap lives in
+        # __post_init__ so it also covers direct construction.
         config = cls(
             server=server,
-            read_only=read_only,
-            scratch_dir=scratch_dir,
-            openai_api_key=openai_api_key,
-            google_api_key=google_api_key,
-            sd_webui_host=sd_webui_host,
-            sd_webui_model=sd_webui_model,
-            default_provider=default_provider,
-            transform_cache_size=transform_cache_size,
-            paid_providers=paid_providers,
-            styles_dir=styles_dir,
-            allow_local_file_input=allow_local_file_input,
-            max_input_image_bytes=max_input_image_bytes,
+            read_only=parse_bool(env(_ENV_PREFIX, "READ_ONLY", "true")),
+            scratch_dir=Path(
+                env(_ENV_PREFIX, "SCRATCH_DIR") or _DEFAULT_SCRATCH_DIR
+            ).expanduser(),
+            openai_api_key=env(_ENV_PREFIX, "OPENAI_API_KEY"),
+            google_api_key=env(_ENV_PREFIX, "GOOGLE_API_KEY"),
+            sd_webui_host=env(_ENV_PREFIX, "SD_WEBUI_HOST")
+            or _legacy_a1111("A1111_HOST", "SD_WEBUI_HOST"),
+            sd_webui_model=env(_ENV_PREFIX, "SD_WEBUI_MODEL")
+            or _legacy_a1111("A1111_MODEL", "SD_WEBUI_MODEL"),
+            default_provider=env(_ENV_PREFIX, "DEFAULT_PROVIDER") or "auto",
+            transform_cache_size=env_int(_ENV_PREFIX, "TRANSFORM_CACHE_SIZE", 64),
+            # Unset or empty falls back to the default; a value naming no real
+            # provider (e.g. "none") is how an operator disables the gate.
+            paid_providers=frozenset(
+                p.lower() for p in parse_list(env(_ENV_PREFIX, "PAID_PROVIDERS") or "")
+            )
+            or frozenset({"openai"}),
+            styles_dir=Path(
+                env(_ENV_PREFIX, "STYLES_DIR") or _DEFAULT_STYLES_DIR
+            ).expanduser(),
+            allow_local_file_input=parse_bool(
+                env(_ENV_PREFIX, "ALLOW_LOCAL_FILE_INPUT", "false")
+            ),
+            max_input_image_bytes=env_int(
+                _ENV_PREFIX, "MAX_INPUT_IMAGE_BYTES", 20 * 1024 * 1024
+            ),
             transfer=TransferConfig.from_env(_ENV_PREFIX),
-            fetch_timeout_s=fetch_timeout_s,
+            fetch_timeout_s=env_float(_ENV_PREFIX, "FETCH_TIMEOUT_S", 30.0),
         )
         # CONFIG-FROM-ENV-END
 

@@ -8,7 +8,9 @@
   "secretKeys": [
     "IMAGE_GENERATION_MCP_BEARER_TOKEN",
     "IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET",
-    "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY"
+    "IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY",
+    "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
+    "IMAGE_GENERATION_MCP_GOOGLE_API_KEY"
   ],
   "questions": [
     {
@@ -361,80 +363,93 @@
     {
       "id": "read_only",
       "label": "Read Only",
-      "type": "text",
-      "var": "IMAGE_GENERATION_MCP_READ_ONLY"
+      "type": "bool",
+      "var": "IMAGE_GENERATION_MCP_READ_ONLY",
+      "help": "When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them."
     },
     {
       "id": "scratch_dir",
       "label": "Scratch Dir",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_SCRATCH_DIR"
+      "var": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
+      "help": "Directory where generated images are saved. Created automatically on first use."
     },
     {
       "id": "openai_api_key",
       "label": "Openai Api Key",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_OPENAI_API_KEY"
+      "var": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
+      "help": "OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set."
     },
     {
       "id": "google_api_key",
       "label": "Google Api Key",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY"
+      "var": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
+      "help": "Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey."
     },
     {
       "id": "sd_webui_host",
       "label": "Sd Webui Host",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST"
+      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
+      "help": "SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo."
     },
     {
       "id": "sd_webui_model",
       "label": "Sd Webui Model",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL"
+      "var": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
+      "help": "SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model."
     },
     {
       "id": "default_provider",
       "label": "Default Provider",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER"
+      "var": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
+      "help": "Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider."
     },
     {
       "id": "transform_cache_size",
       "label": "Transform Cache Size",
-      "type": "text",
-      "var": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE"
+      "type": "number",
+      "var": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
+      "help": "Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching."
     },
     {
       "id": "paid_providers",
       "label": "Paid Providers",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_PAID_PROVIDERS"
+      "var": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
+      "help": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none)."
     },
     {
       "id": "styles_dir",
       "label": "Styles Dir",
       "type": "text",
-      "var": "IMAGE_GENERATION_MCP_STYLES_DIR"
+      "var": "IMAGE_GENERATION_MCP_STYLES_DIR",
+      "help": "Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist."
     },
     {
       "id": "allow_local_file_input",
       "label": "Allow Local File Input",
-      "type": "text",
-      "var": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT"
+      "type": "bool",
+      "var": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
+      "help": "Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted."
     },
     {
       "id": "max_input_image_bytes",
       "label": "Max Input Image Bytes",
-      "type": "text",
-      "var": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES"
+      "type": "number",
+      "var": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
+      "help": "Maximum accepted input image size in bytes."
     },
     {
       "id": "fetch_timeout_s",
       "label": "Fetch Timeout S",
-      "type": "text",
-      "var": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S"
+      "type": "number",
+      "var": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
+      "help": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs)."
     },
     {
       "id": "transfer_ttl_default_s",

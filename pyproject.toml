@@ -116,7 +116,7 @@ ignore = ["E501"]
 # C901 is a TEMPORARY entry for an upstream regression, not a local choice:
 # template v3.1.0's `_unscanned_from_env_reads` measures 11 > 10, so the
 # byte-identical vendored script fails the structural diff-gate on the very
-# update that ships it (fastmcp-server-template#293). Drop this once a
+# update that ships it (fastmcp-server-template#303). Drop this once a
 # template release lands the decomposition. Listed here rather than as an
 # in-file `# noqa` for the same reason S606 is: C901 isn't in the base
 # select, so the noqa would trip RUF100 on the whole-repo pass.
