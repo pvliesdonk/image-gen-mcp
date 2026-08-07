@@ -220,12 +220,12 @@ Domain environment variables use the `IMAGE_GENERATION_MCP_` prefix:
 | `IMAGE_GENERATION_MCP_STYLES_DIR` | `~/.image-generation-mcp/styles` | No | Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist. |
 | `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` | `false` | No | Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted. |
 | `IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES` | `20971520` | No | Maximum accepted input image size in bytes. |
-| `IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S` | `3600.0` | No | Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only. |
-| `IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S` | `86400.0` | No | Ceiling in seconds a caller-requested transfer-link lifetime is clamped to. |
-| `IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S` | `60.0` | No | Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry. |
-| `IMAGE_GENERATION_MCP_TRANSFER_LEASE_S` | `60.0` | No | Reclaim window in seconds for an in-flight transfer whose handler crashed. |
-| `IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES` | `104857600` | No | Per-upload size cap in bytes for create_upload_link bodies. |
 | `IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S` | `30.0` | No | HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs). |
+| `IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S` | `3600.0` | No | Link lifetime in seconds when the caller requests no explicit TTL. |
+| `IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S` | `86400.0` | No | Ceiling in seconds a caller-requested link TTL is clamped to. |
+| `IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S` | `60.0` | No | Post-success grace window in seconds: a served token's TTL shrinks to this so a stalled transfer can retry within it. |
+| `IMAGE_GENERATION_MCP_TRANSFER_LEASE_S` | `60.0` | No | Crashed-handler reclaim window in seconds for an in-flight reservation. |
+| `IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES` | `104857600` | No | Maximum size in bytes of a single upload. |
 <!-- GENERATED-ENV-TABLE-DOMAIN-END -->
 
 The `create_download_link` / `create_upload_link` tools and the `/transfer/{token}` route register only on an HTTP or SSE transport with `BASE_URL` set, and store link tokens in `IMAGE_GENERATION_MCP_KV_STORE_URL`; the `IMAGE_GENERATION_MCP_TRANSFER_*` knobs above tune link lifetime and upload limits. **Security:** `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` grants callers server-filesystem read access via reference-image paths; enable it only for trusted callers or local single-user deployments.

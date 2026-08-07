@@ -445,46 +445,51 @@
       "help": "Maximum accepted input image size in bytes."
     },
     {
+      "id": "fetch_timeout_s",
+      "label": "Fetch Timeout S",
+      "type": "number",
+      "var": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
+      "help": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs)."
+    },
+    {
       "id": "transfer_ttl_default_s",
       "label": "Transfer Ttl Default S",
       "type": "number",
       "var": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
-      "help": "Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only."
+      "help": "Link lifetime in seconds when the caller requests no explicit TTL.",
+      "advancedGroup": "Transfer"
     },
     {
       "id": "transfer_ttl_max_s",
       "label": "Transfer Ttl Max S",
       "type": "number",
       "var": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
-      "help": "Ceiling in seconds a caller-requested transfer-link lifetime is clamped to."
+      "help": "Ceiling in seconds a caller-requested link TTL is clamped to.",
+      "advancedGroup": "Transfer"
     },
     {
       "id": "transfer_grace_ttl_s",
       "label": "Transfer Grace Ttl S",
       "type": "number",
       "var": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
-      "help": "Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry."
+      "help": "Post-success grace window in seconds: a served token's TTL shrinks to this so a stalled transfer can retry within it.",
+      "advancedGroup": "Transfer"
     },
     {
       "id": "transfer_lease_s",
       "label": "Transfer Lease S",
       "type": "number",
       "var": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
-      "help": "Reclaim window in seconds for an in-flight transfer whose handler crashed."
+      "help": "Crashed-handler reclaim window in seconds for an in-flight reservation.",
+      "advancedGroup": "Transfer"
     },
     {
       "id": "transfer_max_upload_bytes",
       "label": "Transfer Max Upload Bytes",
       "type": "number",
       "var": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
-      "help": "Per-upload size cap in bytes for create_upload_link bodies."
-    },
-    {
-      "id": "fetch_timeout_s",
-      "label": "Fetch Timeout S",
-      "type": "number",
-      "var": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
-      "help": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs)."
+      "help": "Maximum size in bytes of a single upload.",
+      "advancedGroup": "Transfer"
     }
   ],
   "guards": [
@@ -498,6 +503,21 @@
         "auth": [
           "oidc",
           "both"
+        ]
+      }
+    },
+    {
+      "level": "warning",
+      "message": "No provider is configured — the server will start but cannot generate images. Fill in at least one of: OpenAI API key, Google API key, or SD WebUI host.",
+      "when": {
+        "openai_api_key": [
+          ""
+        ],
+        "google_api_key": [
+          ""
+        ],
+        "sd_webui_host": [
+          ""
         ]
       }
     }

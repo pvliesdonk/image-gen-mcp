@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     # httpx and uvicorn come transitively via fastmcp (pulled by
     # fastmcp-pvl-core).  Don't re-list them here.
-    "fastmcp-pvl-core>=4.5.0,<5",
+    "fastmcp-pvl-core>=4.6.1,<5",
     "typer>=0.12",
 
     # PROJECT-DEPS-START — add domain dependencies below; kept across copier update
@@ -260,6 +260,10 @@ build_command = "python scripts/bump_manifests.py"
 # all version-coupled files.
 assets = [
     "server.json",
+    # bump_manifests.py also refreshes uv.lock's self-version entry, so the
+    # release commit carries a consistent lockfile instead of leaving drift
+    # for the next `uv run` to re-sync as a side effect.
+    "uv.lock",
 ]
 
 [tool.semantic_release.changelog]

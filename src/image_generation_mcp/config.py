@@ -37,9 +37,6 @@ _ENV_PREFIX = "IMAGE_GENERATION_MCP"
 _DEFAULT_SCRATCH_DIR = Path("~/.image-generation-mcp/images")
 _DEFAULT_STYLES_DIR = Path("~/.image-generation-mcp/styles")
 
-# Core's own defaults for the transfer knobs, kept in sync by construction.
-_TRANSFER_DEFAULTS = TransferConfig()
-
 
 def _legacy_a1111(suffix: str, replacement: str) -> str | None:
     """Read a deprecated ``A1111_*`` alias env var, warning when it is set.
@@ -204,53 +201,13 @@ class ProjectConfig:
             "tags": ("tuning",),
         },
     )
-    transfer_ttl_default_s: float = field(
-        default=_TRANSFER_DEFAULTS.ttl_default_s,
-        metadata={
-            "help": (
-                "Default lifetime in seconds of a create_download_link / "
-                "create_upload_link URL when the caller omits one. "
-                "HTTP transports only."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_ttl_max_s: float = field(
-        default=_TRANSFER_DEFAULTS.ttl_max_s,
-        metadata={
-            "help": (
-                "Ceiling in seconds a caller-requested transfer-link "
-                "lifetime is clamped to."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_grace_ttl_s: float = field(
-        default=_TRANSFER_DEFAULTS.grace_ttl_s,
-        metadata={
-            "help": (
-                "Post-success grace window in seconds a one-time transfer "
-                "link stays reclaimable, so a stalled download can retry."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_lease_s: float = field(
-        default=_TRANSFER_DEFAULTS.lease_s,
-        metadata={
-            "help": (
-                "Reclaim window in seconds for an in-flight transfer whose "
-                "handler crashed."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_max_upload_bytes: int = field(
-        default=_TRANSFER_DEFAULTS.max_upload_bytes,
-        metadata={
-            "help": "Per-upload size cap in bytes for create_upload_link bodies.",
-            "tags": ("transfer",),
-        },
+    # Composed core section, not flattened: since template v3.1.0 (core 4.6.0's
+    # domain_env_surface) the generator resolves each TRANSFER_* var to the
+    # matching TransferConfig field and documents it from core's own metadata,
+    # so no per-var help belongs here — core owns that text and keeps it true.
+    transfer: TransferConfig = field(
+        default_factory=TransferConfig,
+        metadata={"tags": ("transfer",)},
     )
     fetch_timeout_s: float = field(
         default=30.0,
@@ -263,26 +220,6 @@ class ProjectConfig:
         },
     )
     # CONFIG-FIELDS-END
-
-    @property
-    def transfer(self) -> TransferConfig:
-        """The core transfer config assembled from the flat ``transfer_*`` fields.
-
-        A property rather than a composed ``TransferConfig`` field so the
-        config-surface generator documents the flat fields' metadata instead
-        of discovering core's metadata-less dataclass. Construction runs
-        ``TransferConfig.__post_init__`` validation.
-
-        Returns:
-            A validated :class:`fastmcp_pvl_core.TransferConfig`.
-        """
-        return TransferConfig(
-            ttl_default_s=self.transfer_ttl_default_s,
-            ttl_max_s=self.transfer_ttl_max_s,
-            grace_ttl_s=self.transfer_grace_ttl_s,
-            lease_s=self.transfer_lease_s,
-            max_upload_bytes=self.transfer_max_upload_bytes,
-        )
 
     def __post_init__(self) -> None:
         """Validate composed domain fields.  Raise ``ValueError`` when invalid.
@@ -301,9 +238,17 @@ class ProjectConfig:
         ``object.__setattr__(self, "name", value)``.
         """
         # CONFIG-VALIDATE-START — validate domain fields below; kept across copier update
-        # Constructing the composed TransferConfig runs its bounds validation
-        # (positive, finite, ttl_default_s <= ttl_max_s) on every path.
-        _ = self.transfer
+        # The composed TransferConfig validates its own bounds (positive,
+        # finite, ttl_default_s <= ttl_max_s) in its __post_init__, on both
+        # the from_env and the direct-construction path.
+        #
+        # Normalise the deprecated provider alias here rather than in from_env
+        # so a direct ProjectConfig(default_provider="a1111") is remapped too.
+        if self.default_provider == "a1111":
+            logger.warning(
+                "DEFAULT_PROVIDER='a1111' is deprecated — use 'sd_webui' instead"
+            )
+            object.__setattr__(self, "default_provider", "sd_webui")
         # CONFIG-VALIDATE-END
 
     @classmethod
@@ -326,123 +271,48 @@ class ProjectConfig:
         server = ServerConfig.from_env(_ENV_PREFIX)
 
         # CONFIG-FROM-ENV-START — image-generation domain reads; kept across copier update
-        read_only = parse_bool(env(_ENV_PREFIX, "READ_ONLY", "true"))
-
-        scratch_dir = Path(
-            env(_ENV_PREFIX, "SCRATCH_DIR") or _DEFAULT_SCRATCH_DIR
-        ).expanduser()
-
-        openai_api_key = env(_ENV_PREFIX, "OPENAI_API_KEY")
-        google_api_key = env(_ENV_PREFIX, "GOOGLE_API_KEY")
-
-        sd_webui_host = env(_ENV_PREFIX, "SD_WEBUI_HOST") or _legacy_a1111(
-            "A1111_HOST", "SD_WEBUI_HOST"
-        )
-        sd_webui_model = env(_ENV_PREFIX, "SD_WEBUI_MODEL") or _legacy_a1111(
-            "A1111_MODEL", "SD_WEBUI_MODEL"
-        )
-
-        default_provider = env(_ENV_PREFIX, "DEFAULT_PROVIDER") or "auto"
-        if default_provider == "a1111":
-            logger.warning(
-                "DEFAULT_PROVIDER='a1111' is deprecated — use 'sd_webui' instead"
-            )
-            default_provider = "sd_webui"
-
-        raw_cache = env(_ENV_PREFIX, "TRANSFORM_CACHE_SIZE")
-        transform_cache_size = 64
-        if raw_cache:
-            try:
-                transform_cache_size = int(raw_cache)
-            except ValueError:
-                logger.warning(
-                    "Invalid TRANSFORM_CACHE_SIZE=%r — using default 64", raw_cache
-                )
-
-        raw_paid = env(_ENV_PREFIX, "PAID_PROVIDERS")
-        paid_providers = (
-            frozenset(p.lower() for p in parse_list(raw_paid))
-            if raw_paid is not None
-            else frozenset({"openai"})
-        )
-
-        styles_dir = Path(
-            env(_ENV_PREFIX, "STYLES_DIR") or _DEFAULT_STYLES_DIR
-        ).expanduser()
-
-        allow_local_file_input = parse_bool(
-            env(_ENV_PREFIX, "ALLOW_LOCAL_FILE_INPUT", "false")
-        )
-
-        raw_max_input = env(_ENV_PREFIX, "MAX_INPUT_IMAGE_BYTES")
-        max_input_image_bytes = 20 * 1024 * 1024
-        if raw_max_input:
-            try:
-                max_input_image_bytes = int(raw_max_input)
-            except ValueError:
-                logger.warning(
-                    "Invalid MAX_INPUT_IMAGE_BYTES=%r — using default %d",
-                    raw_max_input,
-                    max_input_image_bytes,
-                )
-
-        raw_fetch_timeout = env(_ENV_PREFIX, "FETCH_TIMEOUT_S")
-        fetch_timeout_s = 30.0
-        if raw_fetch_timeout:
-            try:
-                fetch_timeout_s = float(raw_fetch_timeout)
-            except ValueError:
-                logger.warning(
-                    "Invalid FETCH_TIMEOUT_S=%r — using default %s",
-                    raw_fetch_timeout,
-                    fetch_timeout_s,
-                )
-
+        # Reads stay INLINE in their ``cls(...)`` keyword so the config-surface
+        # generator (core's domain_env_surface) links each var to its dataclass
+        # field, and so to that field's help/tags/wizard metadata.  Since core
+        # 4.6.1 a *top-level* field also resolves via a ``name.upper()`` fallback
+        # when its read is hoisted into a local, but the inline form is the
+        # explicit one and stays correct if a field is ever renamed apart from
+        # its env suffix — and it is the only form that resolves a composed
+        # *section* field, whose suffix carries the section's own prefix.
+        # Numeric parsing uses core's env_int/env_float, which already warn and
+        # fall back on a malformed value; the deprecated DEFAULT_PROVIDER='a1111'
+        # remap lives in __post_init__ so it also covers direct construction.
         config = cls(
             server=server,
-            read_only=read_only,
-            scratch_dir=scratch_dir,
-            openai_api_key=openai_api_key,
-            google_api_key=google_api_key,
-            sd_webui_host=sd_webui_host,
-            sd_webui_model=sd_webui_model,
-            default_provider=default_provider,
-            transform_cache_size=transform_cache_size,
-            paid_providers=paid_providers,
-            styles_dir=styles_dir,
-            allow_local_file_input=allow_local_file_input,
-            max_input_image_bytes=max_input_image_bytes,
-            transfer_ttl_default_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_TTL_DEFAULT_S",
-                _TRANSFER_DEFAULTS.ttl_default_s,
-                strict=True,
+            read_only=parse_bool(env(_ENV_PREFIX, "READ_ONLY", "true")),
+            scratch_dir=Path(
+                env(_ENV_PREFIX, "SCRATCH_DIR") or _DEFAULT_SCRATCH_DIR
+            ).expanduser(),
+            openai_api_key=env(_ENV_PREFIX, "OPENAI_API_KEY"),
+            google_api_key=env(_ENV_PREFIX, "GOOGLE_API_KEY"),
+            sd_webui_host=env(_ENV_PREFIX, "SD_WEBUI_HOST")
+            or _legacy_a1111("A1111_HOST", "SD_WEBUI_HOST"),
+            sd_webui_model=env(_ENV_PREFIX, "SD_WEBUI_MODEL")
+            or _legacy_a1111("A1111_MODEL", "SD_WEBUI_MODEL"),
+            default_provider=env(_ENV_PREFIX, "DEFAULT_PROVIDER") or "auto",
+            transform_cache_size=env_int(_ENV_PREFIX, "TRANSFORM_CACHE_SIZE", 64),
+            # Unset or empty falls back to the default; a value naming no real
+            # provider (e.g. "none") is how an operator disables the gate.
+            paid_providers=frozenset(
+                p.lower() for p in parse_list(env(_ENV_PREFIX, "PAID_PROVIDERS") or "")
+            )
+            or frozenset({"openai"}),
+            styles_dir=Path(
+                env(_ENV_PREFIX, "STYLES_DIR") or _DEFAULT_STYLES_DIR
+            ).expanduser(),
+            allow_local_file_input=parse_bool(
+                env(_ENV_PREFIX, "ALLOW_LOCAL_FILE_INPUT", "false")
             ),
-            transfer_ttl_max_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_TTL_MAX_S",
-                _TRANSFER_DEFAULTS.ttl_max_s,
-                strict=True,
+            max_input_image_bytes=env_int(
+                _ENV_PREFIX, "MAX_INPUT_IMAGE_BYTES", 20 * 1024 * 1024
             ),
-            transfer_grace_ttl_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_GRACE_TTL_S",
-                _TRANSFER_DEFAULTS.grace_ttl_s,
-                strict=True,
-            ),
-            transfer_lease_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_LEASE_S",
-                _TRANSFER_DEFAULTS.lease_s,
-                strict=True,
-            ),
-            transfer_max_upload_bytes=env_int(
-                _ENV_PREFIX,
-                "TRANSFER_MAX_UPLOAD_BYTES",
-                _TRANSFER_DEFAULTS.max_upload_bytes,
-                strict=True,
-            ),
-            fetch_timeout_s=fetch_timeout_s,
+            transfer=TransferConfig.from_env(_ENV_PREFIX),
+            fetch_timeout_s=env_float(_ENV_PREFIX, "FETCH_TIMEOUT_S", 30.0),
         )
         # CONFIG-FROM-ENV-END
 
