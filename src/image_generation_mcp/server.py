@@ -135,19 +135,24 @@ class _TitledResourcesAsTools(ResourcesAsTools):
     rather than shipping untitled bridge tools.
     """
 
-    def _make_list_resources_tool(self) -> Any:
-        tool = super()._make_list_resources_tool()
-        if tool.annotations is None:  # pragma: no cover — upstream always sets them
-            tool.annotations = ToolAnnotations()
-        tool.annotations.title = "List Resources"
+    @staticmethod
+    def _with_title(tool: Any, title: str) -> Any:
+        """Return *tool* with a per-tool copy of its annotations carrying *title*.
+
+        MUST copy, never mutate in place: upstream passes one module-level
+        ``_DEFAULT_ANNOTATIONS`` singleton to both bridge tools, so an
+        in-place write makes the second tool's title win for both (and
+        pollutes fastmcp's shared default for the process lifetime).
+        """
+        base = tool.annotations or ToolAnnotations()
+        tool.annotations = base.model_copy(update={"title": title})
         return tool
 
+    def _make_list_resources_tool(self) -> Any:
+        return self._with_title(super()._make_list_resources_tool(), "List Resources")
+
     def _make_read_resource_tool(self) -> Any:
-        tool = super()._make_read_resource_tool()
-        if tool.annotations is None:  # pragma: no cover — upstream always sets them
-            tool.annotations = ToolAnnotations()
-        tool.annotations.title = "Read Resource"
-        return tool
+        return self._with_title(super()._make_read_resource_tool(), "Read Resource")
 
 
 def _finalize_transfer_tool_metadata(mcp: FastMCP) -> None:

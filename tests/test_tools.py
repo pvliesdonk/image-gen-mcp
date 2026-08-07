@@ -1270,6 +1270,28 @@ class TestFullRegistryTitles:
         )
         assert not untitled, f"tools without annotations.title: {untitled}"
 
+    async def test_bridge_tools_carry_distinct_correct_titles(self) -> None:
+        """Regression: the two bridge tools must not share a title.
+
+        Upstream constructs both from one module-level ``_DEFAULT_ANNOTATIONS``
+        singleton; an in-place title write in ``_TitledResourcesAsTools`` made
+        the second tool's title win for both (and mutated fastmcp's shared
+        default). The registry-wide non-empty check above cannot catch a
+        title-swap, so pin the exact per-tool titles and singleton hygiene.
+        """
+        import fastmcp.server.transforms.resources_as_tools as _rat
+
+        from image_generation_mcp.server import _TitledResourcesAsTools
+
+        transform = _TitledResourcesAsTools(FastMCP("t"))
+        list_tool = transform._make_list_resources_tool()
+        read_tool = transform._make_read_resource_tool()
+        assert list_tool.annotations.title == "List Resources"
+        assert read_tool.annotations.title == "Read Resource"
+        assert list_tool.annotations is not read_tool.annotations
+        # fastmcp's shared default must stay untouched
+        assert _rat._DEFAULT_ANNOTATIONS.title is None
+
 
 # ---------------------------------------------------------------------------
 # edit_image tool
