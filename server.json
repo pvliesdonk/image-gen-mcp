@@ -59,104 +59,73 @@
           "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_MODEL; logs a warning when used."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
-          "description": "When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them.",
-          "format": "boolean",
-          "default": "true"
+          "name": "IMAGE_GENERATION_MCP_READ_ONLY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
-          "description": "Directory where generated images are saved. Created automatically on first use.",
-          "format": "filepath",
-          "default": "~/.image-generation-mcp/images"
+          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
-          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set.",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
-          "description": "Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey.",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
-          "description": "SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
-          "description": "SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
-          "description": "Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider.",
-          "default": "auto"
+          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
-          "description": "Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching.",
-          "format": "number",
-          "default": "64"
+          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
-          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none).",
-          "default": "openai"
+          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_STYLES_DIR",
-          "description": "Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist.",
-          "format": "filepath",
-          "default": "~/.image-generation-mcp/styles"
+          "name": "IMAGE_GENERATION_MCP_STYLES_DIR"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
-          "description": "Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted.",
-          "format": "boolean",
-          "default": "false"
+          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
-          "description": "Maximum accepted input image size in bytes.",
-          "format": "number",
-          "default": "20971520"
+          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
-          "description": "Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only.",
+          "description": "Link lifetime in seconds when the caller requests no explicit TTL.",
           "format": "number",
           "default": "3600.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
-          "description": "Ceiling in seconds a caller-requested transfer-link lifetime is clamped to.",
+          "description": "Ceiling in seconds a caller-requested link TTL is clamped to.",
           "format": "number",
           "default": "86400.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
-          "description": "Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry.",
+          "description": "Post-success grace window in seconds: a served token's TTL shrinks to this so a stalled transfer can retry within it.",
           "format": "number",
           "default": "60.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
-          "description": "Reclaim window in seconds for an in-flight transfer whose handler crashed.",
+          "description": "Crashed-handler reclaim window in seconds for an in-flight reservation.",
           "format": "number",
           "default": "60.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
-          "description": "Per-upload size cap in bytes for create_upload_link bodies.",
+          "description": "Maximum size in bytes of a single upload.",
           "format": "number",
           "default": "104857600"
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
-          "description": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs).",
-          "format": "number",
-          "default": "30.0"
         }
       ]
     },
@@ -301,104 +270,73 @@
           "description": "Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_MODEL; logs a warning when used."
         },
         {
-          "name": "IMAGE_GENERATION_MCP_READ_ONLY",
-          "description": "When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them.",
-          "format": "boolean",
-          "default": "true"
+          "name": "IMAGE_GENERATION_MCP_READ_ONLY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR",
-          "description": "Directory where generated images are saved. Created automatically on first use.",
-          "format": "filepath",
-          "default": "~/.image-generation-mcp/images"
+          "name": "IMAGE_GENERATION_MCP_SCRATCH_DIR"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY",
-          "description": "OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set.",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_OPENAI_API_KEY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY",
-          "description": "Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey.",
-          "isSecret": true
+          "name": "IMAGE_GENERATION_MCP_GOOGLE_API_KEY"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST",
-          "description": "SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_HOST"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL",
-          "description": "SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model."
+          "name": "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER",
-          "description": "Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider.",
-          "default": "auto"
+          "name": "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE",
-          "description": "Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching.",
-          "format": "number",
-          "default": "64"
+          "name": "IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS",
-          "description": "Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none).",
-          "default": "openai"
+          "name": "IMAGE_GENERATION_MCP_PAID_PROVIDERS"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_STYLES_DIR",
-          "description": "Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist.",
-          "format": "filepath",
-          "default": "~/.image-generation-mcp/styles"
+          "name": "IMAGE_GENERATION_MCP_STYLES_DIR"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT",
-          "description": "Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted.",
-          "format": "boolean",
-          "default": "false"
+          "name": "IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT"
         },
         {
-          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES",
-          "description": "Maximum accepted input image size in bytes.",
-          "format": "number",
-          "default": "20971520"
+          "name": "IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES"
+        },
+        {
+          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S",
-          "description": "Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only.",
+          "description": "Link lifetime in seconds when the caller requests no explicit TTL.",
           "format": "number",
           "default": "3600.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S",
-          "description": "Ceiling in seconds a caller-requested transfer-link lifetime is clamped to.",
+          "description": "Ceiling in seconds a caller-requested link TTL is clamped to.",
           "format": "number",
           "default": "86400.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S",
-          "description": "Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry.",
+          "description": "Post-success grace window in seconds: a served token's TTL shrinks to this so a stalled transfer can retry within it.",
           "format": "number",
           "default": "60.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_LEASE_S",
-          "description": "Reclaim window in seconds for an in-flight transfer whose handler crashed.",
+          "description": "Crashed-handler reclaim window in seconds for an in-flight reservation.",
           "format": "number",
           "default": "60.0"
         },
         {
           "name": "IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES",
-          "description": "Per-upload size cap in bytes for create_upload_link bodies.",
+          "description": "Maximum size in bytes of a single upload.",
           "format": "number",
           "default": "104857600"
-        },
-        {
-          "name": "IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S",
-          "description": "HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs).",
-          "format": "number",
-          "default": "30.0"
         }
       ]
     }

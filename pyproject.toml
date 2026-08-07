@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     # httpx and uvicorn come transitively via fastmcp (pulled by
     # fastmcp-pvl-core).  Don't re-list them here.
-    "fastmcp-pvl-core>=4.5.0,<5",
+    "fastmcp-pvl-core>=4.6.0,<5",
     "typer>=0.12",
 
     # PROJECT-DEPS-START — add domain dependencies below; kept across copier update
@@ -113,7 +113,14 @@ ignore = ["E501"]
 # ensure_core_available). S606 flags any no-shell process start for review;
 # here the no-shell form is the safer one, and a `# noqa` instead of this
 # entry would trip RUF100 on the whole-repo pass, where `S` isn't selected.
-"scripts/gen_config_surface.py" = ["S606"]
+# C901 is a TEMPORARY entry for an upstream regression, not a local choice:
+# template v3.1.0's `_unscanned_from_env_reads` measures 11 > 10, so the
+# byte-identical vendored script fails the structural diff-gate on the very
+# update that ships it (fastmcp-server-template#293). Drop this once a
+# template release lands the decomposition. Listed here rather than as an
+# in-file `# noqa` for the same reason S606 is: C901 isn't in the base
+# select, so the noqa would trip RUF100 on the whole-repo pass.
+"scripts/gen_config_surface.py" = ["S606", "C901"]
 
 # PROJECT-RUFF-IGNORES-START — replace, extend, or override the entries below
 # for your project's real source/test paths (split _server_apps.py into
@@ -260,6 +267,10 @@ build_command = "python scripts/bump_manifests.py"
 # all version-coupled files.
 assets = [
     "server.json",
+    # bump_manifests.py also refreshes uv.lock's self-version entry, so the
+    # release commit carries a consistent lockfile instead of leaving drift
+    # for the next `uv run` to re-sync as a side effect.
+    "uv.lock",
 ]
 
 [tool.semantic_release.changelog]

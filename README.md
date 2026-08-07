@@ -208,24 +208,24 @@ Domain environment variables use the `IMAGE_GENERATION_MCP_` prefix:
 |---|---|---|---|
 | `IMAGE_GENERATION_MCP_A1111_HOST` | (none) | No | Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_HOST; logs a warning when used. |
 | `IMAGE_GENERATION_MCP_A1111_MODEL` | (none) | No | Deprecated alias for IMAGE_GENERATION_MCP_SD_WEBUI_MODEL; logs a warning when used. |
-| `IMAGE_GENERATION_MCP_READ_ONLY` | `true` | No | When true, write-tagged tools (image generation, transforms, uploads) are hidden from clients. Set false to enable them. |
-| `IMAGE_GENERATION_MCP_SCRATCH_DIR` | `~/.image-generation-mcp/images` | No | Directory where generated images are saved. Created automatically on first use. |
-| `IMAGE_GENERATION_MCP_OPENAI_API_KEY` | (none) | No | OpenAI API key. Enables the OpenAI provider (gpt-image-2, gpt-image-1.5, dall-e-3) when set. |
-| `IMAGE_GENERATION_MCP_GOOGLE_API_KEY` | (none) | No | Google API key. Enables the Gemini provider (gemini-3.1-flash-image and others) when set. Get a key at https://aistudio.google.com/apikey. |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST` | (none) | No | SD WebUI base URL (such as http://localhost:7860). Enables the SD WebUI provider when set. Compatible with AUTOMATIC1111, Forge, reForge, and Forge-neo. |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_MODEL` | (none) | No | SD WebUI checkpoint name, used for model-aware preset detection (SD 1.5 / SDXL / Lightning) and checkpoint override. Unset uses the instance's current model. |
-| `IMAGE_GENERATION_MCP_DEFAULT_PROVIDER` | `auto` | No | Provider used when no keyword triggers auto-selection: auto, openai, gemini, sd_webui, or placeholder. auto picks the first configured provider. |
-| `IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE` | `64` | No | Maximum number of transformed image results (resize, crop, convert) kept in memory. Set 0 to disable caching. |
-| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | `openai` | No | Comma-separated provider names that cost money; generate_image asks for confirmation (client elicitation) before using them. An empty value falls back to this default; to disable confirmation, set a value that names no provider (such as none). |
-| `IMAGE_GENERATION_MCP_STYLES_DIR` | `~/.image-generation-mcp/styles` | No | Directory for style preset files (Markdown with YAML front matter). Created automatically if it does not exist. |
-| `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` | `false` | No | Allow reading input images from local filesystem paths. Off by default: only URLs and uploads are accepted. |
-| `IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES` | `20971520` | No | Maximum accepted input image size in bytes. |
-| `IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S` | `3600.0` | No | Default lifetime in seconds of a create_download_link / create_upload_link URL when the caller omits one. HTTP transports only. |
-| `IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S` | `86400.0` | No | Ceiling in seconds a caller-requested transfer-link lifetime is clamped to. |
-| `IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S` | `60.0` | No | Post-success grace window in seconds a one-time transfer link stays reclaimable, so a stalled download can retry. |
-| `IMAGE_GENERATION_MCP_TRANSFER_LEASE_S` | `60.0` | No | Reclaim window in seconds for an in-flight transfer whose handler crashed. |
-| `IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES` | `104857600` | No | Per-upload size cap in bytes for create_upload_link bodies. |
-| `IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S` | `30.0` | No | HTTP timeout in seconds when fetching remote image URLs (fetch_image and URL inputs). |
+| `IMAGE_GENERATION_MCP_READ_ONLY` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_SCRATCH_DIR` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_OPENAI_API_KEY` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_GOOGLE_API_KEY` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_SD_WEBUI_MODEL` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_DEFAULT_PROVIDER` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_TRANSFORM_CACHE_SIZE` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_STYLES_DIR` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_MAX_INPUT_IMAGE_BYTES` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_FETCH_TIMEOUT_S` | (none) | **Yes** |  |
+| `IMAGE_GENERATION_MCP_TRANSFER_TTL_DEFAULT_S` | `3600.0` | No | Link lifetime in seconds when the caller requests no explicit TTL. |
+| `IMAGE_GENERATION_MCP_TRANSFER_TTL_MAX_S` | `86400.0` | No | Ceiling in seconds a caller-requested link TTL is clamped to. |
+| `IMAGE_GENERATION_MCP_TRANSFER_GRACE_TTL_S` | `60.0` | No | Post-success grace window in seconds: a served token's TTL shrinks to this so a stalled transfer can retry within it. |
+| `IMAGE_GENERATION_MCP_TRANSFER_LEASE_S` | `60.0` | No | Crashed-handler reclaim window in seconds for an in-flight reservation. |
+| `IMAGE_GENERATION_MCP_TRANSFER_MAX_UPLOAD_BYTES` | `104857600` | No | Maximum size in bytes of a single upload. |
 <!-- GENERATED-ENV-TABLE-DOMAIN-END -->
 
 The `create_download_link` / `create_upload_link` tools and the `/transfer/{token}` route register only on an HTTP or SSE transport with `BASE_URL` set, and store link tokens in `IMAGE_GENERATION_MCP_KV_STORE_URL`; the `IMAGE_GENERATION_MCP_TRANSFER_*` knobs above tune link lifetime and upload limits. **Security:** `IMAGE_GENERATION_MCP_ALLOW_LOCAL_FILE_INPUT` grants callers server-filesystem read access via reference-image paths; enable it only for trusted callers or local single-user deployments.

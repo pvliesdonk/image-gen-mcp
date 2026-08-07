@@ -20,8 +20,6 @@ from fastmcp_pvl_core import (
     ServerConfig,
     TransferConfig,
     env,
-    env_float,
-    env_int,
     parse_bool,
     parse_list,
 )
@@ -36,9 +34,6 @@ _ENV_PREFIX = "IMAGE_GENERATION_MCP"
 # expands ``~`` when it resolves the effective paths.
 _DEFAULT_SCRATCH_DIR = Path("~/.image-generation-mcp/images")
 _DEFAULT_STYLES_DIR = Path("~/.image-generation-mcp/styles")
-
-# Core's own defaults for the transfer knobs, kept in sync by construction.
-_TRANSFER_DEFAULTS = TransferConfig()
 
 
 def _legacy_a1111(suffix: str, replacement: str) -> str | None:
@@ -204,53 +199,13 @@ class ProjectConfig:
             "tags": ("tuning",),
         },
     )
-    transfer_ttl_default_s: float = field(
-        default=_TRANSFER_DEFAULTS.ttl_default_s,
-        metadata={
-            "help": (
-                "Default lifetime in seconds of a create_download_link / "
-                "create_upload_link URL when the caller omits one. "
-                "HTTP transports only."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_ttl_max_s: float = field(
-        default=_TRANSFER_DEFAULTS.ttl_max_s,
-        metadata={
-            "help": (
-                "Ceiling in seconds a caller-requested transfer-link "
-                "lifetime is clamped to."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_grace_ttl_s: float = field(
-        default=_TRANSFER_DEFAULTS.grace_ttl_s,
-        metadata={
-            "help": (
-                "Post-success grace window in seconds a one-time transfer "
-                "link stays reclaimable, so a stalled download can retry."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_lease_s: float = field(
-        default=_TRANSFER_DEFAULTS.lease_s,
-        metadata={
-            "help": (
-                "Reclaim window in seconds for an in-flight transfer whose "
-                "handler crashed."
-            ),
-            "tags": ("transfer",),
-        },
-    )
-    transfer_max_upload_bytes: int = field(
-        default=_TRANSFER_DEFAULTS.max_upload_bytes,
-        metadata={
-            "help": "Per-upload size cap in bytes for create_upload_link bodies.",
-            "tags": ("transfer",),
-        },
+    # Composed core section, not flattened: since template v3.1.0 (core 4.6.0's
+    # domain_env_surface) the generator resolves each TRANSFER_* var to the
+    # matching TransferConfig field and documents it from core's own metadata,
+    # so no per-var help belongs here — core owns that text and keeps it true.
+    transfer: TransferConfig = field(
+        default_factory=TransferConfig,
+        metadata={"tags": ("transfer",)},
     )
     fetch_timeout_s: float = field(
         default=30.0,
@@ -263,26 +218,6 @@ class ProjectConfig:
         },
     )
     # CONFIG-FIELDS-END
-
-    @property
-    def transfer(self) -> TransferConfig:
-        """The core transfer config assembled from the flat ``transfer_*`` fields.
-
-        A property rather than a composed ``TransferConfig`` field so the
-        config-surface generator documents the flat fields' metadata instead
-        of discovering core's metadata-less dataclass. Construction runs
-        ``TransferConfig.__post_init__`` validation.
-
-        Returns:
-            A validated :class:`fastmcp_pvl_core.TransferConfig`.
-        """
-        return TransferConfig(
-            ttl_default_s=self.transfer_ttl_default_s,
-            ttl_max_s=self.transfer_ttl_max_s,
-            grace_ttl_s=self.transfer_grace_ttl_s,
-            lease_s=self.transfer_lease_s,
-            max_upload_bytes=self.transfer_max_upload_bytes,
-        )
 
     def __post_init__(self) -> None:
         """Validate composed domain fields.  Raise ``ValueError`` when invalid.
@@ -301,9 +236,9 @@ class ProjectConfig:
         ``object.__setattr__(self, "name", value)``.
         """
         # CONFIG-VALIDATE-START — validate domain fields below; kept across copier update
-        # Constructing the composed TransferConfig runs its bounds validation
-        # (positive, finite, ttl_default_s <= ttl_max_s) on every path.
-        _ = self.transfer
+        # The composed TransferConfig validates its own bounds (positive,
+        # finite, ttl_default_s <= ttl_max_s) in its __post_init__, on both
+        # the from_env and the direct-construction path.
         # CONFIG-VALIDATE-END
 
     @classmethod
@@ -412,36 +347,7 @@ class ProjectConfig:
             styles_dir=styles_dir,
             allow_local_file_input=allow_local_file_input,
             max_input_image_bytes=max_input_image_bytes,
-            transfer_ttl_default_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_TTL_DEFAULT_S",
-                _TRANSFER_DEFAULTS.ttl_default_s,
-                strict=True,
-            ),
-            transfer_ttl_max_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_TTL_MAX_S",
-                _TRANSFER_DEFAULTS.ttl_max_s,
-                strict=True,
-            ),
-            transfer_grace_ttl_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_GRACE_TTL_S",
-                _TRANSFER_DEFAULTS.grace_ttl_s,
-                strict=True,
-            ),
-            transfer_lease_s=env_float(
-                _ENV_PREFIX,
-                "TRANSFER_LEASE_S",
-                _TRANSFER_DEFAULTS.lease_s,
-                strict=True,
-            ),
-            transfer_max_upload_bytes=env_int(
-                _ENV_PREFIX,
-                "TRANSFER_MAX_UPLOAD_BYTES",
-                _TRANSFER_DEFAULTS.max_upload_bytes,
-                strict=True,
-            ),
+            transfer=TransferConfig.from_env(_ENV_PREFIX),
             fetch_timeout_s=fetch_timeout_s,
         )
         # CONFIG-FROM-ENV-END
