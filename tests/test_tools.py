@@ -1256,9 +1256,13 @@ class TestFullRegistryTitles:
         # Parent-class accessor bypasses FastMCP's model-visibility filter,
         # the same trick tests._helpers.get_tool_including_app_only uses.
         tools = await super(FastMCP, server).list_tools()
-        # Sanity: this is the full registry (domain + core + bridge +
-        # transfer tools), not the filtered client-facing listing.
-        assert len(tools) >= 18, [t.name for t in tools]
+        # Sanity: this is the full registry, not the filtered client-facing
+        # listing — 15 tools.py registrations (incl. the app-only gallery
+        # and save handlers), core's get_server_info, the 2 bridge tools,
+        # and the 2 transfer tools = 20 on an HTTP server with base_url.
+        # Exact-count floor so a tool silently vanishing from registration
+        # fails here too, not just an untitled addition.
+        assert len(tools) >= 20, sorted(t.name for t in tools)
         untitled = sorted(
             t.name
             for t in tools
