@@ -1225,6 +1225,74 @@ class TestToolAnnotations:
             )
 
 
+class TestFullRegistryTitles:
+    """CLAUDE.md Tool Registration Checklist enforcement (issue #315).
+
+    Every registered tool must carry a non-empty ``annotations.title``.
+    Enumerates the FULL registry via the parent-class accessor — including
+    app-only tools, write-tagged tools hidden in read-only mode, the
+    ``ResourcesAsTools`` bridge tools, and the transfer tools — so a future
+    tool cannot ship its machine name as the client-facing label.
+    """
+
+    async def test_every_registered_tool_has_a_nonempty_title(
+        self, tmp_path: Path
+    ) -> None:
+        from fastmcp_pvl_core import ServerConfig
+
+        from image_generation_mcp.config import ProjectConfig
+        from image_generation_mcp.server import make_server
+
+        server = make_server(
+            transport="http",
+            config=ProjectConfig(
+                server=ServerConfig(
+                    base_url="https://mcp.example.com", kv_store_url="memory://"
+                ),
+                scratch_dir=tmp_path,
+                read_only=True,
+            ),
+        )
+        # Parent-class accessor bypasses FastMCP's model-visibility filter,
+        # the same trick tests._helpers.get_tool_including_app_only uses.
+        tools = await super(FastMCP, server).list_tools()
+        # Sanity: this is the full registry, not the filtered client-facing
+        # listing — 15 tools.py registrations (incl. the app-only gallery
+        # and save handlers), core's get_server_info, the 2 bridge tools,
+        # and the 2 transfer tools = 20 on an HTTP server with base_url.
+        # Exact-count floor so a tool silently vanishing from registration
+        # fails here too, not just an untitled addition.
+        assert len(tools) >= 20, sorted(t.name for t in tools)
+        untitled = sorted(
+            t.name
+            for t in tools
+            if t.annotations is None or not (t.annotations.title or "").strip()
+        )
+        assert not untitled, f"tools without annotations.title: {untitled}"
+
+    async def test_bridge_tools_carry_distinct_correct_titles(self) -> None:
+        """Regression: the two bridge tools must not share a title.
+
+        Upstream constructs both from one module-level ``_DEFAULT_ANNOTATIONS``
+        singleton; an in-place title write in ``_TitledResourcesAsTools`` made
+        the second tool's title win for both (and mutated fastmcp's shared
+        default). The registry-wide non-empty check above cannot catch a
+        title-swap, so pin the exact per-tool titles and singleton hygiene.
+        """
+        import fastmcp.server.transforms.resources_as_tools as _rat
+
+        from image_generation_mcp.server import _TitledResourcesAsTools
+
+        transform = _TitledResourcesAsTools(FastMCP("t"))
+        list_tool = transform._make_list_resources_tool()
+        read_tool = transform._make_read_resource_tool()
+        assert list_tool.annotations.title == "List Resources"
+        assert read_tool.annotations.title == "Read Resource"
+        assert list_tool.annotations is not read_tool.annotations
+        # fastmcp's shared default must stay untouched
+        assert _rat._DEFAULT_ANNOTATIONS.title is None
+
+
 # ---------------------------------------------------------------------------
 # edit_image tool
 # ---------------------------------------------------------------------------

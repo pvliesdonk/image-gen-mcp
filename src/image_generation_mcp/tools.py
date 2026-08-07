@@ -374,6 +374,7 @@ def register_tools(mcp: FastMCP) -> None:
         tags={"write"},
         task=True,
         annotations={
+            "title": "Generate Image",
             "readOnlyHint": False,
             "destructiveHint": False,
             "openWorldHint": True,
@@ -579,6 +580,7 @@ def register_tools(mcp: FastMCP) -> None:
         tags={"write"},
         task=True,
         annotations={
+            "title": "Transform Image",
             "readOnlyHint": False,
             "destructiveHint": False,
             "openWorldHint": True,
@@ -893,6 +895,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Check Generation Status",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -966,6 +969,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Show Image",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1129,6 +1133,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Browse Gallery",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1233,6 +1238,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Gallery Page",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1333,6 +1339,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Gallery Full Image",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1391,6 +1398,7 @@ def register_tools(mcp: FastMCP) -> None:
         tags={"write"},
         icons=[Icon(src=_LUCIDE.format("trash-2"), mimeType="image/svg+xml")],
         annotations={
+            "title": "Delete Image",
             "readOnlyHint": False,
             "destructiveHint": True,
             "openWorldHint": False,
@@ -1420,6 +1428,7 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool(
         icons=[Icon(src=_LUCIDE.format("layers"), mimeType="image/svg+xml")],
         annotations={
+            "title": "List Providers",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": True,
@@ -1465,6 +1474,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool(
         annotations={
+            "title": "Edit Image",
             "readOnlyHint": True,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1520,6 +1530,7 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool(
         tags={"write"},
         annotations={
+            "title": "Save Edited Image",
             "readOnlyHint": False,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1622,6 +1633,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         tags={"write"},
         annotations={
+            "title": "Save Style",
             "readOnlyHint": False,
             "destructiveHint": False,
             "openWorldHint": False,
@@ -1690,6 +1702,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         tags={"write"},
         annotations={
+            "title": "Delete Style",
             "readOnlyHint": False,
             "destructiveHint": True,
             "openWorldHint": False,

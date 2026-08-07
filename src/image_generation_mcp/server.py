@@ -124,6 +124,37 @@ _TRANSFER_TOOL_META: dict[str, tuple[ToolAnnotations, str, str | None]] = {
 }
 
 
+class _TitledResourcesAsTools(ResourcesAsTools):
+    """``ResourcesAsTools`` whose two bridge tools carry ``annotations.title``.
+
+    fastmcp's transform constructs ``list_resources`` / ``read_resource``
+    with title-less annotations; the Tool Registration Checklist requires a
+    non-empty title on every registered tool (enforced by
+    ``tests/test_tools.py``). Overrides the parent's private factory methods —
+    if a fastmcp upgrade renames them, the enforcement test fails loudly
+    rather than shipping untitled bridge tools.
+    """
+
+    @staticmethod
+    def _with_title(tool: Any, title: str) -> Any:
+        """Return *tool* with a per-tool copy of its annotations carrying *title*.
+
+        MUST copy, never mutate in place: upstream passes one module-level
+        ``_DEFAULT_ANNOTATIONS`` singleton to both bridge tools, so an
+        in-place write makes the second tool's title win for both (and
+        pollutes fastmcp's shared default for the process lifetime).
+        """
+        base = tool.annotations or ToolAnnotations()
+        tool.annotations = base.model_copy(update={"title": title})
+        return tool
+
+    def _make_list_resources_tool(self) -> Any:
+        return self._with_title(super()._make_list_resources_tool(), "List Resources")
+
+    def _make_read_resource_tool(self) -> Any:
+        return self._with_title(super()._make_read_resource_tool(), "Read Resource")
+
+
 def _finalize_transfer_tool_metadata(mcp: FastMCP) -> None:
     """Attach title/hints/icon (and the ``write`` tag) to the transfer tools.
 
@@ -290,7 +321,7 @@ def make_server(
 
     # IG-specific: expose resources as tools for clients without resource support.
     # Apply AFTER all registrations so the transform sees every resource.
-    mcp.add_transform(ResourcesAsTools(mcp))
+    mcp.add_transform(_TitledResourcesAsTools(mcp))
 
     if config.read_only:
         mcp.disable(tags={"write"})
