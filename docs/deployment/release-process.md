@@ -13,7 +13,7 @@ from.
 | Channel | Version identity | What it promises |
 |---|---|---|
 | `edge` | None; the commit is the identity | The newest merged code. Every merge to `main` rebuilds the rolling Docker tag plus an `.mcpb` bundle workflow artifact, and the rolling `unstable` docs version deploys from the same trigger. It leaves no git tag, GitHub release, or PyPI entry behind. |
-| Pre-release | `vX.Y.Z-rc.N`, computed and reviewed in its release pull request | A stabilisation step toward exactly that version, normally cut from a `release/X.Y` branch. Publishes a GitHub release with wheels, `sdist`, `.mcpb` bundle, and SBOM attached, plus a Docker image under its immutable version tag. Skips PyPI, `.deb`/`.rpm` packages, the marketplace and registry entries, and the docs deploy. |
+| Pre-release | `vX.Y.Z-rc.N`, computed and reviewed in its release pull request | A stabilisation step toward exactly that version, normally cut from a `release/X.Y` branch. Publishes a GitHub release with wheels, `sdist`, `.deb`/`.rpm` packages, `.mcpb` bundle, and SBOM attached, plus a Docker image under its immutable version tag and the rolling `rc` tag. Skips PyPI, the marketplace and registry entries, and the docs deploy. |
 | Stable | `vX.Y.Z` | The full artifact set: PyPI, Docker, Linux packages, GitHub release assets (wheels, `sdist`, `.mcpb` bundle, SBOM), marketplace and registry entries, versioned docs. |
 
 Pre-release and `edge` builds never reach PyPI: PyPI is where every
@@ -26,7 +26,9 @@ Rolling pointers are ordering-aware. The Docker `latest`, `vX`, and `vX.Y`
 tags, the GitHub latest-release pointer, the docs `latest` alias, and the
 marketplace and registry entries follow a release only when it is the
 newest in the relevant series, so a patch release cut from an old
-`release/X.Y` branch never moves them back to older content. This holds
+`release/X.Y` branch never moves them back to older content. The Docker
+`rc` tag follows the same rule on the pre-release side: it moves only
+while the candidate's version is still ahead of the newest stable. This holds
 even when two releases overlap: each rolling channel checks the tag
 ordering again inside its own publish job. See
 [Image tags](docker.md#image-tags) for the Docker tag list.
@@ -108,9 +110,9 @@ See [Repository Protection](repository-protection.md).
 
 Each release is described in three places with distinct jobs:
 
-- **The GitHub release body** carries the release's machine-written
-  changelog section and pointers: the versioned docs, the compare view,
-  and, once the release's notes page exists, a deep link to it.
+- **The GitHub release body** carries the release's notes summary, its
+  machine-written changelog section, and pointers: the versioned docs,
+  the compare view, and a deep link to the notes page.
 - **The release notes pages on this docs site** are the canonical
   human-facing narrative of what changed and why it matters.
 - **`CHANGELOG.md`** in the repository is the machine-written audit
@@ -121,26 +123,24 @@ Each release is described in three places with distinct jobs:
 
 The pages under [Release Notes](../releases/index.md) cover one minor
 series each; a patch release adds a dated section to its series page.
-After every stable release, the **Release Notes** workflow drafts the
-page: an agent researches the release range through the GitHub API (the
-linked issues and pull requests, not commit subjects) and opens a pull
-request against `main`. The same workflow can also be dispatched while a
-release pull request is still open, so the notes draft is reviewable
-during a release-candidate cycle rather than only after the stable ships.
-Every causal claim in a page must cite a linked issue or pull request.
-The drafting agent runs the same prose lint as the rest of this site
-while it writes, and the notes pull request's own CI enforces it: the
-`vale` job must pass before the pull request can merge, the same gate
-every change to this site clears.
+The page is part of every release pull request, exactly like the
+changelog. The Release Prepare workflow's notes job drafts or refreshes
+it. The drafting agent reads the release range through the GitHub API,
+working from the linked issues and pull requests rather than commit
+subjects, and the finished page is committed onto the release pull
+request's branch. Reviewing the release pull request covers the notes. Merging it lands the page in
+the release's own tag, and the published docs and the release body's
+summary and deep link all read the page from there. Release candidates carry their notes
+draft the same way, so a candidate is the full release artifact,
+narrative included. Every causal claim in a page must cite a linked
+issue or pull request, and the drafting agent runs the same prose lint
+as the rest of this site.
 
-A maintainer merge is the publication step. Nothing lands on the site
-without review, and until the merge the release keeps the changelog and
-pointer body the release workflow wrote; a failed or unconvincing draft
-never blocks or alters a release. The docs deploy for a stable overlays
-the merged pages from `main` into the release's versioned docs, so they
-are present whichever branch the release was cut from. When the page is already merged before
-the stable publishes, the release body deep-links it immediately;
-otherwise, on merge, the **Release Notes Publish** workflow updates the
-GitHub release body from the page's summary and redeploys that minor's
-versioned docs so the body's deep link resolves. Later hand edits to a
-merged page redeploy the docs the same way.
+The release pull request stays a draft until the notes job lands its
+page, so a release without its notes can never merge by accident. A
+drafting failure fails the prepare run visibly and leaves the pull
+request in draft; re-run the notes job, or re-dispatch Release Prepare
+with `skip_notes` to release without a notes refresh. For a release shipped that way, the **Release Notes**
+workflow's manual dispatch drafts a standalone notes pull request as a
+backfill. Later hand edits to a released page redeploy that minor's
+versioned docs through the **Release Notes Publish** workflow.

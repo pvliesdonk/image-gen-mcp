@@ -58,6 +58,12 @@ STAMPER = REPO_ROOT / "scripts" / "stamp_manifests.py"
 GUARD = REPO_ROOT / "scripts" / "promotion_guard.sh"
 PREPARE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release-prepare.yml"
 RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
+NOTES_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release-notes.yml"
+NOTES_PUBLISH_WORKFLOW = (
+    REPO_ROOT / ".github" / "workflows" / "release-notes-publish.yml"
+)
+DOCS_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "docs.yml"
+UNSTABLE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "unstable.yml"
 
 
 def _knope_config() -> dict[str, Any]:
@@ -437,13 +443,509 @@ def test_docker_rolling_tags_gate_on_the_recheck_not_the_release_job() -> None:
     step green — exactly the silent-drift shape this suite guards against.
     """
     block = _release_job_block("publish-docker", "publish-linux-packages")
-    for output in ("is_latest", "is_latest_minor", "is_latest_major"):
+    for output in ("is_latest", "is_latest_minor", "is_latest_major", "is_newest_rc"):
         needle = "enable=${{ steps.recheck.outputs." + output + " == 'true' }}"
         assert needle in block, (
             f"the rolling-tag enable for {output} must read the recheck step"
         )
     assert "enable=${{ needs.release.outputs" not in block, (
         "no rolling-tag enable may read the release job's stale-able outputs"
+    )
+
+
+def test_docker_rc_tag_is_ordering_gated_and_disjoint_from_latest() -> None:
+    """An rc release repoints the rolling ``rc`` tag, and only that one.
+
+    Before template#360 the rc-fed rolling tag was ``unstable`` and its
+    enable was the bare ``prerelease`` flag — no ordering at all, so a
+    backport rc repointed it backwards.  #360 retired the tag rather than
+    fixing the gate, which left rcs with no rolling pointer whatsoever:
+    ``edge`` follows ``main``, not a stabilisation branch, so "run the
+    current candidate" had no answer.  ``rc`` restores the pointer *with*
+    the ordering discipline ``latest`` already had.
+
+    Two properties are asserted, both of which have been wrong in the past:
+
+    1. The ``rc`` enable exists and reads the publish-time recheck.
+    2. The two ordering families are disjoint — no stable rolling tag reads
+       ``is_newest_rc`` and the ``rc`` tag reads nothing else — so a stable
+       release can never move ``rc`` nor an rc move ``latest``.
+    """
+    block = _release_job_block("publish-docker", "publish-linux-packages")
+    tag_lines = [
+        line.strip()
+        for line in block.splitlines()
+        if line.strip().startswith("type=raw,")
+    ]
+    rc_lines = [line for line in tag_lines if line.startswith("type=raw,value=rc,")]
+    assert len(rc_lines) == 1, (
+        f"publish-docker must push exactly one rolling `rc` tag line, got: {rc_lines}"
+    )
+    assert "is_newest_rc" in rc_lines[0], (
+        "the `rc` tag must be gated on the rc ordering output, not on the "
+        f"bare prerelease flag (template#360's regression): {rc_lines[0]}"
+    )
+    for line in tag_lines:
+        if line in rc_lines:
+            continue
+        assert "is_newest_rc" not in line, (
+            f"a stable rolling tag must never follow the rc ordering: {line}"
+        )
+    for stable_output in ("is_latest", "is_latest_minor", "is_latest_major"):
+        assert stable_output not in rc_lines[0], (
+            f"the `rc` tag must not read {stable_output}: {rc_lines[0]}"
+        )
+
+
+def test_rc_ordering_compares_base_versions_not_rc_tags() -> None:
+    """The rc gate never version-sorts an rc tag against a stable tag.
+
+    ``sort -V`` does not implement semver prerelease precedence: it orders
+    ``v4.0.0`` BEFORE ``v4.0.0-rc.1``.  Ranking rcs among themselves is
+    fine, but comparing an rc tag directly against a stable one silently
+    inverts, and would let a leftover candidate of an already-released
+    version keep ``rc`` ahead of ``latest``.  The gate therefore strips
+    ``-rc.N`` and compares the BASE version — this asserts that stripping
+    survives, because losing it produces no error, just a wrong tag.
+    """
+    block = _release_job_block("publish-docker", "publish-linux-packages")
+    assert "${TAG%-rc.*}" in block, (
+        "the rc ordering must compare the rc's base version against the "
+        "newest stable; `sort -V` inverts if given the rc tag itself"
+    )
+
+
+def test_marketplace_bump_targets_the_only_loadable_manifest_path() -> None:
+    """The catalog bump writes ``.claude-plugin/marketplace.json``.
+
+    Claude Code reads the marketplace manifest from that path and nowhere
+    else, so a bump written to a root-level ``marketplace.json`` succeeds,
+    commits, and publishes nothing anyone can install — which is what this
+    job did until template#383.  The failure is silent by construction, so
+    the path is asserted rather than trusted.
+    """
+    block = _release_job_block("publish-claude-plugin", "publish-registry")
+    assert "MANIFEST: .claude-plugin/marketplace.json" in block, (
+        "publish-claude-plugin must bump .claude-plugin/marketplace.json"
+    )
+    stray = [
+        line
+        for line in block.splitlines()
+        if "marketplace.json" in line
+        and ".claude-plugin/marketplace.json" not in line
+        and not line.lstrip().startswith("#")
+        and not line.lstrip().startswith("- name:")
+    ]
+    assert not stray, (
+        f"no step may still operate on a bare root-level marketplace.json: {stray}"
+    )
+
+
+def test_marketplace_bump_feeds_the_catalog_readme() -> None:
+    """The bump refreshes the entry's prose and regenerates the catalog README.
+
+    The catalog's README plugin list is generated from the manifest, so the
+    ``description`` is not decoration — it is the generator's input, and this
+    project is where its own blurb lives.  Two ways that silently degrades:
+    trimming the upsert back to version+ref, which freezes every existing
+    entry's prose at whatever it was when first appended; and dropping the
+    generator call, which leaves the catalog's default branch describing a
+    plugin set it no longer serves (the ``scholar-mcp`` class, invisible
+    because nothing there fails).  Neither produces an error, so both are
+    asserted here.
+    """
+    block = _release_job_block("publish-claude-plugin", "publish-registry")
+    assert ".description = $desc" in block, (
+        "the upsert must refresh the entry's description, not only its pin — "
+        "the catalog README is generated from it"
+    )
+    assert "scripts/gen_readme.py" in block, (
+        "the bump must run the catalog's README generator, or the catalog's "
+        "default branch goes stale after every release"
+    )
+
+
+def test_prepare_drafts_notes_into_the_release_pr() -> None:
+    """Release notes are a generated artifact of preparation (template#419).
+
+    The notes page has exactly the changelog's lifecycle: drafted by the
+    prepare run into the release PR's diff, reviewed as part of the release
+    decision, landed on the base by the merge — so every tag carries its
+    own page.  The draft-notes job must call the notes workflow (not
+    duplicate it), be skippable only via the explicit ``skip_notes``
+    escape hatch, and hand over the four values the call mode needs.
+    """
+    text = PREPARE_WORKFLOW.read_text(encoding="utf-8")
+    assert "skip_notes:" in text, "the skip_notes escape hatch is gone"
+    assert "draft-notes:" in text, "the draft-notes job is gone"
+    block = text[text.index("draft-notes:") :]
+    assert "uses: ./.github/workflows/release-notes.yml" in block, (
+        "draft-notes must CALL release-notes.yml, not duplicate the agent"
+    )
+    assert "secrets: inherit" in block
+    assert "needs: prepare" in block
+    for handed_over in (
+        "target_version:",
+        "source_ref:",
+        "prep_branch:",
+        "expected_head:",
+    ):
+        assert handed_over in block, f"draft-notes no longer passes {handed_over}"
+
+
+def test_notes_lock_is_taken_by_the_caller_job_in_call_mode() -> None:
+    """The end-to-end notes lock needs BOTH declaration sites (template#448).
+
+    A workflow-level ``concurrency`` key belongs to the triggered run —
+    for a reusable workflow that is the caller's run, so the group at the
+    top of release-notes.yml serialises its dispatch-triggered runs only.
+    The draft-notes caller job must take the same group at the job level
+    (the reusable-workflow mechanism GitHub documents), and neither site
+    may cancel in progress: a cancelled landing strands a finished draft.
+    """
+    prepare = PREPARE_WORKFLOW.read_text(encoding="utf-8")
+    block = prepare[prepare.index("draft-notes:") :]
+    match = re.search(
+        r"concurrency:\n\s+group: (\S+)\n\s+cancel-in-progress: (\S+)", block
+    )
+    assert match, "the draft-notes caller job declares no job-level concurrency"
+    assert match.group(1) == "release-notes-draft", (
+        "the caller job's group must be the notes workflow's own "
+        f"'release-notes-draft' bucket, got: {match.group(1)!r}"
+    )
+    assert match.group(2) == "false", "the notes lock must never cancel in progress"
+    notes = NOTES_WORKFLOW.read_text(encoding="utf-8")
+    assert "group: release-notes-draft" in notes, (
+        "the notes workflow's own group (dispatch-mode serialisation) "
+        "must keep the same 'release-notes-draft' bucket"
+    )
+
+
+def test_notes_dispatch_offers_a_full_redraft_override() -> None:
+    """The watermark cache needs an operator override (template#452).
+
+    Incremental research deliberately preserves accepted prose, so a
+    change to the skill's own contract can never reach a range the page
+    already covers on its own.  The manual dispatch must expose the
+    full_redraft flag and the drafting prompt must thread it to the
+    agent; the prepare-time call stays incremental, so the
+    workflow_call inputs must NOT grow the flag.
+    """
+    text = NOTES_WORKFLOW.read_text(encoding="utf-8")
+    on_block = text[text.index("\non:") : text.index("\npermissions:")]
+    call_block = on_block[
+        on_block.index("workflow_call:") : on_block.index("workflow_dispatch:")
+    ]
+    dispatch_block = on_block[on_block.index("workflow_dispatch:") :]
+    assert "full_redraft:" in dispatch_block, (
+        "the dispatch entry lost its full_redraft force-rewrite input"
+    )
+    assert "full_redraft" not in call_block, (
+        "call mode must stay incremental — the prepare-time refresh may "
+        "never force-rewrite accepted prose"
+    )
+    prompt = text[text.index("Draft the notes page") :]
+    assert "full redraft:" in prompt, (
+        "the drafting prompt no longer threads the full_redraft flag to the agent"
+    )
+
+
+def test_notes_workflow_is_callable_and_not_release_triggered() -> None:
+    """The notes workflow serves the release PR; the post-hoc path is gone.
+
+    A ``release: published`` trigger would resurrect notes that arrive
+    after the tag — the exact state template#419 removed (the tag tree
+    must be self-contained).  The call mode commits onto the prep branch
+    with a lease on the stamp head, so a stale draft can never clobber a
+    newer Release Prepare re-dispatch, and an empty draft must FAIL the
+    call (a release PR without notes is incomplete; skip_notes is the
+    only sanctioned way around it).
+    """
+    text = NOTES_WORKFLOW.read_text(encoding="utf-8")
+    assert "workflow_call:" in text, "the notes workflow lost its call entry"
+    assert "workflow_dispatch:" in text, "the backfill dispatch entry is gone"
+    on_block = text[text.index("\non:") : text.index("\npermissions:")]
+    assert "release:" not in on_block, (
+        "the post-stable release trigger must stay deleted — notes travel "
+        "in the release PR, not after the tag"
+    )
+    assert "--force-with-lease=" in text, (
+        "the prep-branch commit must be leased on the expected stamp head"
+    )
+    assert "track_progress" not in text, (
+        "claude-code-action's track_progress is only supported on PR/issue "
+        "events; this workflow runs on workflow_dispatch/workflow_call, "
+        "where passing it is a hard error before the agent starts"
+    )
+    assert "Edit(docs/releases/" in text, (
+        "the drafting agent needs the file tools explicitly (in headless "
+        "mode --allowedTools IS the allowlist), scoped to the notes "
+        "surface via Edit(path) — the only path-scoped file gate Claude "
+        "Code consults, covering the Write tool as well"
+    )
+    allowlist = next(line for line in text.splitlines() if '--allowedTools "' in line)
+    assert "Write(" not in allowlist, (
+        "Write(path) rules are accepted but never matched — a dead rule "
+        "in the allowlist would suggest scoping that does not exist"
+    )
+    assert ",Write," not in text and ",Edit," not in text, (
+        "no unscoped Write/Edit may appear in the allowlist — an unscoped "
+        "write tool lets a prompt-injected research source plant git "
+        "config or hooks that the credentialed landing step executes"
+    )
+    assert "Seed and snapshot the notes surface" in text and "pre-notes" in text, (
+        "the trusted pre-agent step must seed the files a draft may "
+        "create (so Edit suffices) and snapshot the pre-draft surface"
+    )
+    assert "cmp -s" in text, (
+        "the landing overlay must compare against the pre-draft snapshot "
+        "and copy only files the draft changed — never revert concurrent "
+        "notes changes with an hour-old checkout"
+    )
+    assert "git merge-file" in text, (
+        "a file both the draft and the base changed must be three-way "
+        "merged, failing loudly on overlap — a silent clobber reverts "
+        "the concurrent change"
+    )
+    assert "deleted on the base" in text, (
+        "an edit-versus-delete divergence must fail loudly — copying "
+        "would silently resurrect the file the base deleted"
+    )
+    assert "seeded.txt" in text, (
+        "the seed step must record which files it created, and the "
+        "divergence check must exempt them — a seeded placeholder absent "
+        "from the landing clone is the first release of its series, not "
+        "a concurrent deletion"
+    )
+    assert "\n  land:\n    needs: draft" in text, (
+        "the landing must run in a SEPARATE job on a fresh runner — the "
+        "drafting runner may be poisoned beyond the tree (GITHUB_PATH, "
+        "GITHUB_ENV, overwritten executables) and the PAT must never "
+        "exist on it"
+    )
+    draft_half = text[: text.index("\n  land:")]
+    assert "RELEASE_TOKEN" not in draft_half, (
+        "no step of the draft job may carry the release PAT — it exists "
+        "only in the landing job"
+    )
+    assert "notes-surface" in text and "notes-pre" in text, (
+        "the surface and the pre-draft snapshot must cross jobs as "
+        "artifacts — data, not environment"
+    )
+    assert text.count("concurrency:") == 1 and "\nconcurrency:\n" in text, (
+        "concurrency must be workflow-level, covering draft and landing "
+        "end to end — with per-job groups a queued newer draft can "
+        "replace the pending landing, stranding a finished draft"
+    )
+    assert "persist-credentials: false" in text, (
+        "the checkout must not persist the release PAT — the agent's "
+        "unrestricted Read would let a prompt-injected research source "
+        "lift it out of .git/config into published content"
+    )
+    assert "-c credential.helper= " in text.replace("\\\n", " ") and (
+        "credential.helper=!gh auth git-credential" in text
+    ), (
+        "network git must reset inherited credential helpers and name "
+        "gh's per invocation — a helper planted in the checkout must "
+        "never run with the PAT in scope"
+    )
+    assert "Bash(git" not in text, (
+        "the drafting agent gets no local git — read-oriented git "
+        "commands still carry arbitrary-file-write flags (git log "
+        "--output=...) that bypass the write-tool scoping; the skill "
+        "reads tags and files-at-refs through the API instead"
+    )
+    assert 'clone --quiet --single-branch --branch "${PREP_BRANCH:-$DEFAULT}"' in (
+        text
+    ), (
+        "the landing step must run git only in a fresh clone — the "
+        "agent's checkout is data, not git state, and planted config "
+        "(core.fsmonitor, helpers, hooks) would execute on the first "
+        "git command there"
+    )
+    assert "gh auth setup-git" not in text, (
+        "no global credential-helper setup — auth is per-invocation only"
+    )
+    assert "Bash(uv run mkdocs build --strict)" in text, (
+        "mkdocs must be pinned to the exact quality-gate invocation — a "
+        "wildcard admits -f with an agent-written config whose hooks "
+        "execute arbitrary Python"
+    )
+    assert "mkdocs *" not in text, "no mkdocs wildcard may reappear in the allowlist"
+    assert "GIT_CONFIG_GLOBAL: /dev/null" in text, (
+        "the credentialed landing step must read no global git config — "
+        "a gadget reaching $HOME must not hand git code to execute there"
+    )
+    call_half = text[text.index('if [ -n "$PREP_BRANCH" ]') :]
+    call_half = call_half[: call_half.index("# Dispatch mode")]
+    assert "::error::" in call_half and "skip_notes" in call_half, (
+        "an empty draft with no existing page must fail loudly and name skip_notes"
+    )
+    assert "notes-range-end: ${RANGE_END}" in call_half, (
+        "the target page's notes-range-end watermark must be verified "
+        "against this run's range end — an incomplete or failed draft "
+        "must never silently ship stale notes"
+    )
+    assert call_half.index("notes-range-end: ${RANGE_END}") < call_half.index(
+        "git status --porcelain -- docs/releases"
+    ), (
+        "the watermark check must be UNCONDITIONAL — before the "
+        "changed/unchanged split, so a draft that edited only vocabulary, "
+        "the index, or another page still fails this release's refresh"
+    )
+    assert "gh pr ready " in call_half, (
+        "the call mode must lift the release PR's draft hold once the "
+        "notes land or are confirmed current"
+    )
+    assert "headRefOid" in call_half and "accepted_head" in call_half, (
+        "the ready-lift must verify the PR still points at the head this "
+        "run accepted — an older notes run surviving a re-dispatch must "
+        "never mark the refreshed, notes-less head ready"
+    )
+    assert "Discover the release PR for a manual re-draft" in text, (
+        "a manual target_version re-draft must land on the open release "
+        "PR's prep branch, not a standalone PR against the default branch"
+    )
+
+
+def test_release_pr_is_held_draft_until_the_notes_land() -> None:
+    """The notes are a merge gate, not a footnote (template#421).
+
+    The release PR opens before the hour-scale draft-notes job runs, and
+    required CI can go green on the stamped head first — which would leave
+    a notes-less release PR mergeable and taggable.  The prepare job must
+    convert the PR to draft right after creation (skipped only under the
+    explicit ``skip_notes`` escape hatch), and only the notes job's
+    ``gh pr ready`` lifts the hold.
+    """
+    prepare = PREPARE_WORKFLOW.read_text(encoding="utf-8")
+    step_name = "Set the release PR draft hold"
+    assert step_name in prepare, "the draft-hold step is gone"
+    step = prepare[prepare.index(step_name) :]
+    step = step[: step.index("- name:")] if "- name:" in step else step
+    assert "gh pr ready --undo" in step, (
+        "the hold must use draft conversion — a draft PR cannot be merged"
+    )
+    assert "SKIP_NOTES" in step and "isDraft" in step, (
+        "the step must set the state in BOTH directions: skip_notes must "
+        "explicitly lift a hold a previous run's failed notes job left on "
+        "the refreshed PR — the skipped draft-notes job cannot do it"
+    )
+
+
+def test_publish_workflow_skips_release_pr_merges() -> None:
+    """The release owns its own docs deploy (template#421).
+
+    A release PR's merge changes ``docs/releases/`` and would trigger this
+    workflow's redeploy concurrently with the release — which resolves the
+    series' newest tag BEFORE the new tag exists and could overwrite the
+    fresh deploy with the previous tag's content.  Pushes whose head is a
+    release-PR merge (the pinned squash subject) must be skipped wholesale.
+    """
+    publish = NOTES_PUBLISH_WORKFLOW.read_text(encoding="utf-8")
+    assert "/pulls" in publish and 'startswith("knope/prepare/")' in publish, (
+        "release-merge detection must be merge-strategy independent — the "
+        "commits API associates the pushed head with its PR under squash, "
+        "merge commit, and rebase alike"
+    )
+    assert "^chore: prepare release " in publish, (
+        "the squash-subject check must remain as the degraded fallback for "
+        "an API failure"
+    )
+    assert "pull-requests: read" in publish, (
+        "the commits-to-PRs lookup needs the pull-requests read permission — "
+        "a job-level permissions block zeroes everything unspecified, and "
+        "without it the gate always degrades to the squash-only fallback"
+    )
+    gate_idx = publish.index("^chore: prepare release ")
+    pages_idx = publish.index("Find changed release pages")
+    assert gate_idx < pages_idx, "the gate must run before page detection"
+    assert "steps.gate.outputs.skip != 'true'" in publish, (
+        "page detection must be conditioned on the gate"
+    )
+
+
+def test_pending_marker_machinery_is_gone() -> None:
+    """No deferred body upgrade, no default-branch overlay at release time.
+
+    The page lives in the tagged tree, so release.yml composes the body —
+    summary block and deep link — from the local checkout at publish time,
+    docs deploys build the tag as-is, and the publish workflow only
+    redeploys docs when a released page is edited later.  Any reappearance
+    of the marker or the overlay means the post-hoc model is creeping
+    back.
+    """
+    marker = "release-notes-pending"
+    for workflow in (RELEASE_WORKFLOW, NOTES_PUBLISH_WORKFLOW, DOCS_WORKFLOW):
+        assert marker not in workflow.read_text(encoding="utf-8"), (
+            f"{workflow.name} resurrects the {marker} marker"
+        )
+    release = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    assert "RELEASE-SUMMARY" in release, (
+        "the release body must take its summary from the page in the tag"
+    )
+    docs = DOCS_WORKFLOW.read_text(encoding="utf-8")
+    assert "Overlay release-notes pages" not in docs, (
+        "the release-deploy overlay is dead — the tag is the source of truth"
+    )
+    publish = NOTES_PUBLISH_WORKFLOW.read_text(encoding="utf-8")
+    assert "--notes-file" not in publish, (
+        "the publish workflow must not rewrite release bodies any more — "
+        "its jobs are the release-merge gate and the docs redeploy for "
+        "later page edits"
+    )
+
+
+def test_rc_series_redrafts_and_rc_bodies_read_the_stable_marker() -> None:
+    """An rc series must refresh one section, and rc bodies must find it.
+
+    Every candidate of a target normalises to the same stable version, so
+    a later rc (or the promotion) of a patch release must re-draft the
+    section its first rc wrote — mode selection keys on the page's
+    RELEASE-SUMMARY marker, not on ``Z > 0`` alone, or each refresh
+    appends a duplicate section.  And because the skill writes the marker
+    for the STABLE tag, the release-body extraction must normalise an rc
+    tag the same way or every rc body ships an empty summary.
+    """
+    notes = NOTES_WORKFLOW.read_text(encoding="utf-8")
+    marker_check = 'grep -qF "RELEASE-SUMMARY ${TAG} START" "$page"'
+    assert marker_check in notes, (
+        "mode selection must detect an already-covered target via its "
+        "RELEASE-SUMMARY marker and re-draft in place"
+    )
+    assert notes.index(marker_check) < notes.index('"${ver##*.}" -gt 0'), (
+        "the marker check must take precedence over the Z > 0 patch-append "
+        "branch — an rc.2 of a patch target must re-draft rc.1's section"
+    )
+    release = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    assert 'marker_tag="v${ver%%-*}"' in release, (
+        "the body step must normalise the tag to the stable version before "
+        "the marker lookup — the skill keys the summary block on vX.Y.Z"
+    )
+    assert 'awk -v tag="$marker_tag"' in release, (
+        "the summary extraction must search with the normalised marker tag, "
+        "not the literal (possibly -rc.N) release tag"
+    )
+
+
+def test_port_bookkeeping_carries_the_notes_page() -> None:
+    """A branch-cut stable's page reaches the default branch like the changelog.
+
+    The pages for all releases accumulate on the default branch (the docs
+    site reads them there); a release cut from release/X.Y lands its page
+    on that branch only, so the port PR must carry it over alongside the
+    changelog section.
+    """
+    text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    port = text[text.index("port-bookkeeping:") :]
+    assert 'page="docs/releases/${minor}.md"' in port, (
+        "the port step no longer stages the release-notes page"
+    )
+    assert "released-page.md" in port
+    assert "RELEASE-PAGES-START" in port and "index-entry.md" in port, (
+        "a first-of-minor branch cut must port its index ENTRY too — by "
+        "insertion, never wholesale copy (a backport branch's index "
+        "predates newer minors on the default branch)"
     )
 
 
@@ -612,6 +1114,49 @@ def test_stable_version_stamps_every_published_pin(stamp_sandbox: Path) -> None:
     )
     assert re.search(r"^A .*uv\.lock$", status, re.MULTILINE), (
         "the stamped lockfile must be staged for knope's release commit"
+    )
+
+
+def test_docker_cache_export_cannot_fail_a_build() -> None:
+    """Every gha cache export is best-effort, never a build gate.
+
+    The Release workflow runs on pull_request closed, whose Actions cache
+    token has no writable scopes — a plain ``cache-to: type=gha`` then
+    hard-fails an otherwise successful image build (the v4.0.0-rc.2
+    regression).  The unstable channel gets the same treatment: the cache
+    is an optimization, never a correctness input.
+    """
+    for workflow in (RELEASE_WORKFLOW, UNSTABLE_WORKFLOW):
+        text = workflow.read_text(encoding="utf-8")
+        assert "cache-to: type=gha,mode=max,ignore-error=true" in text, (
+            f"{workflow.name} lost the best-effort cache export"
+        )
+        assert "cache-to: type=gha,mode=max\n" not in text, (
+            f"{workflow.name} carries a cache export that can fail the build"
+        )
+
+
+def test_linux_packages_attach_to_prereleases_too() -> None:
+    """publish-linux-packages runs for rcs, gated on ``released`` alone.
+
+    It only attaches deb/rpm to the version's own GitHub release — a
+    per-version immutable channel like the wheel and mcpb assets — so an
+    rc gets its artifacts; external surfaces (PyPI, registry, marketplace)
+    stay stable-gated elsewhere.
+    """
+    block = _release_job_block("publish-linux-packages", "build-mcpb")
+    assert "if: needs.release.outputs.released == 'true'\n" in block, (
+        "publish-linux-packages must gate on released alone"
+    )
+    assert "is_prerelease" not in block, (
+        "publish-linux-packages must not skip prereleases"
+    )
+    postinstall = (REPO_ROOT / "packaging" / "scripts" / "postinstall.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "*-rc.*" in postinstall and "releases/download" in postinstall, (
+        "an rc package's postinstall must install the wheel from the"
+        " version's own GitHub release — rc versions never reach PyPI"
     )
 
 
