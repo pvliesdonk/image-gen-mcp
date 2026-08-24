@@ -1,36 +1,65 @@
-#!/usr/bin/env bash
-# Post-install: reload systemd, install uv, create default env file, print instructions.
-set -euo pipefail
+#!/bin/bash
+# Post-install script: create venv and install image-generation-mcp from PyPI.
+set -eu
 
-CONFIG_DIR="/etc/image-generation-mcp"
-ENV_FILE="$CONFIG_DIR/env"
-EXAMPLE_FILE="$CONFIG_DIR/env.example"
+INSTALL_DIR="/opt/image-generation-mcp"
+VENV_DIR="${INSTALL_DIR}/venv"
+SERVICE_USER="image-generation-mcp"
 
-systemctl daemon-reload 2>/dev/null || true
+# Determine package version — set by nfpm via VERSION env var, or read
+# from the installed package metadata as fallback.
+PKG_VERSION="${VERSION:-}"
 
-# Install uv if not already present
-if ! command -v uvx >/dev/null 2>&1; then
-    echo "  Installing uv (required for image-generation-mcp)..."
-    if command -v curl >/dev/null 2>&1; then
-        curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
-    else
-        echo "  WARNING: curl not found — install uv manually:"
-        echo "    curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh"
+# Create install directory
+mkdir -p "$INSTALL_DIR"
+
+# Create or update the virtual environment
+if [ ! -d "$VENV_DIR" ]; then
+    python3 -m venv "$VENV_DIR"
+fi
+
+# Upgrade pip and install the package
+"${VENV_DIR}/bin/pip" install --quiet --upgrade pip
+
+if [ -n "$PKG_VERSION" ]; then
+    case "$PKG_VERSION" in
+        *-rc.*)
+            # Pre-releases never reach PyPI; install the wheel attached to
+            # this version's own GitHub release. The wheel filename carries
+            # the PEP 440 canonical spelling (-rc.N -> rcN).
+            canonical="$(printf '%s' "$PKG_VERSION" | sed 's/-rc\./rc/')"
+            "${VENV_DIR}/bin/pip" install --quiet \
+                "image-generation-mcp @ https://github.com/pvliesdonk/image-generation-mcp/releases/download/v${PKG_VERSION}/image_generation_mcp-${canonical}-py3-none-any.whl"
+            ;;
+        *)
+            "${VENV_DIR}/bin/pip" install --quiet "image-generation-mcp==${PKG_VERSION}"
+            ;;
+    esac
+else
+    "${VENV_DIR}/bin/pip" install --quiet "image-generation-mcp"
+fi
+
+# Ensure config directory exists
+mkdir -p /etc/image-generation-mcp
+
+# Copy example env if no config exists yet
+if [ ! -f /etc/image-generation-mcp/env ]; then
+    if [ -f /etc/image-generation-mcp/env.example ]; then
+        cp /etc/image-generation-mcp/env.example /etc/image-generation-mcp/env
     fi
 fi
 
-# Copy example env if no env file exists yet
-if [ ! -f "$ENV_FILE" ] && [ -f "$EXAMPLE_FILE" ]; then
-    cp "$EXAMPLE_FILE" "$ENV_FILE"
-    chmod 0640 "$ENV_FILE"
-    chown root:image-generation-mcp "$ENV_FILE"
+# Restrict env file permissions — it may contain secrets (tokens, API keys).
+if [ -f /etc/image-generation-mcp/env ]; then
+    chmod 600 /etc/image-generation-mcp/env
 fi
 
-echo ""
-echo "  image-generation-mcp installed successfully."
-echo ""
-echo "  Next steps:"
-echo "    1. Edit /etc/image-generation-mcp/env"
-echo "    2. sudo systemctl enable --now image-generation-mcp"
-echo "    3. sudo journalctl -u image-generation-mcp -f"
-echo ""
+# Reload systemd to pick up the unit file.
+# Note: the service is intentionally NOT enabled here — start-on-boot requires
+# explicit opt-in by the administrator via: systemctl enable image-generation-mcp
+systemctl daemon-reload 2>/dev/null || true
+
+# On upgrade, restart the service if it's already running so the new version is loaded.
+if systemctl is-active --quiet image-generation-mcp 2>/dev/null; then
+    systemctl restart image-generation-mcp
+fi
