@@ -33,6 +33,7 @@ ruff
 stdio
 
 # --- Operational / config jargon ---
+allowlist
 config
 deployer
 env

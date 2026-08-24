@@ -33,7 +33,7 @@ comma-separated list of explicit tool names:
 Hidden tools disappear from `tools/list` and are rejected on `tools/call`;
 resources and prompts are unaffected. Setting both variables, or setting one
 to a value with no names in it, is a startup error. A name matching no
-registered tool is ignored, but an allow list that matches nothing logs a
+registered tool is ignored, but an allowlist that matches nothing logs a
 startup `WARNING` since the instance then exposes zero tools. See
 `fastmcp-pvl-core`'s README for the full semantics.
 
