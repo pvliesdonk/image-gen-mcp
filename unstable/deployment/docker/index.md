@@ -15,9 +15,12 @@ The server listens on port 8000 with HTTP transport by default.
 | `latest`     | Newest stable release                                        | Each stable release that is newest across all series |
 | `vX.Y.Z`     | That exact release (pre-releases included, as `vX.Y.Z-rc.N`) | Never (immutable)                                    |
 | `vX.Y`, `vX` | Newest stable release in that series                         | Each stable release that is newest in its series     |
+| `rc`         | Newest release candidate                                     | Each pre-release still ahead of `latest`             |
 | `edge`       | Newest commit on `main`                                      | Every merge to `main`                                |
 
-Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. A pre-release pushes only its immutable `vX.Y.Z-rc.N` tag. To run the latest merged code, use `edge`, which follows `main` continuously and carries no version identity. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
+Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. The same rule governs `rc`: a candidate only moves the tag while its version is still ahead of the newest stable, so a candidate for an already-released version never pulls `rc` behind `latest`.
+
+The three rolling tags answer different questions. Use `latest` to run released code, `rc` to test the candidate for the next release, and `edge` to run the newest merged commit. Note that `rc` is not cleared when its release ships: it keeps pointing at the last candidate until the next one is cut, so `latest` is the tag to follow in production. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
 
 ```
 docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
@@ -37,6 +40,8 @@ docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revis
 See [Configuration](https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration/index.md) for the full environment variable reference.
 
 For OIDC auth variables, see [Authentication](https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/authentication/index.md).
+
+Running behind a reverse proxy on a path prefix (`https://mcp.example.com/myservice/mcp`) rather than its own hostname needs two routing rules, one of which sits outside the prefix: see [Subpath Deployments](https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/oidc/#subpath-deployments).
 
 ## Volumes
 
