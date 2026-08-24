@@ -30,6 +30,58 @@ vars:
     tags: [providers]
     wizard: {control: none}
 
+# MCPB's template baseline deliberately exposes only generic server fields.
+# Restore the project-specific desktop install screen through the documented
+# overlay so the generator owns both user_config and its env wiring.
+files:
+  packaging/mcpb/manifest.json.in:
+    fields:
+      "{PREFIX}_SCRATCH_DIR":
+        id: scratch_dir
+        title: "Scratch directory"
+        description: "Where generated images are saved. Blank uses ~/.image-generation-mcp/images."
+        type: directory
+        default: "${DOCUMENTS}/Image Generation MCP"
+      "{PREFIX}_STYLES_DIR":
+        id: styles_dir
+        title: "Styles directory"
+        description: "Where style preset files live. Blank uses ~/.image-generation-mcp/styles."
+        type: directory
+        default: null
+      "{PREFIX}_READ_ONLY":
+        id: read_only
+        title: "Read-only mode"
+        description: "When true, image-generation tools are hidden. Defaults to FALSE for MCPB bundles so local desktop installs can generate images."
+        default: false
+      "{PREFIX}_DEFAULT_PROVIDER":
+        id: default_provider
+        title: "Default provider"
+        description: "One of: auto, openai, gemini, sd_webui, placeholder."
+        default: auto
+      "{PREFIX}_PAID_PROVIDERS":
+        id: paid_providers
+        title: "Paid providers"
+        description: "Comma-separated providers that cost money and require confirmation."
+        default: openai
+      "{PREFIX}_OPENAI_API_KEY":
+        id: openai_api_key
+        title: "OpenAI API key"
+        description: "Enables gpt-image-1 / dall-e-3. Stored in the OS keychain."
+        sensitive: true
+      "{PREFIX}_GOOGLE_API_KEY":
+        id: google_api_key
+        title: "Google API key"
+        description: "Enables Gemini image generation. Stored in the OS keychain."
+        sensitive: true
+      "{PREFIX}_SD_WEBUI_HOST":
+        id: sd_webui_host
+        title: "SD WebUI host"
+        description: "Base URL of an A1111/Forge/reForge instance (e.g. http://localhost:7860)."
+      "{PREFIX}_SD_WEBUI_MODEL":
+        id: sd_webui_model
+        title: "SD WebUI model"
+        description: "Checkpoint name used for preset detection (optional)."
+
 # Extra wizard questions specific to this project.
 wizard_routing: []
 

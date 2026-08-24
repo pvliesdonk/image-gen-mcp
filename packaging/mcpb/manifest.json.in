@@ -17,29 +17,55 @@
   "documentation": "https://pvliesdonk.github.io/image-generation-mcp/",
   "support": "https://github.com/pvliesdonk/image-generation-mcp/issues",
   "license": "MIT",
-  "keywords": ["image-generation", "openai", "gemini", "stable-diffusion", "dall-e", "ai-art", "mcp"],
+  "keywords": [
+    "image-generation",
+    "openai",
+    "gemini",
+    "stable-diffusion",
+    "dall-e",
+    "ai-art",
+    "mcp"
+  ],
   "server": {
     "type": "uv",
     "entry_point": "src/server.py",
     "mcp_config": {
       "command": "uvx",
-      "args": ["--from", "image-generation-mcp[all]==${VERSION}", "image-generation-mcp", "serve"],
+      "args": [
+        "--from",
+        "image-generation-mcp[all]==${VERSION}",
+        "image-generation-mcp",
+        "serve"
+      ],
       "env": {
-        "IMAGE_GENERATION_MCP_SCRATCH_DIR":       "${user_config.scratch_dir}",
-        "IMAGE_GENERATION_MCP_STYLES_DIR":        "${user_config.styles_dir}",
-        "IMAGE_GENERATION_MCP_READ_ONLY":         "${user_config.read_only}",
-        "IMAGE_GENERATION_MCP_SERVER_NAME":       "${user_config.server_name}",
-        "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER":  "${user_config.default_provider}",
-        "IMAGE_GENERATION_MCP_PAID_PROVIDERS":    "${user_config.paid_providers}",
-        "IMAGE_GENERATION_MCP_OPENAI_API_KEY":    "${user_config.openai_api_key}",
-        "IMAGE_GENERATION_MCP_GOOGLE_API_KEY":    "${user_config.google_api_key}",
-        "IMAGE_GENERATION_MCP_SD_WEBUI_HOST":     "${user_config.sd_webui_host}",
-        "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL":    "${user_config.sd_webui_model}",
-        "FASTMCP_LOG_LEVEL":                      "${user_config.log_level}"
+        "IMAGE_GENERATION_MCP_SERVER_NAME": "${user_config.server_name}",
+        "FASTMCP_LOG_LEVEL": "${user_config.log_level}",
+        "IMAGE_GENERATION_MCP_SCRATCH_DIR": "${user_config.scratch_dir}",
+        "IMAGE_GENERATION_MCP_STYLES_DIR": "${user_config.styles_dir}",
+        "IMAGE_GENERATION_MCP_READ_ONLY": "${user_config.read_only}",
+        "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER": "${user_config.default_provider}",
+        "IMAGE_GENERATION_MCP_PAID_PROVIDERS": "${user_config.paid_providers}",
+        "IMAGE_GENERATION_MCP_OPENAI_API_KEY": "${user_config.openai_api_key}",
+        "IMAGE_GENERATION_MCP_GOOGLE_API_KEY": "${user_config.google_api_key}",
+        "IMAGE_GENERATION_MCP_SD_WEBUI_HOST": "${user_config.sd_webui_host}",
+        "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL": "${user_config.sd_webui_model}"
       }
     }
   },
   "user_config": {
+    "server_name": {
+      "type": "string",
+      "title": "Server name",
+      "description": "Rename this server instance; defaults to the project name.",
+      "required": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log level",
+      "description": "Log level for FastMCP internals and app loggers (DEBUG / INFO / WARNING / ERROR / CRITICAL). The -v CLI flag overrides to DEBUG.",
+      "required": false,
+      "default": "INFO"
+    },
     "scratch_dir": {
       "type": "directory",
       "title": "Scratch directory",
@@ -56,16 +82,9 @@
     "read_only": {
       "type": "boolean",
       "title": "Read-only mode",
-      "description": "When true, image-generation tools are hidden (only list_providers / show_image remain). Defaults to FALSE for MCPB bundles (desktop/local use → interactive generation is the primary use case), in contrast to the stdio/uvx/Docker default which is TRUE (servers are read-only unless explicitly opted in).",
+      "description": "When true, image-generation tools are hidden. Defaults to FALSE for MCPB bundles so local desktop installs can generate images.",
       "required": false,
       "default": false
-    },
-    "server_name": {
-      "type": "string",
-      "title": "Server name",
-      "description": "Name shown in the Claude tool list.",
-      "required": false,
-      "default": "image-generation-mcp"
     },
     "default_provider": {
       "type": "string",
@@ -77,7 +96,7 @@
     "paid_providers": {
       "type": "string",
       "title": "Paid providers",
-      "description": "Comma-separated providers that cost money (used for elicitation prompts).",
+      "description": "Comma-separated providers that cost money and require confirmation.",
       "required": false,
       "default": "openai"
     },
@@ -106,18 +125,15 @@
       "title": "SD WebUI model",
       "description": "Checkpoint name used for preset detection (optional).",
       "required": false
-    },
-    "log_level": {
-      "type": "string",
-      "title": "Log level",
-      "description": "One of: DEBUG, INFO, WARNING, ERROR.",
-      "required": false,
-      "default": "INFO"
     }
   },
   "compatibility": {
     "claude_desktop": ">=0.10.0",
-    "platforms": ["darwin", "win32", "linux"],
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
     "runtimes": {
       "python": ">=3.11,<4.0"
     }

@@ -17,10 +17,12 @@ from fastmcp import FastMCP
 from fastmcp.server.transforms import ResourcesAsTools
 from fastmcp_pvl_core import (
     ServerConfig,
+    apply_tool_visibility,
     build_auth,
     build_instructions,
     build_kv_store,  # noqa: F401  — re-exported for downstream projects' convenience
     configure_logging_from_env,
+    configure_task_backend,
     env,
     register_server_info_tool,
     resolve_auth_mode,
@@ -199,13 +201,26 @@ def make_server(
         config = ProjectConfig.from_env()
     configure_logging_from_env()
 
-    # Operator overrides: SERVER_NAME renames this instance and INSTRUCTIONS
-    # replaces the default instructions text, both falling back to the domain
-    # default when unset/empty. Read via env() (template-owned, not
-    # ProjectConfig): SERVER_NAME is declared in config-presentation.yml, so a
-    # ProjectConfig field for it would be a duplicate-name generator error.
+    # Background-task backend (SEP-1686 / Docket).  Unconditional and
+    # template-owned: pydocket ships in fastmcp-pvl-core's base dependencies,
+    # so the backend is always configurable, and whether this server actually
+    # uses tasks is decided by registering ``task=True`` tools — not by
+    # packaging or by an opt-in switch here.  It mutates fastmcp's
+    # process-global settings, which fastmcp reads lazily at root-lifespan
+    # entry, so doing it inside ``make_server`` covers both CLI paths (
+    # ``server.run(...)`` and the uvicorn ``http_app()`` one).
+    # ``IMAGE_GENERATION_MCP_TASKS_URL`` selects the backend; unset, a
+    # ``redis://`` ``IMAGE_GENERATION_MCP_KV_STORE_URL`` is reused so one URL
+    # configures every stateful subsystem, and otherwise fastmcp's
+    # ``memory://`` default applies.  The queue name is derived from the env
+    # prefix, so two servers sharing one Redis do not share a queue.
+    configure_task_backend(_ENV_PREFIX, config.server)
+
+    # Operator overrides: SERVER_NAME renames this instance; INSTRUCTIONS
+    # replaces the default instructions text (the latter is the override that
+    # build_instructions' hint advertises). Both fall back when unset/empty.
+    server_name = env(_ENV_PREFIX, "SERVER_NAME", "image-generation-mcp")
     instructions = env(_ENV_PREFIX, "INSTRUCTIONS") or build_instructions(
-        read_only=config.read_only,
         env_prefix=_ENV_PREFIX,
         domain_line=(
             "AI image generation server supporting multiple providers "
@@ -228,8 +243,6 @@ def make_server(
         pkg_ver = _pkg_version("image-generation-mcp")
     except PackageNotFoundError:
         pkg_ver = "unknown"
-
-    server_name = env(_ENV_PREFIX, "SERVER_NAME") or _DEFAULT_SERVER_NAME
 
     logger.info(
         "Server config: name=%s version=%s auth=%s mode=%s",
@@ -326,5 +339,12 @@ def make_server(
     if config.read_only:
         mcp.disable(tags={"write"})
     # DOMAIN-WIRING-END
+
+    # Operator tool visibility (IMAGE_GENERATION_MCP_TOOLS_ALLOW /
+    # IMAGE_GENERATION_MCP_TOOLS_DENY) applies last: fastmcp resolves visibility
+    # transforms in call order, so the operator's lists win over any
+    # visibility calls in the wiring above, and pvl-core's zero-tools-exposed
+    # diagnostic judges the full registered tool set.
+    apply_tool_visibility(mcp, config.server)
 
     return mcp
