@@ -64,6 +64,9 @@ NOTES_PUBLISH_WORKFLOW = (
 )
 DOCS_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "docs.yml"
 UNSTABLE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "unstable.yml"
+CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+COVERAGE_STATUS_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "coverage-status.yml"
+PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 
 def _knope_config() -> dict[str, Any]:
@@ -589,8 +592,14 @@ def test_prepare_drafts_notes_into_the_release_pr() -> None:
         "source_ref:",
         "prep_branch:",
         "expected_head:",
+        "full_redraft:",
     ):
         assert handed_over in block, f"draft-notes no longer passes {handed_over}"
+    assert "Refuse contradictory notes inputs" in text, (
+        "skip_notes and full_redraft contradict each other (one skips "
+        "drafting, the other forces a rewrite) — the prepare job must "
+        "refuse the pair before any heavy work runs"
+    )
 
 
 def test_notes_lock_is_taken_by_the_caller_job_in_call_mode() -> None:
@@ -622,14 +631,17 @@ def test_notes_lock_is_taken_by_the_caller_job_in_call_mode() -> None:
 
 
 def test_notes_dispatch_offers_a_full_redraft_override() -> None:
-    """The watermark cache needs an operator override (template#452).
+    """The watermark cache needs an operator override (template#452/#460).
 
     Incremental research deliberately preserves accepted prose, so a
     change to the skill's own contract can never reach a range the page
-    already covers on its own.  The manual dispatch must expose the
-    full_redraft flag and the drafting prompt must thread it to the
-    agent; the prepare-time call stays incremental, so the
-    workflow_call inputs must NOT grow the flag.
+    already covers on its own.  Both entry points must expose the
+    full_redraft flag — the Release Notes dispatch directly, and the
+    workflow_call so Release Prepare can thread its own input through —
+    and the drafting prompt must hand it to the agent.  The call input
+    must DEFAULT to false: a prepare that does not opt in stays
+    incremental, so a force rewrite is always an explicit operator
+    choice.
     """
     text = NOTES_WORKFLOW.read_text(encoding="utf-8")
     on_block = text[text.index("\non:") : text.index("\npermissions:")]
@@ -640,13 +652,67 @@ def test_notes_dispatch_offers_a_full_redraft_override() -> None:
     assert "full_redraft:" in dispatch_block, (
         "the dispatch entry lost its full_redraft force-rewrite input"
     )
-    assert "full_redraft" not in call_block, (
-        "call mode must stay incremental — the prepare-time refresh may "
-        "never force-rewrite accepted prose"
+    call_flag = re.search(
+        r"full_redraft:\n(?:\s+\S.*\n)*?\s+default: (\S+)\n", call_block
+    )
+    assert call_flag, (
+        "the workflow_call inputs lost full_redraft — Release Prepare "
+        "can no longer thread its force-rewrite input through the call"
+    )
+    assert call_flag.group(1) == "false", (
+        "the call-mode full_redraft must default to false — an un-opted "
+        "prepare refresh stays incremental"
     )
     prompt = text[text.index("Draft the notes page") :]
     assert "full redraft:" in prompt, (
         "the drafting prompt no longer threads the full_redraft flag to the agent"
+    )
+    # The rewrite must be mechanically reachable (template#463): the
+    # agent's only mutation tool is path-scoped Edit, which writes whole
+    # pages reliably only into seeded EMPTY files — so a full redraft
+    # empties the page, and only AFTER the pre-draft snapshot copied it,
+    # or the landing overlay would lose the baseline that attributes the
+    # rewrite to this draft.
+    seed_step = text[
+        text.index("Seed and snapshot the notes surface") : text.index(
+            "Upload the pre-draft snapshot"
+        )
+    ]
+    assert (
+        'if [ "$FULL_REDRAFT" = "true" ]' in seed_step and ': > "$PAGE"' in seed_step
+    ), (
+        "the seed step no longer empties the page on a full redraft — "
+        "in-place prose replacement is not reachable in the drafting "
+        "sandbox (152 denied bulk-edit attempts on the first live run)"
+    )
+    assert seed_step.index('cp -R docs/releases "$PRE/releases"') < seed_step.index(
+        'if [ "$FULL_REDRAFT" = "true" ]'
+    ), (
+        "the page must be emptied AFTER the snapshot copies it — "
+        "truncating first would snapshot the empty file and break the "
+        "landing overlay's change attribution"
+    )
+
+
+def test_ready_lift_retries_the_stale_pr_head_read() -> None:
+    """The ready-lift must ride out its own push's API lag (template#462).
+
+    The landing step reads the PR head right after its own lease-guarded
+    push, and the API's view can still report the pre-push lease head for
+    a moment.  The guard must retry while it sees exactly EXPECTED_HEAD
+    (staleness, not a takeover) and still refuse on any third head — an
+    un-retried read left a complete release PR stuck in draft on the
+    first live rc.6 landing downstream.
+    """
+    text = NOTES_WORKFLOW.read_text(encoding="utf-8")
+    land = text[text.index("\n  land:") :]
+    assert '"$current_head" = "$EXPECTED_HEAD"' in land, (
+        "the ready-lift no longer distinguishes a stale read of its own "
+        "push (the lease head) from a genuinely newer prepare"
+    )
+    assert re.search(r"for attempt in [0-9 ]+; do\n(?:.*\n)*?.*headRefOid", land), (
+        "the PR-head read must sit inside a retry loop — a single read "
+        "races the run's own push"
     )
 
 
@@ -1136,6 +1202,192 @@ def test_docker_cache_export_cannot_fail_a_build() -> None:
         )
 
 
+def test_pypi_publishes_prereleases_too() -> None:
+    """publish-pypi runs for rcs, gated on ``released`` alone.
+
+    The .mcpb bundle is a pointer to PyPI, not a self-contained bundle:
+    ``packaging/mcpb/pyproject.toml.in`` pins ``<pkg>[all]==<version>`` and
+    the manifest launches ``uvx --from`` that same spec.  While rcs were
+    held back from PyPI, every rc bundle packed, validated and uploaded
+    green and then failed at install time in front of the tester —
+    ``no version of <pkg>[all]==X.Y.ZrcN`` — so the candidate could not be
+    tested through the channel the candidate exists to test.
+
+    Re-gating this job on ``is_prerelease`` would restore that, silently:
+    the release stays green and only a human installing the bundle finds
+    out.  Hence the assertion on the gate rather than on an artifact.
+
+    Exposure is bounded by the resolver, not by this gate: PEP 440 keeps
+    pre-releases out of a resolve unless the requirement pins one or
+    ``--pre`` is passed.  The surfaces that would show a candidate to
+    everyone are the rolling ones, and those are asserted stable-gated by
+    the marketplace/registry/docs tests elsewhere in this suite.
+    """
+    block = _release_job_block("publish-pypi", "publish-docker")
+    assert "if: needs.release.outputs.released == 'true'\n" in block, (
+        "publish-pypi must gate on released alone"
+    )
+    assert "is_prerelease" not in block, (
+        "publish-pypi must not skip prereleases — an rc that never reaches "
+        "PyPI ships an uninstallable .mcpb bundle"
+    )
+
+
+# The publisher runs `twine check` before upload, and twine learned
+# `Metadata-Version: 2.5` in 7.0.0.  v1.14.2 is the first release bundling
+# it; v1.14.0 and v1.14.1 both ship twine 6.1.0.
+_PUBLISHER_TWINE7_FLOOR = (1, 14, 2)
+
+
+def _hatchling_requirement() -> str:
+    """The single hatchling entry in ``[build-system] requires``."""
+    data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    requires = data["build-system"]["requires"]
+    hatchling = [
+        r for r in requires if r.split("[")[0].strip().lower().startswith("hatchling")
+    ]
+    assert len(hatchling) == 1, (
+        f"expected exactly one hatchling requirement, got: {requires!r}"
+    )
+    return str(hatchling[0])
+
+
+def test_build_backend_is_bounded_at_the_minor() -> None:
+    """hatchling carries a floor AND a ceiling that binds at the next minor.
+
+    The metadata version hatchling emits and the twine the publisher bundles
+    are one invariant across two files.  Left unpinned, this side moves on
+    hatchling's release schedule rather than on anyone's decision: 1.32
+    started emitting ``Metadata-Version: 2.5``, the pinned publisher's twine
+    refused it, and `publish-pypi` broke for every project at once, at
+    release time, stable and candidate alike (template#479).
+
+    The ceiling has to bind at the MINOR, because that is where the metadata
+    version moves — 1.27 took it to 2.4, 1.32 took it to 2.5.  A ``<2``
+    ceiling would have stopped neither; it reads like a guard and holds
+    nothing.  Patch releases stay open so bug fixes flow; crossing a minor
+    is a deliberate edit, paired with a publisher that accepts what the new
+    minor emits.
+    """
+    requirement = _hatchling_requirement()
+    floor = re.search(r">=\s*(\d+)\.(\d+)", requirement)
+    ceiling = re.search(r"<\s*(\d+)\.(\d+)", requirement)
+    assert floor is not None, (
+        f"hatchling needs a >= floor, got: {requirement!r} — an unbounded "
+        "backend picks up a new metadata version on its own schedule"
+    )
+    assert ceiling is not None, (
+        f"hatchling needs a < ceiling, got: {requirement!r} — without one, "
+        "the next metadata bump breaks publish-pypi in every project at once"
+    )
+    major, minor = int(floor.group(1)), int(floor.group(2))
+    expected = (major, minor + 1)
+    actual = (int(ceiling.group(1)), int(ceiling.group(2)))
+    assert actual == expected, (
+        f"hatchling ceiling must bind at the next minor "
+        f"(<{expected[0]}.{expected[1]}), got: {requirement!r}. "
+        "Metadata versions move on hatchling minors, so a looser ceiling "
+        "lets the next bump through unnoticed."
+    )
+
+
+def test_pypi_publisher_understands_current_metadata() -> None:
+    """The pinned publisher is new enough to accept what the backend emits.
+
+    gh-action-pypi-publish runs ``twine check`` on every file before upload,
+    using the twine it bundles.  Below v1.14.2 that is twine 6.1.0, which
+    rejects a 2.5 wheel with "'2.5' is not a valid metadata version" — the
+    upload never starts, so nothing reaches PyPI and no version is burned,
+    but no release publishes either.
+
+    Asserted on the version comment beside the SHA because that is what a
+    human reads when bumping.  Upstream states the floor in its own
+    requirements: "v7 is needed to support metadata v2.5 including PEP 794".
+    """
+    text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    pinned = re.search(
+        r"pypa/gh-action-pypi-publish@([0-9a-f]{40})\s*#\s*v(\d+)\.(\d+)\.(\d+)",
+        text,
+    )
+    assert pinned is not None, (
+        "release.yml must pin gh-action-pypi-publish to a 40-char SHA with a "
+        "trailing version comment — the comment is the only readable record "
+        "of which twine the publisher bundles"
+    )
+    version = (int(pinned.group(2)), int(pinned.group(3)), int(pinned.group(4)))
+    assert version >= _PUBLISHER_TWINE7_FLOOR, (
+        f"gh-action-pypi-publish v{version[0]}.{version[1]}.{version[2]} bundles "
+        "twine < 7, which rejects Metadata-Version 2.5; v1.14.2 or newer is "
+        "required or publish-pypi fails on every release"
+    )
+
+
+def test_plugin_zip_attaches_to_prereleases_too() -> None:
+    """build-plugin-zip runs for rcs, gated on ``released`` alone.
+
+    The zip is the plugin channel's only marketplace-free install path:
+    ``claude plugin install`` resolves names through marketplaces and takes
+    no path, URL or archive, so ``claude --plugin-url <asset>`` is how a
+    candidate's plugin gets exercised before it ships.  An asset that only
+    exists on stable tags cannot serve that purpose.
+
+    The rolling marketplace entry is the surface that stays stable-only, and
+    ``test_marketplace_bump_targets_the_only_loadable_manifest_path`` and its
+    neighbours own that assertion.
+    """
+    block = _release_job_block("build-plugin-zip", "publish-plugin-zip")
+    assert "if: needs.release.outputs.released == 'true'\n" in block, (
+        "build-plugin-zip must gate on released alone"
+    )
+    assert "is_prerelease" not in block, (
+        "build-plugin-zip must not skip prereleases — an rc plugin that is "
+        "never packed cannot be installed for testing"
+    )
+
+
+def test_plugin_zip_is_built_by_the_shared_composite_everywhere() -> None:
+    """Every caller packs the zip through .github/actions/build-plugin-zip.
+
+    Three workflows produce this artifact — the release, the rolling edge
+    channel, and the pre-release dispatch — and the whole point of the
+    composite is that the two rehearsal paths cannot drift from what a real
+    release executes.  An inlined `zip -r` in any of them would pack an
+    archive nothing had vendored or verified.
+    """
+    workflows = REPO_ROOT / ".github" / "workflows"
+    for name in ("release.yml", "unstable.yml", "pre-release-check.yml"):
+        text = (workflows / name).read_text(encoding="utf-8")
+        assert "uses: ./.github/actions/build-plugin-zip" in text, (
+            f"{name} must build the plugin zip through the shared composite"
+        )
+
+
+def test_plugin_zip_vendors_the_wheel_rather_than_pinning_pypi() -> None:
+    """The packed zip launches from ${CLAUDE_PLUGIN_ROOT}, not from an index.
+
+    This is the property that makes the asset worth having.  The marketplace
+    entry is a thin PyPI pointer and stays that way; the zip is thick, so it
+    installs at a version PyPI has never seen — every rc, and the constant
+    ``0.0.0-dev`` edge build that no publishing policy could ever serve.
+
+    Asserted on the scripts rather than on a built artifact because the
+    failure is silent: a zip whose ``--from`` still names a PyPI version
+    packs, uploads and installs fine from a stable tag, and fails only for
+    whoever tries the candidate.
+    """
+    action = (REPO_ROOT / ".github" / "actions" / "build-plugin-zip").resolve()
+    vendor = (action / "vendor.py").read_text(encoding="utf-8")
+    verify = (action / "verify.py").read_text(encoding="utf-8")
+    assert "CLAUDE_PLUGIN_ROOT" in vendor, (
+        "vendor.py must repin --from onto the vendored wheel"
+    )
+    assert "CLAUDE_PLUGIN_ROOT" in verify, "verify.py must assert the repin happened"
+    # Both scripts refuse rather than warn: a half-vendored zip is worse than
+    # no zip, because it looks installable right up until launch.
+    assert "VendorError" in vendor and "raise" in vendor
+    assert "VerifyError" in verify and "raise" in verify
+
+
 def test_linux_packages_attach_to_prereleases_too() -> None:
     """publish-linux-packages runs for rcs, gated on ``released`` alone.
 
@@ -1156,7 +1408,9 @@ def test_linux_packages_attach_to_prereleases_too() -> None:
     )
     assert "*-rc.*" in postinstall and "releases/download" in postinstall, (
         "an rc package's postinstall must install the wheel from the"
-        " version's own GitHub release — rc versions never reach PyPI"
+        " version's own GitHub release: the .deb/.rpm candidate then"
+        " installs from the same immutable per-version channel it shipped"
+        " in, independently of whether that rc's PyPI publish landed"
     )
 
 
@@ -1303,6 +1557,129 @@ def _published_pins() -> dict[str, str]:
     return pins
 
 
+# A freshly rendered project, before its first release, carries seed
+# versions rather than a coherent one: `server.json` is seeded 0.1.0 (to
+# match `pyproject.toml`). They are placeholders, not a claim about a
+# release, so the pin assertions below do not apply to that state.
+_SEED_PINS = frozenset({"0.0.0", "0.1.0"})
+
+
+def _is_pre_release_state(pins: dict[str, str]) -> bool:
+    """Whether *pins* are all still placeholders, so no pin rule applies.
+
+    Keyed on **every** pin being a seed value, not on `server.json`'s
+    top-level one alone (#472).  Keying it on a single pin meant a mixed
+    state — one manifest reseeded to its placeholder by a `copier update`
+    while the rest sit at a real released version — skipped the whole
+    assertion instead of failing it.  That mixed state is the one most worth
+    catching: these are published surfaces, so a placeholder among them
+    tells the MCP registry or the marketplace a version that was never
+    released.
+
+    Pure, and separate from the IO, so the decision is exercised by the unit
+    tests below even in a freshly rendered project where the assertions that
+    consume it skip.
+    """
+    return bool(pins) and all(ver in _SEED_PINS for ver in pins.values())
+
+
+def _lockstep_violation(pins: dict[str, str]) -> str | None:
+    """A message naming the disagreeing pins, or `None` when they agree."""
+    distinct = sorted(set(pins.values()))
+    if len(distinct) <= 1:
+        return None
+    return (
+        "committed manifests must all pin the same version, but they "
+        f"disagree ({', '.join(distinct)}): "
+        + ", ".join(f"{where} = {ver}" for where, ver in sorted(pins.items()))
+    )
+
+
+def _pins_or_skip() -> dict[str, str]:
+    """The committed pins, skipping a project that has not released yet."""
+    pins = _published_pins()
+    if _is_pre_release_state(pins):
+        pytest.skip("initial placeholder versions, before the first stable release")
+    return pins
+
+
+def test_committed_pins_agree_with_each_other() -> None:
+    """Every committed manifest pins the same version.
+
+    `CLAUDE.md`'s "Manifest version lockstep" rule is that `server.json` all carry
+    one version, and `scripts/stamp_manifests.py` moves them together.  The
+    neighbouring test checks each pin against the *release history*, which
+    is the stronger check in most states but admits two values during a
+    release PR — the last stable and the version being prepared — so a
+    half-stamped tree, some manifests moved and some not, satisfies it while
+    violating lockstep (#472).
+
+    This asserts the rule directly and needs no tag visibility to do it, so
+    it still bites on the shallow checkouts where the history-scoped test
+    skips.
+    """
+    violation = _lockstep_violation(_pins_or_skip())
+    assert violation is None, violation
+
+
+class TestPinRuleLogic:
+    """The pin rules on synthetic pin maps.
+
+    The two assertions above read this repo's real manifests, so in a
+    freshly rendered project they skip — correctly, but that would leave the
+    logic they encode shipping untested in every downstream until its first
+    release. These exercise the decisions directly.
+    """
+
+    def test_a_fresh_render_is_a_pre_release_state(self) -> None:
+        """Seeds deliberately differ from each other: `server.json` is
+        seeded to match `pyproject.toml` (0.1.0). All are placeholders, so this
+        must read as pre-release rather than as a lockstep violation."""
+        assert _is_pre_release_state(
+            {"server.json version": "0.1.0", "plugin.json version": "0.0.0"}
+        )
+
+    def test_a_reseeded_manifest_beside_a_released_one_is_not(self) -> None:
+        """The #472 gap. A `copier update` reseeds one manifest while the
+        project sits at a real release; keying the skip on `server.json`
+        alone let this pass unexamined."""
+        assert not _is_pre_release_state(
+            {"server.json version": "0.1.0", "plugin.json version": "1.9.0"}
+        )
+        # ...and in the other direction, which is the reported instance:
+        # server.json released, its own pypi package pin left at the seed.
+        assert not _is_pre_release_state(
+            {"server.json version": "1.9.0", "server.json pypi x": "0.1.0"}
+        )
+
+    def test_no_pins_at_all_is_not_a_pre_release_state(self) -> None:
+        """An empty map means the collector found nothing to check, which is
+        a broken collector rather than a project before its first release —
+        `all()` over an empty iterable would call it pre-release and skip."""
+        assert not _is_pre_release_state({})
+
+    def test_agreeing_pins_pass(self) -> None:
+        assert (
+            _lockstep_violation(
+                {"server.json version": "1.9.0", "plugin.json version": "1.9.0"}
+            )
+            is None
+        )
+
+    def test_disagreeing_pins_are_named_in_the_message(self) -> None:
+        """A half-stamped release PR: some manifests moved to the prepared
+        version, some still at the last stable. Both values are admissible
+        to the history-scoped test, so only lockstep catches it."""
+        violation = _lockstep_violation(
+            {"server.json version": "1.9.0", "plugin.json version": "2.0.0"}
+        )
+        assert violation is not None
+        # The message has to name which pin is which — a bare "they
+        # disagree" leaves the reader diffing four files by hand.
+        assert "server.json version = 1.9.0" in violation
+        assert "plugin.json version = 2.0.0" in violation
+
+
 def test_committed_pins_name_the_last_stable_or_the_prepared_version() -> None:
     """Pins equal the last stable release OR the version this diff prepares.
 
@@ -1325,9 +1702,7 @@ def test_committed_pins_name_the_last_stable_or_the_prepared_version() -> None:
     marketplace never publish (the markdown-vault-mcp#1053 class the
     stamper's rc skip exists to prevent).
     """
-    pins = _published_pins()
-    if pins["server.json version"] in {"0.0.0", "0.1.0"}:
-        pytest.skip("initial placeholder versions, before the first stable release")
+    pins = _pins_or_skip()
     stable_tags = _reachable_stable_tags()
     if not stable_tags:
         # Tag visibility itself is guarded by the changelog-coupled test
@@ -1350,6 +1725,49 @@ def test_committed_pins_name_the_last_stable_or_the_prepared_version() -> None:
         f"or the stable version this diff prepares ({prepared}), but these "
         "do neither: "
         + ", ".join(f"{where} = {ver}" for where, ver in sorted(bad.items()))
+    )
+
+
+@pytest.mark.parametrize(
+    ("workflow", "label"),
+    [
+        (CI_WORKFLOW, "ci.yml (own-branch path)"),
+        (COVERAGE_STATUS_WORKFLOW, "coverage-status.yml (fork-PR fallback)"),
+    ],
+)
+def test_every_codecov_patch_poster_posts_under_all_outcomes(
+    workflow: Path, label: str
+) -> None:
+    """Both posters of ``codecov/patch`` report something, always.
+
+    `extra_required_checks` lets a project make ``codecov/patch`` a required
+    context.  A required check that never reports does not turn a pull request
+    red — it leaves it waiting forever on a status that is not coming, and the
+    only exits are an admin bypass or a ruleset edit.  So "post an ``error``"
+    and "post nothing" are not equivalent failure modes, and the difference is
+    invisible in a green run.
+
+    Two workflows can post this context: `ci.yml` for own-branch pull requests
+    and `coverage-status.yml` for fork ones, where the read-only fork token
+    forces the `workflow_run` detour.  They drifted once (#476): `ci.yml`
+    treated always-report as an invariant while the fallback skipped its
+    posting step whenever the artifact download failed.  Asserted rather than
+    documented, because the two halves live in different files and nothing
+    else couples them.
+    """
+    text = workflow.read_text(encoding="utf-8")
+    poster = text.index("name: Post codecov/patch status")
+    # Look only at the posting step, not the whole workflow: `always()`
+    # elsewhere in the file would satisfy a naive substring check.
+    step = text[poster : poster + 2000]
+    assert "always()" in step, (
+        f"{label}: the codecov/patch posting step must run under all outcomes"
+    )
+    # ...and it must carry a fallback state, or `always()` only guarantees the
+    # step runs, not that it posts a usable status.
+    assert "'error'" in step or '"error"' in step, (
+        f"{label}: the posting step must default to an `error` state when the "
+        "coverage result is missing"
     )
 
 
