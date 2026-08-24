@@ -95,6 +95,76 @@ The apply step needs `administration: write`, a permission the default
 `GITHUB_TOKEN` cannot be granted, so it runs with `RELEASE_TOKEN`,
 matching the permission set the README already asks for.
 
+## Requiring a check the template does not own
+
+`CI Success` is the only context the shipped rulesets require, and it is an
+aggregate: it passes when every job in the generated `ci.yml` passed, so
+adding a job there needs no ruleset change. A check that lives outside that
+workflow is a different matter. A workflow cannot list another workflow's
+job in its own `needs:`, so a domain workflow the project added itself
+cannot join the aggregate: it runs, it shows red on the pull request, and
+nothing stops the merge.
+
+List its context in the `extra_required_checks` copier answer instead:
+
+```yaml
+# .copier-answers.yml
+extra_required_checks:
+  - SPA sources
+```
+
+Each name renders into the `required_status_checks` array of both branch
+rulesets, alongside `CI Success`, and applies to `main` and `release/*`
+alike. The answer is the project's own, so the rulesets stay template-owned
+and a `copier update` re-renders them with the project's checks intact. An
+empty answer, the default, renders exactly the single-context form every
+project already had.
+
+Write each name as the check appears on the pull request. That is the job's
+`name:` when it has one and the job id otherwise, not the workflow's name,
+and not the file it lives in.
+
+The rendered files reach GitHub the same way as any other ruleset change:
+commit them and push, and the `.github/rulesets/` path filter starts
+`bootstrap.yml`; a `workflow_dispatch` run applies them on demand.
+
+!!! warning "A required check must report on every pull request"
+    A required context that never reports blocks the merge forever. The
+    pull request waits for a check that is not coming, and there is no
+    timeout. This is easy to trigger by accident, because the natural way
+    to write a domain workflow is to scope it:
+
+    - a `paths:` filter means the check reports on the pull requests that
+      touch those files and no others,
+    - a job-level `if:` that evaluates false skips the job, which reports
+      nothing,
+    - a workflow that runs only on `push` never reports on a pull request
+      at all.
+
+    Let the workflow run on every pull request to a protected branch and
+    decide inside the job whether there is work to do, exiting zero when
+    there is not. Verify on a pull request that touches nothing the check
+    cares about: the context must still appear, and pass.
+
+### `codecov/patch`, if you require it
+
+`codecov/patch` is the one context this rule applies to that the template
+itself ships, and it is worth knowing how it reaches a pull request before
+you add it to `extra_required_checks`.
+
+Two workflows post it. `ci.yml` posts it directly for a pull request from a
+branch in this repository. A pull request from a fork gets a read-only token,
+so `ci.yml` cannot write the status there; `coverage-status.yml` posts it
+instead, from a `workflow_run` that executes in this repository's context
+after CI finishes.
+
+Both post under every outcome, including an `error` state when the coverage
+result is missing. That is deliberate: an `error` is recoverable, because a
+maintainer can re-run the workflow, while a missing status is not. If you
+require this context and a fork pull request stalls on it, check the **Post
+Coverage Status** workflow's runs rather than the CI run: the status comes
+from there.
+
 ## Applying by hand
 
 Without the bootstrap workflow (or when importing into another repository):

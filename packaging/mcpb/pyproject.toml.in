@@ -1,6 +1,6 @@
 # Rendered at build time by envsubst. ${VERSION} matches the package release.
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.32,<1.33"]
 build-backend = "hatchling.build"
 
 [project]

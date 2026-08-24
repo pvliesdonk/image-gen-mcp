@@ -281,7 +281,18 @@ jobs:
           fi
           {
             if [ "$IS_PRERELEASE" = "true" ]; then
+              # PyPI knows the candidate by its PEP 440 canonical spelling,
+              # not the SemVer spelling the tag carries.  Print the command
+              # that actually works: a resolver ignores pre-releases unless
+              # the requirement pins one, so `pip install image-generation-mcp`
+              # will not find this build.
               echo "Release candidate ${ver}: a stabilisation build toward the upcoming v${minor} stable. Install it only to help test that release."
+              echo
+              echo '```bash'
+              echo "pip install image-generation-mcp==${ver/-rc./rc}"
+              echo '```'
+              echo
+              echo "The \`.mcpb\` bundle below installs in Claude Desktop the same way a stable one does — it fetches that same version from PyPI on first launch."
               echo
             fi
             if [ -n "$summary" ]; then
@@ -370,10 +381,28 @@ jobs:
 
   publish-pypi:
     needs: release
-    # Every stable, including a backport patch from an old release/X.Y: PyPI
-    # versions are immutable and unordered, and installers pinned below a
-    # newer major are exactly who a backport serves.
-    if: needs.release.outputs.released == 'true' && needs.release.outputs.is_prerelease == 'false'
+    # Every release, rc included.  PyPI versions are immutable and unordered,
+    # so a backport patch from an old release/X.Y publishes too: installers
+    # pinned below a newer major are exactly who a backport serves.
+    #
+    # rcs publish because the .mcpb bundle is a POINTER to PyPI, not a
+    # self-contained bundle.  packaging/mcpb/pyproject.toml.in pins
+    # `image-generation-mcp[all]==${VERSION}` and the manifest launches `uvx --from`
+    # the same spec, so a candidate whose wheel never reached PyPI packs,
+    # validates and uploads fine, then fails in front of the tester at install
+    # time with "no version of image-generation-mcp[all]==X.Y.ZrcN".  Same for the
+    # `uvx`/`pip` install lines a candidate's release notes hand out.  Holding
+    # rc wheels back made every rc bundle uninstallable, which defeats the
+    # point of cutting a candidate.
+    #
+    # This does not put candidates in front of ordinary installers.  A PEP 440
+    # resolver excludes pre-releases unless the requirement itself pins one —
+    # which the bundle's pin does — or `--pre` is passed, so `pip install
+    # image-generation-mcp` and `uv add image-generation-mcp` keep resolving to the newest
+    # stable.  The surfaces that would genuinely expose a candidate to
+    # everyone are the rolling ones — the marketplace and MCP registry entries,
+    # the `latest` Docker tag, the docs deploy — and those stay stable-gated.
+    if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -390,7 +419,21 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
+        # v1.14.2 or newer is a hard floor, not a routine bump.  The action
+        # runs `twine check` on every file before upload, using the twine it
+        # bundles, and twine only learned `Metadata-Version: 2.5` in 7.0.0.
+        # v1.14.0 and v1.14.1 both bundle twine 6.1.0, which rejects a 2.5
+        # wheel with "'2.5' is not a valid metadata version" -- so once
+        # hatchling 1.32 started emitting 2.5, this step failed for every
+        # downstream, on every release, stable and candidate alike (#479).
+        # Upstream's own requirements say it: "v7 is needed to support
+        # metadata v2.5 including PEP 794".
+        #
+        # The build backend's metadata version and the publisher's twine are
+        # one invariant across two files; `pyproject.toml` bounds hatchling so
+        # this side cannot be outrun again, and template-ci's
+        # publish-metadata gate proves the pair still agree.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
         with:
           packages-dir: dist/
           print-hash: true
@@ -702,6 +745,61 @@ jobs:
           gh release upload \
             "${{ needs.release.outputs.tag }}" \
             dist/image-generation-mcp-*.mcpb \
+            --clobber \
+            --repo "${{ github.repository }}"
+
+  # The plugin zip is the channel's thick artifact: it vendors the project's
+  # own wheel and launches it from ${CLAUDE_PLUGIN_ROOT}, so unlike the
+  # marketplace entry (a thin PyPI pointer) it installs at a version PyPI has
+  # never seen.  That is what makes an rc's plugin testable —
+  # `claude --plugin-url <asset>` loads it for one session with no
+  # marketplace entry and no install record, which is the only
+  # marketplace-free install path Claude Code offers.
+  #
+  # Runs for rcs: like the wheel, deb/rpm and mcpb assets, this attaches to
+  # the version's own GitHub release, a per-version immutable channel rather
+  # than an external publish surface.  The rolling marketplace entry stays
+  # stable-only in publish-claude-plugin below.
+  build-plugin-zip:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.build.outputs.present }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+      - name: Build and smoke-test plugin zip
+        id: build
+        uses: ./.github/actions/build-plugin-zip
+        with:
+          version: ${{ needs.release.outputs.version }}
+      - uses: actions/upload-artifact@v7
+        if: steps.build.outputs.present == 'true'
+        with:
+          name: plugin-zip
+          path: dist/image-generation-mcp-plugin-*.zip
+          if-no-files-found: error
+
+  publish-plugin-zip:
+    needs: [release, build-plugin-zip]
+    if: needs.release.outputs.released == 'true' && needs.build-plugin-zip.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: plugin-zip
+          path: dist/
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload \
+            "${{ needs.release.outputs.tag }}" \
+            dist/image-generation-mcp-plugin-*.zip \
             --clobber \
             --repo "${{ github.repository }}"
 

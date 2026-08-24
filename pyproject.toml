@@ -80,6 +80,12 @@ dev = [
     "mypy>=1.0",
     "pip-audit>=2.7",
     "jsonschema>=4.18",
+    # scripts/gen_config_surface.py imports yaml. It arrived transitively via
+    # mkdocs-material in the `docs` group, so a plain `uv sync` left it out
+    # and the generator fell back to its network bootstrap — slower, offline-
+    # hostile, and liable to resolve a different fastmcp-pvl-core than this
+    # project pins (#262). Declared here so the requirement is stated.
+    "pyyaml>=6",
 ]
 docs = [
     "mike>=2",
@@ -101,7 +107,19 @@ Documentation = "https://pvliesdonk.github.io/image-generation-mcp/"
 Issues = "https://github.com/pvliesdonk/image-generation-mcp/issues"
 
 [build-system]
-requires = ["hatchling"]
+# Bounded on purpose, at the minor.  hatchling emits the newest core-metadata
+# version it knows, and the publisher's twine refuses metadata it does not
+# know -- an invariant spanning this file and release.yml's
+# gh-action-pypi-publish pin.  Unpinned, this side moves on hatchling's
+# release schedule rather than on anyone's decision, and the break lands at
+# release time in every project at once (#479).
+#
+# The ceiling has to bind at the minor, because that is where the metadata
+# version moves: 1.27 took it to 2.4 and 1.32 took it to 2.5.  A `<2` ceiling
+# would have stopped neither, so it buys the look of a guard without one.
+# Patch releases stay open; a minor bump is a deliberate edit here, paired
+# with a publisher that accepts whatever the new minor emits.
+requires = ["hatchling>=1.32,<1.33"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

@@ -1,5 +1,5 @@
 # Changes here will be overwritten by `copier update`.
-_commit: v5.3.2
+_commit: v5.6.3
 _src_path: https://github.com/pvliesdonk/fastmcp-server-template
 docker_registry: ghcr.io/pvliesdonk
 domain_description: MCP server for AI image generation via OpenAI, Google GenAI, or
@@ -7,6 +7,7 @@ domain_description: MCP server for AI image generation via OpenAI, Google GenAI,
 enable_authorization: false
 enable_structural_gate: true
 env_prefix: IMAGE_GENERATION_MCP
+extra_required_checks: []
 github_org: pvliesdonk
 human_name: Image Generation MCP
 include_claude_plugin: false
