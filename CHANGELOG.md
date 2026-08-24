@@ -2,7 +2,7 @@
 
 <!-- version list -->
 
-## v1.12.0 (2026-08-06)
+## 1.12.0 (2026-08-06)
 
 ### Features
 
@@ -11,7 +11,7 @@
   [`0af4ed7`](https://github.com/pvliesdonk/image-generation-mcp/commit/0af4ed7bc0e3508c87bf3ea2944dde83ca5bb26b))
 
 
-## v1.12.0-rc.1 (2026-07-10)
+## 1.12.0-rc.1 (2026-07-10)
 
 ### Bug Fixes
 
@@ -56,7 +56,7 @@
   [`f608fad`](https://github.com/pvliesdonk/image-generation-mcp/commit/f608fadaacae337d96d8b8fcec210cfaf61b7e24))
 
 
-## v1.11.0 (2026-07-04)
+## 1.11.0 (2026-07-04)
 
 ### Bug Fixes
 
@@ -155,7 +155,7 @@
   [`08b7c84`](https://github.com/pvliesdonk/image-generation-mcp/commit/08b7c84e593148f5cf78c909b01f455c0ae4d79d))
 
 
-## v1.10.1 (2026-06-18)
+## 1.10.1 (2026-06-18)
 
 ### Bug Fixes
 
@@ -170,10 +170,10 @@
   [`62941f7`](https://github.com/pvliesdonk/image-generation-mcp/commit/62941f7048458256118543a968a3249154510284))
 
 
-## v1.10.0 (2026-06-18)
+## 1.10.0 (2026-06-18)
 
 
-## v1.10.0-rc.1 (2026-06-18)
+## 1.10.0-rc.1 (2026-06-18)
 
 ### Chores
 
@@ -236,7 +236,7 @@
   [`7592488`](https://github.com/pvliesdonk/image-generation-mcp/commit/7592488844cddb5ebeab487d903e2abaaa579649))
 
 
-## v1.9.0 (2026-04-29)
+## 1.9.0 (2026-04-29)
 
 ### Features
 
@@ -245,7 +245,7 @@
   [`00e12a8`](https://github.com/pvliesdonk/image-generation-mcp/commit/00e12a8d3326fa08ff1891d4e0f539051dbfd036))
 
 
-## v1.8.1 (2026-04-23)
+## 1.8.1 (2026-04-23)
 
 ### Bug Fixes
 
@@ -286,10 +286,10 @@
   [`37f53d3`](https://github.com/pvliesdonk/image-generation-mcp/commit/37f53d3edd749944d782eb37b7f464906c59ef39))
 
 
-## v1.8.0 (2026-04-21)
+## 1.8.0 (2026-04-21)
 
 
-## v1.7.0-rc.2 (2026-04-21)
+## 1.7.0-rc.2 (2026-04-21)
 
 ### Chores
 
@@ -302,7 +302,7 @@
   [`97f566b`](https://github.com/pvliesdonk/image-generation-mcp/commit/97f566ba06f11b18296f52fbe6073bb0997b17be))
 
 
-## v1.5.1 (2026-04-21)
+## 1.5.1 (2026-04-21)
 
 ### Bug Fixes
 
@@ -315,7 +315,7 @@
   [`9f28b5a`](https://github.com/pvliesdonk/image-generation-mcp/commit/9f28b5a0a0a7d2b647450b234af4c503bbea8646))
 
 
-## v1.7.0-rc.1 (2026-04-21)
+## 1.7.0-rc.1 (2026-04-21)
 
 ### Bug Fixes
 
@@ -324,7 +324,7 @@
   [`0008d24`](https://github.com/pvliesdonk/image-generation-mcp/commit/0008d24330f96cfe65778ac16309a22ea5f5ca27))
 
 
-## v1.6.0-rc.1 (2026-04-21)
+## 1.6.0-rc.1 (2026-04-21)
 
 ### Chores
 
@@ -336,7 +336,7 @@
   ([`1d24411`](https://github.com/pvliesdonk/image-generation-mcp/commit/1d24411d5d9cfb0d39c6701e323c1a22d525f3ba))
 
 
-## v1.5.0 (2026-04-01)
+## 1.5.0 (2026-04-01)
 
 ### Chores
 
@@ -386,7 +386,7 @@
   [`e3c030e`](https://github.com/pvliesdonk/image-generation-mcp/commit/e3c030eca6a6728d0a3ed7e15ee8ce895130f936))
 
 
-## v1.4.0 (2026-03-25)
+## 1.4.0 (2026-03-25)
 
 ### Bug Fixes
 
@@ -482,7 +482,7 @@
   ([`5cf6a21`](https://github.com/pvliesdonk/image-generation-mcp/commit/5cf6a21cdcade993d46e1f47966cb696f636b79e))
 
 
-## v1.3.0 (2026-03-24)
+## 1.3.0 (2026-03-24)
 
 ### Bug Fixes
 
@@ -546,7 +546,7 @@
   [`2c389ff`](https://github.com/pvliesdonk/image-generation-mcp/commit/2c389ff23489c13556a50722ec1ac4eab649d82c))
 
 
-## v1.2.0 (2026-03-22)
+## 1.2.0 (2026-03-22)
 
 ### Bug Fixes
 
@@ -606,7 +606,7 @@
   [`e866604`](https://github.com/pvliesdonk/image-generation-mcp/commit/e86660463ff9f8e871b908bdfe3bfa8ee02b656d))
 
 
-## v1.1.0 (2026-03-21)
+## 1.1.0 (2026-03-21)
 
 ### Bug Fixes
 
@@ -713,6 +713,6 @@
   [`f82799c`](https://github.com/pvliesdonk/image-generation-mcp/commit/f82799c03f36329c7080a7daaf949eee3980cafa))
 
 
-## v1.0.0 (2026-03-19)
+## 1.0.0 (2026-03-19)
 
 - Initial Release

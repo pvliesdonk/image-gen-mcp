@@ -199,6 +199,7 @@ zlib
 codecov
 consumer_sink
 cron
+knope
 lockfile
 scaffolded
 venv
