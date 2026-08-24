@@ -8,6 +8,22 @@ docker compose up -d
 
 The server listens on port 8000 with HTTP transport by default.
 
+## Image tags
+
+| Tag | Contents | Updated by |
+|-----|----------|------------|
+| `latest` | Newest stable release | Each stable release that is newest across all series |
+| `vX.Y.Z` | That exact release (pre-releases included, as `vX.Y.Z-rc.N`) | Never (immutable) |
+| `vX.Y`, `vX` | Newest stable release in that series | Each stable release that is newest in its series |
+| `edge` | Newest commit on `main` | Every merge to `main` |
+
+Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. A pre-release pushes only its immutable `vX.Y.Z-rc.N` tag. To run the latest merged code, use `edge`, which follows `main` continuously and carries no version identity. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
+
+```bash
+docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+  ghcr.io/pvliesdonk/image-generation-mcp:edge
+```
+
 ## Environment variables
 
 | Variable | Default | Description |
