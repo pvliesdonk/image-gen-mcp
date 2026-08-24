@@ -34,13 +34,18 @@ stdio
 
 # --- Operational / config jargon ---
 allowlist
+backports
 config
 deployer
 env
+hotfix
+ruleset
+rulesets
 truthy
 uncommented
 uncommenting
 unprefixed
+upserts
 validators
 
 # --- Diagnostics / observability ---

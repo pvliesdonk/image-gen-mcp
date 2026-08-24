@@ -10,6 +10,16 @@ commit — which is the commit it then tags.
 The script runs inside PSR's Docker action container (python:3.14-slim), which
 has Python but no ``jq`` — hence Python rather than a shell+jq wrapper.
 
+Pre-releases are handled differently (#345): the release workflow's
+``publish-pypi`` and ``publish-registry`` jobs (and the marketplace publish)
+all skip pre-releases, so a pre-release version never exists on PyPI or the
+MCP registry.  Manifests whose version fields name a *published* artifact —
+``server.json`` and the Claude Code plugin pair — are therefore left at the
+last published stable on pre-release runs, and the next stable release
+re-bumps them.  Only ``uv.lock`` is refreshed unconditionally: it tracks
+``pyproject.toml``, not PyPI, and letting it lag would break ``uv lock
+--check`` on the release commit.
+
 This file is TEMPLATE-OWNED: it re-renders on every ``copier update``, so a
 fix to the shared bumpers (``server.json``, ``uv.lock``) arrives whole rather
 than half — the ``assets`` half landing in the re-rendered ``pyproject.toml``
@@ -45,6 +55,82 @@ def _dump(path: Path, data: Any) -> None:
         # jq's default behavior and how a human editor would save the file.
         json.dump(data, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
+
+
+def _is_prerelease(version: str) -> bool:
+    """Return True unless ``version`` is a plain stable ``X.Y.Z``.
+
+    PSR (``tag_format = "v{version}"``, ``prerelease_token: rc``) emits
+    stable versions as ``X.Y.Z`` and pre-releases in SemVer form as
+    ``X.Y.Z-rc.N``.  The check is deliberately conservative: anything that
+    is not a plain three-component release (a pre-release, a build tag, an
+    unexpected format) keeps the PyPI-referencing pins at the last published
+    stable instead of pinning a version that may never exist on PyPI.
+    Stdlib-only on purpose — PSR's container Python has no guaranteed
+    ``packaging`` install.
+    """
+    return re.fullmatch(r"\d+\.\d+\.\d+", version) is None
+
+
+def _bump_server_json(version: str) -> int:
+    """Bump ``server.json``: top-level version, PyPI package version, OCI tag.
+
+    Called for stable releases only — both version fields name artifacts that
+    are published exclusively for stable releases, so pre-release runs leave
+    the file at the last published stable (see ``main()``).  Replace only the
+    ``:v<old>`` suffix of the OCI identifier so forks/renames keep their own
+    ``ghcr.io/<owner>/<image>`` base.  Returns a process exit code.
+    """
+    server_path = Path("server.json")
+    if not server_path.exists():
+        print(
+            f"server.json not found in {Path.cwd()} — run from repo root",
+            file=sys.stderr,
+        )
+        return 1
+    server = _load(server_path)
+    if not isinstance(server, dict):
+        print(
+            f"{server_path} must contain a JSON object (top-level), "
+            f"got {type(server).__name__}",
+            file=sys.stderr,
+        )
+        return 1
+    server["version"] = version
+    packages = server.get("packages", [])
+    if not isinstance(packages, list):
+        print(
+            f"{server_path}: 'packages' must be a JSON array, got "
+            f"{type(packages).__name__}",
+            file=sys.stderr,
+        )
+        return 1
+    for i, pkg in enumerate(packages):
+        if not isinstance(pkg, dict):
+            print(
+                f"WARNING: packages[{i}] is not a JSON object "
+                f"(got {type(pkg).__name__}) — skipped",
+                file=sys.stderr,
+            )
+            continue
+        if pkg.get("registryType") == "pypi":
+            pkg["version"] = version
+        elif pkg.get("registryType") == "oci":
+            # ``or ""`` covers both the absent-key and the JSON-null cases;
+            # ``dict.get(key, default)`` only returns default when the key
+            # is absent, not when the value is None.
+            identifier = pkg.get("identifier") or ""
+            new_id, n = re.subn(r":v[^:]+$", f":v{version}", identifier)
+            if n == 0:
+                print(
+                    f"WARNING: OCI identifier {identifier!r} has no ':v<tag>' "
+                    "suffix to bump — left unchanged",
+                    file=sys.stderr,
+                )
+            pkg["identifier"] = new_id
+    _dump(server_path, server)
+    print(f"bump_manifests: server.json → {version}")
+    return 0
 
 
 def _bump_lockfile(version: str) -> None:
@@ -104,63 +190,27 @@ def main() -> int:
         )
         return 1
 
-    # server.json: top-level version, PyPI package version, OCI tag suffix.
-    # Replace only the ``:v<old>`` suffix of the OCI identifier so forks/renames
-    # keep their own ``ghcr.io/<owner>/<image>`` base.
-    server_path = Path("server.json")
-    if not server_path.exists():
+    prerelease = _is_prerelease(version)
+    if prerelease:
+        # Pre-releases skip publish-pypi / publish-registry / the marketplace
+        # publish, so rewriting the manifests that name a published artifact
+        # would pin a version that never exists there (#345).  Leave them at
+        # the last published stable; the next stable release re-bumps them.
         print(
-            f"server.json not found in {Path.cwd()} — run from repo root",
-            file=sys.stderr,
+            f"bump_manifests: {version} is a pre-release — "
+            "server.json left at the last published stable"
         )
-        return 1
-    server = _load(server_path)
-    if not isinstance(server, dict):
-        print(
-            f"{server_path} must contain a JSON object (top-level), "
-            f"got {type(server).__name__}",
-            file=sys.stderr,
-        )
-        return 1
-    server["version"] = version
-    packages = server.get("packages", [])
-    if not isinstance(packages, list):
-        print(
-            f"{server_path}: 'packages' must be a JSON array, got "
-            f"{type(packages).__name__}",
-            file=sys.stderr,
-        )
-        return 1
-    for i, pkg in enumerate(packages):
-        if not isinstance(pkg, dict):
-            print(
-                f"WARNING: packages[{i}] is not a JSON object "
-                f"(got {type(pkg).__name__}) — skipped",
-                file=sys.stderr,
-            )
-            continue
-        if pkg.get("registryType") == "pypi":
-            pkg["version"] = version
-        elif pkg.get("registryType") == "oci":
-            # ``or ""`` covers both the absent-key and the JSON-null cases;
-            # ``dict.get(key, default)`` only returns default when the key
-            # is absent, not when the value is None.
-            identifier = pkg.get("identifier") or ""
-            new_id, n = re.subn(r":v[^:]+$", f":v{version}", identifier)
-            if n == 0:
-                print(
-                    f"WARNING: OCI identifier {identifier!r} has no ':v<tag>' "
-                    "suffix to bump — left unchanged",
-                    file=sys.stderr,
-                )
-            pkg["identifier"] = new_id
-    _dump(server_path, server)
-
-    print(f"bump_manifests: server.json → {version}")
+    else:
+        rc = _bump_server_json(version)
+        if rc != 0:
+            return rc
     _bump_lockfile(version)
     # DOMAIN-MANIFESTS-START — bump this project's extra versioned manifests
-    # here; `version` is the new version string, and the repo root is the cwd.
-    # Every path touched here must also be listed in `pyproject.toml`
+    # here; `version` is the new version string, `prerelease` says whether it
+    # is a pre-release, and the repo root is the cwd.  A manifest that names a
+    # published artifact (a PyPI pin, a registry entry) should follow the same
+    # rule as the template's own bumps: skip the rewrite when `prerelease` is
+    # true.  Every path touched here must also be listed in `pyproject.toml`
     # `[tool.semantic_release] assets`, or PSR leaves it out of the release
     # commit.  Kept across copier update; everything outside these markers is
     # template-owned and re-rendered, which is what keeps the bumpers above in
