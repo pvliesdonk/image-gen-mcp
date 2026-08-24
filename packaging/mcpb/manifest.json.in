@@ -39,7 +39,16 @@
       ],
       "env": {
         "IMAGE_GENERATION_MCP_SERVER_NAME": "${user_config.server_name}",
-        "FASTMCP_LOG_LEVEL": "${user_config.log_level}"
+        "FASTMCP_LOG_LEVEL": "${user_config.log_level}",
+        "IMAGE_GENERATION_MCP_SCRATCH_DIR": "${user_config.scratch_dir}",
+        "IMAGE_GENERATION_MCP_STYLES_DIR": "${user_config.styles_dir}",
+        "IMAGE_GENERATION_MCP_READ_ONLY": "${user_config.read_only}",
+        "IMAGE_GENERATION_MCP_DEFAULT_PROVIDER": "${user_config.default_provider}",
+        "IMAGE_GENERATION_MCP_PAID_PROVIDERS": "${user_config.paid_providers}",
+        "IMAGE_GENERATION_MCP_OPENAI_API_KEY": "${user_config.openai_api_key}",
+        "IMAGE_GENERATION_MCP_GOOGLE_API_KEY": "${user_config.google_api_key}",
+        "IMAGE_GENERATION_MCP_SD_WEBUI_HOST": "${user_config.sd_webui_host}",
+        "IMAGE_GENERATION_MCP_SD_WEBUI_MODEL": "${user_config.sd_webui_model}"
       }
     }
   },
@@ -56,6 +65,66 @@
       "description": "Log level for FastMCP internals and app loggers (DEBUG / INFO / WARNING / ERROR / CRITICAL). The -v CLI flag overrides to DEBUG.",
       "required": false,
       "default": "INFO"
+    },
+    "scratch_dir": {
+      "type": "directory",
+      "title": "Scratch directory",
+      "description": "Where generated images are saved. Blank uses ~/.image-generation-mcp/images.",
+      "required": false,
+      "default": "${DOCUMENTS}/Image Generation MCP"
+    },
+    "styles_dir": {
+      "type": "directory",
+      "title": "Styles directory",
+      "description": "Where style preset files live. Blank uses ~/.image-generation-mcp/styles.",
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read-only mode",
+      "description": "When true, image-generation tools are hidden. Defaults to FALSE for MCPB bundles so local desktop installs can generate images.",
+      "required": false,
+      "default": false
+    },
+    "default_provider": {
+      "type": "string",
+      "title": "Default provider",
+      "description": "One of: auto, openai, gemini, sd_webui, placeholder.",
+      "required": false,
+      "default": "auto"
+    },
+    "paid_providers": {
+      "type": "string",
+      "title": "Paid providers",
+      "description": "Comma-separated providers that cost money and require confirmation.",
+      "required": false,
+      "default": "openai"
+    },
+    "openai_api_key": {
+      "type": "string",
+      "title": "OpenAI API key",
+      "description": "Enables gpt-image-1 / dall-e-3. Stored in the OS keychain.",
+      "required": false,
+      "sensitive": true
+    },
+    "google_api_key": {
+      "type": "string",
+      "title": "Google API key",
+      "description": "Enables Gemini image generation. Stored in the OS keychain.",
+      "required": false,
+      "sensitive": true
+    },
+    "sd_webui_host": {
+      "type": "string",
+      "title": "SD WebUI host",
+      "description": "Base URL of an A1111/Forge/reForge instance (e.g. http://localhost:7860).",
+      "required": false
+    },
+    "sd_webui_model": {
+      "type": "string",
+      "title": "SD WebUI model",
+      "description": "Checkpoint name used for preset detection (optional).",
+      "required": false
     }
   },
   "compatibility": {
