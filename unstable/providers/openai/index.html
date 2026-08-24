@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -857,6 +876,17 @@
     <span class="md-ellipsis">
       
         Quality levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution tiers
       
     </span>
   </a>
@@ -1668,9 +1698,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1767,6 +1880,17 @@
     <span class="md-ellipsis">
       
         Quality levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution tiers
       
     </span>
   </a>
@@ -2072,6 +2196,67 @@
 </tr>
 </tbody>
 </table>
+<p><code>quality</code> does not control output size. Use <code>resolution</code> for that (see
+<a href="#resolution-tiers">Resolution tiers</a> below).</p>
+<h2 id="resolution-tiers">Resolution tiers<a class="headerlink" href="#resolution-tiers" title="Permanent link">&para;</a></h2>
+<p>The <code>resolution</code> parameter controls output size, independently of <code>quality</code>.
+Only <code>gpt-image-2</code> honors <code>high</code>/<code>max</code>; every other model (including
+<code>gpt-image-1.5</code>, <code>gpt-image-1-mini</code>, <code>gpt-image-1</code>, <code>chatgpt-image-latest</code>,
+and both dall-e models) ignores <code>resolution</code> and always renders at its
+standard size.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect ratio</th>
+<th><code>standard</code></th>
+<th><code>high</code></th>
+<th><code>max</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1:1</code></td>
+<td><code>1024x1024</code></td>
+<td><code>1920x1920</code></td>
+<td><code>2880x2880</code></td>
+</tr>
+<tr>
+<td><code>16:9</code></td>
+<td><code>1536x1024</code></td>
+<td><code>2560x1440</code></td>
+<td><code>3840x2160</code></td>
+</tr>
+<tr>
+<td><code>9:16</code></td>
+<td><code>1024x1536</code></td>
+<td><code>1440x2560</code></td>
+<td><code>2160x3840</code></td>
+</tr>
+<tr>
+<td><code>3:2</code></td>
+<td><code>1536x1024</code></td>
+<td><code>2304x1536</code></td>
+<td><code>3504x2336</code></td>
+</tr>
+<tr>
+<td><code>2:3</code></td>
+<td><code>1024x1536</code></td>
+<td><code>1536x2304</code></td>
+<td><code>2336x3504</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>max</code> reaches up to 4K (<code>3840x2160</code>) for landscape and portrait ratios;
+output beyond <code>2560x1440</code> total pixels is documented by OpenAI as
+experimental. Use <code>high</code> for a more conservative print-resolution target
+before reaching for <code>max</code>.</p>
+<p><strong>Standard-tier sizing is not aspect-ratio-exact.</strong> The <code>standard</code> size
+table above predates the <code>resolution</code> parameter and was chosen for
+convenient round numbers rather than exact ratio matches: <code>16:9</code> at
+<code>1536x1024</code> is actually 1.5:1, not 1.778:1. Raising <code>resolution</code> to <code>high</code>
+or <code>max</code> on <code>gpt-image-2</code> selects a different size table with its own
+approximation, so the output can reframe slightly when you switch tiers.
+This is tracked as issue #340.</p>
 <h2 id="negative-prompts">Negative prompts<a class="headerlink" href="#negative-prompts" title="Permanent link">&para;</a></h2>
 <p>OpenAI does not have native negative prompt support. When a <code>negative_prompt</code> is provided, it is appended to the prompt as:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{prompt}

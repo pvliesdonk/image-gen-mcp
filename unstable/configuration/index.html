@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -923,6 +942,28 @@
     <span class="md-ellipsis">
       
         Server identity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-visibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool visibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background tasks
       
     </span>
   </a>
@@ -1648,9 +1689,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1697,6 +1821,28 @@
     <span class="md-ellipsis">
       
         Server identity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-visibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool visibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background tasks
       
     </span>
   </a>
@@ -1934,9 +2080,8 @@
 </tbody>
 </table>
 <h2 id="server-identity">Server identity<a class="headerlink" href="#server-identity" title="Permanent link">&para;</a></h2>
-<p>These two are read by the scaffold's <code>make_server()</code> (not by
-<code>ServerConfig</code>), so an operator can rename an instance or override its
-instructions without editing template-owned code:</p>
+<p>These two let an operator rename an instance or override its
+instructions, with no configuration beyond the variable itself:</p>
 <ul>
 <li><code>IMAGE_GENERATION_MCP_SERVER_NAME</code>: the server name reported to clients and
   by <code>get_server_info</code>. Defaults to <code>image-generation-mcp</code>.</li>
@@ -1944,6 +2089,37 @@ instructions without editing template-owned code:</p>
   text. Unset, the scaffold builds the default (which advertises this
   override).</li>
 </ul>
+<h2 id="tool-visibility">Tool visibility<a class="headerlink" href="#tool-visibility" title="Permanent link">&para;</a></h2>
+<p>Operators can trim which tools this instance exposes. Each variable takes a
+comma-separated list of explicit tool names:</p>
+<ul>
+<li><code>IMAGE_GENERATION_MCP_TOOLS_ALLOW</code>: expose <em>only</em> the listed tools.</li>
+<li><code>IMAGE_GENERATION_MCP_TOOLS_DENY</code>: hide the listed tools.</li>
+</ul>
+<p>Hidden tools disappear from <code>tools/list</code> and are rejected on <code>tools/call</code>;
+resources and prompts are unaffected. Setting both variables, or setting one
+to a value with no names in it, is a startup error. A name matching no
+registered tool is ignored, but an allowlist that matches nothing logs a
+startup <code>WARNING</code> since the instance then exposes zero tools. See
+<code>fastmcp-pvl-core</code>'s README for the full semantics.</p>
+<h2 id="background-tasks">Background tasks<a class="headerlink" href="#background-tasks" title="Permanent link">&para;</a></h2>
+<p>Every Image Generation MCP instance wires a background-task backend at startup, so
+a tool registered with <code>task=True</code> works with no extra setup. One variable
+picks the backend:</p>
+<ul>
+<li><code>IMAGE_GENERATION_MCP_TASKS_URL</code>: <code>memory://</code> runs tasks in-process and loses
+  them on restart; <code>redis://...</code> is durable and shared across processes.</li>
+</ul>
+<p>Unset, a <code>redis://</code> <code>IMAGE_GENERATION_MCP_KV_STORE_URL</code> is reused for tasks as
+well, so a single URL configures every stateful subsystem. With neither set,
+the backend falls back to <code>memory://</code>, which the server logs at startup when
+running over HTTP. The queue name comes from the <code>IMAGE_GENERATION_MCP</code> prefix, so
+two servers sharing one Redis do not share a queue.</p>
+<p>Worker tuning stays on the native <code>FASTMCP_DOCKET_*</code> variables
+(<code>FASTMCP_DOCKET_CONCURRENCY</code> and friends, listed in <code>.env.example</code>). Set the
+backend through <code>IMAGE_GENERATION_MCP_TASKS_URL</code> rather than
+<code>FASTMCP_DOCKET_URL</code>: the former wins when both are set, and the server warns
+about the disagreement.</p>
 <!-- DOMAIN-CONFIG-VARS-START -->
 <h2 id="providers">Providers<a class="headerlink" href="#providers" title="Permanent link">&para;</a></h2>
 <table>
@@ -2083,7 +2259,7 @@ instructions without editing template-owned code:</p>
 <td><code>IMAGE_GENERATION_MCP_PAID_PROVIDERS</code></td>
 <td>str</td>
 <td><code>openai</code></td>
-<td>Comma-separated list of provider names that cost money. When the MCP client supports <a href="https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation">elicitation</a>, <code>generate_image</code> asks for confirmation before using these providers. Set to empty string to disable confirmation. Gemini <code>quality="hd"</code> uses thinking tokens which are billed; consider adding <code>gemini</code> if you use <code>hd</code> quality frequently.</td>
+<td>Comma-separated list of provider names that cost money. When the MCP client supports <a href="https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation">elicitation</a>, <code>generate_image</code> asks for confirmation before using these providers. An empty value is treated as unset and falls back to the default (<code>openai</code>); to disable confirmation entirely, set a value that names no provider (such as <code>none</code>). Gemini <code>quality="hd"</code> uses thinking tokens which are billed; consider adding <code>gemini</code> if you use <code>hd</code> quality frequently.</td>
 </tr>
 </tbody>
 </table>

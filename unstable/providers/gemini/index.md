@@ -46,16 +46,39 @@ Gemini natively supports 14 aspect ratios, all passed through directly:
 
 ## Quality levels
 
-The `quality` parameter controls resolution, model reasoning, and response modalities:
+The `quality` parameter controls model reasoning and response modalities. It no longer controls output size, that is `resolution`'s job (see [Resolution tiers](#resolution-tiers) below).
 
-| Quality    | Image size | Thinking                                                | Response modalities | Cost                   |
-| ---------- | ---------- | ------------------------------------------------------- | ------------------- | ---------------------- |
-| `standard` | 1K         | Minimal (default)                                       | Image only          | Free tier              |
-| `hd`       | 2K         | High (model reasons about composition before rendering) | Text + Image        | Thinking tokens billed |
+| Quality    | Thinking                                                | Response modalities | Cost                   |
+| ---------- | ------------------------------------------------------- | ------------------- | ---------------------- |
+| `standard` | Minimal (default)                                       | Image only          | Free tier              |
+| `hd`       | High (model reasons about composition before rendering) | Text + Image        | Thinking tokens billed |
 
 **How `hd` works:** When `quality="hd"` is set, the provider enables `thinking_level="High"` on supported models (`gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-3.1-flash-lite-image`). The model reasons through the prompt, plans composition, and may generate interim images before producing the final result. Output quality improves measurably for complex prompts with multiple elements, layouts, or text.
 
-`gemini-2.5-flash-image` does not support thinking. Setting `hd` still increases resolution to 2K but skips the thinking configuration for this model.
+`gemini-2.5-flash-image` does not support thinking. Setting `hd` on this model has no effect: it still renders at whatever `resolution` allows (1K, since it does not support the higher tiers).
+
+## Resolution tiers
+
+The `resolution` parameter controls output size, independently of `quality`:
+
+| Resolution           | Image size |
+| -------------------- | ---------- |
+| `standard` (default) | 1K         |
+| `high`               | 2K         |
+| `max`                | 4K         |
+
+Only the current Gemini 3 image models support the full 1K/2K/4K range:
+
+| Model                         | Supported resolutions     |
+| ----------------------------- | ------------------------- |
+| `gemini-3.1-flash-image`      | `standard`, `high`, `max` |
+| `gemini-3-pro-image`          | `standard`, `high`, `max` |
+| `gemini-3.1-flash-lite-image` | `standard` only           |
+| `gemini-2.5-flash-image`      | `standard` only           |
+
+Requesting `high` or `max` on a `standard`-only model **clamps down** to the model's highest supported tier rather than raising an error; the delivered tier is reported back in the generated image's metadata. Check `supported_resolutions` on each model entry in `list_providers` before relying on `high`/`max` for a specific model.
+
+Higher resolution tiers may increase generation cost even on the free tier; check [Google AI pricing](https://ai.google.dev/pricing) for current limits before generating at `high`/`max` in volume.
 
 ## Negative prompts
 

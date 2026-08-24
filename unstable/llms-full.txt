@@ -530,16 +530,39 @@ Gemini natively supports 14 aspect ratios, all passed through directly:
 
 ## Quality levels
 
-The `quality` parameter controls resolution, model reasoning, and response modalities:
+The `quality` parameter controls model reasoning and response modalities. It no longer controls output size, that is `resolution`'s job (see [Resolution tiers](#resolution-tiers) below).
 
-| Quality    | Image size | Thinking                                                | Response modalities | Cost                   |
-| ---------- | ---------- | ------------------------------------------------------- | ------------------- | ---------------------- |
-| `standard` | 1K         | Minimal (default)                                       | Image only          | Free tier              |
-| `hd`       | 2K         | High (model reasons about composition before rendering) | Text + Image        | Thinking tokens billed |
+| Quality    | Thinking                                                | Response modalities | Cost                   |
+| ---------- | ------------------------------------------------------- | ------------------- | ---------------------- |
+| `standard` | Minimal (default)                                       | Image only          | Free tier              |
+| `hd`       | High (model reasons about composition before rendering) | Text + Image        | Thinking tokens billed |
 
 **How `hd` works:** When `quality="hd"` is set, the provider enables `thinking_level="High"` on supported models (`gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-3.1-flash-lite-image`). The model reasons through the prompt, plans composition, and may generate interim images before producing the final result. Output quality improves measurably for complex prompts with multiple elements, layouts, or text.
 
-`gemini-2.5-flash-image` does not support thinking. Setting `hd` still increases resolution to 2K but skips the thinking configuration for this model.
+`gemini-2.5-flash-image` does not support thinking. Setting `hd` on this model has no effect: it still renders at whatever `resolution` allows (1K, since it does not support the higher tiers).
+
+## Resolution tiers
+
+The `resolution` parameter controls output size, independently of `quality`:
+
+| Resolution           | Image size |
+| -------------------- | ---------- |
+| `standard` (default) | 1K         |
+| `high`               | 2K         |
+| `max`                | 4K         |
+
+Only the current Gemini 3 image models support the full 1K/2K/4K range:
+
+| Model                         | Supported resolutions     |
+| ----------------------------- | ------------------------- |
+| `gemini-3.1-flash-image`      | `standard`, `high`, `max` |
+| `gemini-3-pro-image`          | `standard`, `high`, `max` |
+| `gemini-3.1-flash-lite-image` | `standard` only           |
+| `gemini-2.5-flash-image`      | `standard` only           |
+
+Requesting `high` or `max` on a `standard`-only model **clamps down** to the model's highest supported tier rather than raising an error; the delivered tier is reported back in the generated image's metadata. Check `supported_resolutions` on each model entry in `list_providers` before relying on `high`/`max` for a specific model.
+
+Higher resolution tiers may increase generation cost even on the free tier; check [Google AI pricing](https://ai.google.dev/pricing) for current limits before generating at `high`/`max` in volume.
 
 ## Negative prompts
 
@@ -692,6 +715,24 @@ The provider registers automatically when this variable is set.
 | ------------- | --------------------------- | ------------------ |
 | `standard`    | `auto` (lets OpenAI choose) | `standard`         |
 | `hd`          | `high`                      | `hd`               |
+
+`quality` does not control output size. Use `resolution` for that (see [Resolution tiers](#resolution-tiers) below).
+
+## Resolution tiers
+
+The `resolution` parameter controls output size, independently of `quality`. Only `gpt-image-2` honors `high`/`max`; every other model (including `gpt-image-1.5`, `gpt-image-1-mini`, `gpt-image-1`, `chatgpt-image-latest`, and both dall-e models) ignores `resolution` and always renders at its standard size.
+
+| Aspect ratio | `standard`  | `high`      | `max`       |
+| ------------ | ----------- | ----------- | ----------- |
+| `1:1`        | `1024x1024` | `1920x1920` | `2880x2880` |
+| `16:9`       | `1536x1024` | `2560x1440` | `3840x2160` |
+| `9:16`       | `1024x1536` | `1440x2560` | `2160x3840` |
+| `3:2`        | `1536x1024` | `2304x1536` | `3504x2336` |
+| `2:3`        | `1024x1536` | `1536x2304` | `2336x3504` |
+
+`max` reaches up to 4K (`3840x2160`) for landscape and portrait ratios; output beyond `2560x1440` total pixels is documented by OpenAI as experimental. Use `high` for a more conservative print-resolution target before reaching for `max`.
+
+**Standard-tier sizing is not aspect-ratio-exact.** The `standard` size table above predates the `resolution` parameter and was chosen for convenient round numbers rather than exact ratio matches: `16:9` at `1536x1024` is actually 1.5:1, not 1.778:1. Raising `resolution` to `high` or `max` on `gpt-image-2` selects a different size table with its own approximation, so the output can reframe slightly when you switch tiers. This is tracked as issue #340.
 
 ## Negative prompts
 
@@ -969,6 +1010,10 @@ The `strength` parameter controls `denoising_strength` in the SD WebUI API paylo
 ## Background transparency
 
 The `background` parameter is **not supported** by SD WebUI. When `background="transparent"` is passed, it is silently ignored (a debug log is emitted). Stable Diffusion does not natively support transparent background generation.
+
+## Resolution
+
+The `resolution` parameter is **not supported** by SD WebUI. The provider always renders at the checkpoint/preset size for the requested aspect ratio (see the per-architecture size tables above) and reports "resolution": "standard" in provider metadata, regardless of the requested tier. When a non-standard tier (`high` or `max`) is requested, it is clamped to `standard` and a WARNING-level `resolution_clamped` log is emitted (matching the Gemini and OpenAI providers).
 
 ## Capability discovery
 
@@ -1447,6 +1492,7 @@ The placeholder provider is **always registered**: no configuration or API key i
 - **prompt:** used to determine the output color (via SHA-256 hash index into a 6-color palette)
 - **negative_prompt:** ignored
 - **quality:** ignored
+- **resolution:** ignored. This provider has no higher-resolution tier; it reports "resolution": "standard" in provider metadata regardless of the requested tier.
 - **aspect_ratio:** maps to pixel sizes above
 - **background:** `"opaque"` (default) produces RGB PNG; `"transparent"` produces RGBA PNG with alpha channel set to 0
 
@@ -1473,10 +1519,29 @@ All configuration is via environment variables prefixed with `IMAGE_GENERATION_M
 
 ## Server identity
 
-These two are read by the scaffold's `make_server()` (not by `ServerConfig`), so an operator can rename an instance or override its instructions without editing template-owned code:
+These two let an operator rename an instance or override its instructions, with no configuration beyond the variable itself:
 
 - `IMAGE_GENERATION_MCP_SERVER_NAME`: the server name reported to clients and by `get_server_info`. Defaults to `image-generation-mcp`.
 - `IMAGE_GENERATION_MCP_INSTRUCTIONS`: replaces the default MCP instructions text. Unset, the scaffold builds the default (which advertises this override).
+
+## Tool visibility
+
+Operators can trim which tools this instance exposes. Each variable takes a comma-separated list of explicit tool names:
+
+- `IMAGE_GENERATION_MCP_TOOLS_ALLOW`: expose *only* the listed tools.
+- `IMAGE_GENERATION_MCP_TOOLS_DENY`: hide the listed tools.
+
+Hidden tools disappear from `tools/list` and are rejected on `tools/call`; resources and prompts are unaffected. Setting both variables, or setting one to a value with no names in it, is a startup error. A name matching no registered tool is ignored, but an allowlist that matches nothing logs a startup `WARNING` since the instance then exposes zero tools. See `fastmcp-pvl-core`'s README for the full semantics.
+
+## Background tasks
+
+Every Image Generation MCP instance wires a background-task backend at startup, so a tool registered with `task=True` works with no extra setup. One variable picks the backend:
+
+- `IMAGE_GENERATION_MCP_TASKS_URL`: `memory://` runs tasks in-process and loses them on restart; `redis://...` is durable and shared across processes.
+
+Unset, a `redis://` `IMAGE_GENERATION_MCP_KV_STORE_URL` is reused for tasks as well, so a single URL configures every stateful subsystem. With neither set, the backend falls back to `memory://`, which the server logs at startup when running over HTTP. The queue name comes from the `IMAGE_GENERATION_MCP` prefix, so two servers sharing one Redis do not share a queue.
+
+Worker tuning stays on the native `FASTMCP_DOCKET_*` variables (`FASTMCP_DOCKET_CONCURRENCY` and friends, listed in `.env.example`). Set the backend through `IMAGE_GENERATION_MCP_TASKS_URL` rather than `FASTMCP_DOCKET_URL`: the former wins when both are set, and the server warns about the disagreement.
 
 ## Providers
 
@@ -1517,9 +1582,9 @@ Authentication only works with HTTP transport (`--transport http` or `sse`). It 
 
 ## Cost Control
 
-| Variable                              | Type | Default  | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------- | ---- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str  | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. Set to empty string to disable confirmation. Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
+| Variable                              | Type | Default  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------- | ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str  | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. An empty value is treated as unset and falls back to the default (`openai`); to disable confirmation entirely, set a value that names no provider (such as `none`). Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
 
 ## Performance
 
@@ -1639,7 +1704,7 @@ IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY=your-stable-hex-key
 
 # MCP Tools
 
-image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.
+image-generation-mcp exposes the domain tools documented below, plus two auto-generated resource-bridge tools, to MCP clients.
 
 ## generate_image
 
@@ -1654,15 +1719,16 @@ Generate an image from a text prompt. Returns immediately with a `status: "gener
 
 ### Parameters
 
-| Parameter         | Type | Default      | Description                                                                                                                                                                                                                                     |
-| ----------------- | ---- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt`          | str  | *(required)* | Text description of the desired image                                                                                                                                                                                                           |
-| `provider`        | str  | `"auto"`     | Provider name (`openai`, `sd_webui`, `placeholder`) or `"auto"` for keyword-based selection                                                                                                                                                     |
-| `negative_prompt` | str  | `null`       | Things to avoid in the image. Native support on SD WebUI (SD 1.5/SDXL only; Flux models do NOT support negative prompts); appended as "Avoid:" on OpenAI.                                                                                       |
-| `aspect_ratio`    | str  | `"1:1"`      | Desired ratio: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`. Gemini also supports: `3:4`, `4:3`, `4:5`, `5:4`, `4:1`, `1:4`, `8:1`, `1:8`, `21:9`                                                                                                        |
-| `quality`         | str  | `"standard"` | Quality level: `standard` (fast, lower cost) or `hd` (higher quality, enables model reasoning + 2K on Gemini, `high` tier on OpenAI)                                                                                                            |
-| `background`      | str  | `"opaque"`   | Background mode: `opaque` or `transparent`. Supported by OpenAI's `gpt-image-1` / `gpt-image-1.5` / `gpt-image-1-mini` (not `gpt-image-2` or `chatgpt-image-latest`, which drop transparency) and Placeholder. SD WebUI ignores this parameter. |
-| `model`           | str  | `null`       | Specific model to use (such as an SD WebUI checkpoint name or `"dall-e-3"` for OpenAI). Overrides the provider's default. Use `list_providers` to see available model IDs.                                                                      |
+| Parameter         | Type | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------- | ---- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt`          | str  | *(required)* | Text description of the desired image                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `provider`        | str  | `"auto"`     | Provider name (`openai`, `sd_webui`, `placeholder`) or `"auto"` for keyword-based selection                                                                                                                                                                                                                                                                                                                                             |
+| `negative_prompt` | str  | `null`       | Things to avoid in the image. Native support on SD WebUI (SD 1.5/SDXL only; Flux models do NOT support negative prompts); appended as "Avoid:" on OpenAI.                                                                                                                                                                                                                                                                               |
+| `aspect_ratio`    | str  | `"1:1"`      | Desired ratio: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`. Gemini also supports: `3:4`, `4:3`, `4:5`, `5:4`, `4:1`, `1:4`, `8:1`, `1:8`, `21:9`                                                                                                                                                                                                                                                                                                |
+| `quality`         | str  | `"standard"` | Quality level: `standard` (fast, lower cost) or `hd` (higher quality, enables model reasoning on Gemini, `high` tier on OpenAI). Independent of `resolution`, which controls output size.                                                                                                                                                                                                                                               |
+| `resolution`      | str  | `"standard"` | Output size tier: `standard`, `high`, or `max`. `high`/`max` unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only `gemini-3.1-flash-lite-image` and `gemini-2.5-flash-image`, which clamp down to 1K); on OpenAI, only `gpt-image-2` goes beyond standard (up to 4K). Every other model ignores this. Check `supported_resolutions` in `list_providers` before relying on `high`/`max` for a specific model. |
+| `background`      | str  | `"opaque"`   | Background mode: `opaque` or `transparent`. Supported by OpenAI's `gpt-image-1` / `gpt-image-1.5` / `gpt-image-1-mini` (not `gpt-image-2` or `chatgpt-image-latest`, which drop transparency) and Placeholder. SD WebUI ignores this parameter.                                                                                                                                                                                         |
+| `model`           | str  | `null`       | Specific model to use (such as an SD WebUI checkpoint name or `"dall-e-3"` for OpenAI). Overrides the provider's default. Use `list_providers` to see available model IDs.                                                                                                                                                                                                                                                              |
 
 ### Return value
 
@@ -1757,7 +1823,8 @@ For task-oriented walkthroughs (editing, composition, masking, and SD `strength`
 | `provider`         | str       | `"auto"`     | Provider to use, or `"auto"`. Image-to-image needs a provider that reports `supports_image_input` in `list_providers`                                                                                                                                                                                                                                                                                                                                                                                 |
 | `negative_prompt`  | str       | `null`       | Things to avoid in the result (provider support varies)                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `aspect_ratio`     | str       | `"1:1"`      | Desired aspect ratio of the output image                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `quality`          | str       | `"standard"` | Quality level: `standard` or `hd`                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `quality`          | str       | `"standard"` | Quality level: `standard` or `hd`. Independent of `resolution`, which controls output size.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `resolution`       | str       | `"standard"` | Output size tier: `standard`, `high`, or `max`. `high`/`max` unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only `gemini-3.1-flash-lite-image` and `gemini-2.5-flash-image`, which clamp down to 1K); on OpenAI, only `gpt-image-2` goes beyond standard (up to 4K). Every other model ignores this. Check `supported_resolutions` in `list_providers` before relying on `high`/`max` for a specific model.                                                               |
 | `background`       | str       | `"opaque"`   | Background mode: `opaque` or `transparent` (provider-dependent)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `model`            | str       | `null`       | Specific model ID; see `list_providers`                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `strength`         | float     | `null`       | SD WebUI only: denoising strength for image-to-image (0.0 to 1.0, default 0.75 when omitted). Lower values preserve more of the reference image; higher values regenerate more. Other providers ignore it. Has no effect without a reference image.                                                                                                                                                                                                                                                   |
@@ -2258,6 +2325,7 @@ JSON object with a `refreshed_at` ISO 8601 timestamp and provider names, availab
             "supports_mask": false,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -2287,6 +2355,7 @@ JSON object with a `refreshed_at` ISO 8601 timestamp and provider names, availab
             "supports_mask": true,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard", "hd"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png", "jpeg", "webp"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -2503,6 +2572,7 @@ Provider capabilities and supported features.
             "supports_mask": false,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -2532,6 +2602,7 @@ Provider capabilities and supported features.
             "supports_mask": true,
             "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
             "supported_qualities": ["standard", "hd"],
+            "supported_resolutions": ["standard"],
             "supported_formats": ["png", "jpeg", "webp"],
             "supports_negative_prompt": false,
             "supports_background": true,
@@ -2550,6 +2621,7 @@ Provider capabilities and supported features.
   },
   "supported_aspect_ratios": ["1:1", "16:9", "9:16", "3:2", "2:3"],
   "supported_quality_levels": ["standard", "hd"],
+  "supported_resolutions": ["standard", "high", "max"],
   "supported_backgrounds": ["opaque", "transparent"]
 }
 ```
@@ -2570,7 +2642,7 @@ Provider-specific prompt writing guidance for LLM clients. Read this resource to
 
 Markdown document covering:
 
-- **General tips:** aspect ratio selection and quality levels; when and how to use negative prompts
+- **General tips:** aspect ratio selection and quality/resolution tiers; when and how to use negative prompts
 - **OpenAI:** natural-language prompts, style keywords, and text rendering tips
 - **SD WebUI (Stable Diffusion):** CLIP-tag prompting for SD 1.5/SDXL and natural-language prompting for Flux; negative prompts, BREAK syntax, and model-specific advice
 - **Placeholder:** prompt-to-color mapping explanation
@@ -2846,7 +2918,7 @@ Clients without MCP Apps support receive the raw JSON response from `browse_gall
 
 # MCP Prompts
 
-image-generation-mcp provides three prompts that give LLM clients guidance on provider selection, prompt formatting, and style application.
+MCP prompts are reusable prompt templates exposed to clients; the ones this server provides are listed below.
 
 ## select_provider
 
@@ -3044,25 +3116,26 @@ Client → image-generation-mcp → OIDC Provider
 
 ### Required variables
 
-| Variable                                  | Description                                                                                         |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL for OIDC and the capability-link transfer routes, such as `https://mcp.example.com` |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery endpoint                                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | Client ID registered with your provider                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | Client secret                                                                                       |
+| Variable                                  | Description                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the deployed server (`https://mcp.example.com`). Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset. |
+| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery document URL (`https://auth.example.com/.well-known/openid-configuration`).                                                                         |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client identifier registered with the provider.                                                                                                               |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret registered with the provider.                                                                                                                   |
 
 ### Optional variables
 
-| Variable                                        | Default   | Description                                                                                                                       |
-| ----------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | ephemeral | JWT signing key (**required on Linux/Docker**)                                                                                    |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | n/a       | Expected JWT audience claim; leave unset if your provider does not set one                                                        |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Comma-separated required scopes                                                                                                   |
-| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Set `true` to verify the access token as a JWT instead of the id token; useful for audience-claim validation on JWT access tokens |
+| Variable                                        | Default   | Description                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | (none)    | Expected `aud` claim; tokens issued for another audience are rejected.                                                                                                                                                                                                                                                                                                        |
+| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.                                                                                                                                                                                                                                                                             |
+| `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES`   | (none)    | Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default `openid offline_access`; `oidc_required_scopes` is always added on top. Set this when the registered client is not permitted `offline_access`, or to have clients request extra claim scopes (such as `groups`) without also requiring them in every token. |
+| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | `derived` | Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.                                |
+| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Validate the access token instead of the id token.                                                                                                                                                                                                                                                                                                                            |
 
-JWT signing key on Linux/Docker
+JWT signing key and secret rotation
 
-Without `OIDC_JWT_SIGNING_KEY`, FastMCP generates an ephemeral key that invalidates all tokens on restart. Always set a stable key in production:
+When `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` is unset, FastMCP derives the signing key from the OIDC client secret, so the key stays the same across restarts. Rotating the client secret changes the derived key and invalidates every token issued under the old one. Set an explicit key to decouple token validity from client-secret rotation:
 
 ```
 openssl rand -hex 32
@@ -3084,9 +3157,9 @@ ______________________________________________________________________
 
 The `client_id` and/or `redirect_uris` in your OIDC provider config don't match the values in your `.env` file. Verify both sides match exactly.
 
-### Tokens invalidated after restart
+### Tokens invalidated after a client-secret rotation
 
-You're missing `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`. Without it, FastMCP generates an ephemeral key on each startup. Generate and set a stable key:
+You're missing `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`. Without it, FastMCP derives the signing key from the OIDC client secret, so rotating that secret changes the derived key and invalidates every token issued under the old one. Generate and set a stable key to decouple token validity from secret rotation:
 
 ```
 openssl rand -hex 32
@@ -3709,21 +3782,31 @@ docker compose up -d
 
 The server listens on port 8000 with HTTP transport by default.
 
+## Image tags
+
+| Tag          | Contents                                                     | Updated by                                           |
+| ------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `latest`     | Newest stable release                                        | Each stable release that is newest across all series |
+| `vX.Y.Z`     | That exact release (pre-releases included, as `vX.Y.Z-rc.N`) | Never (immutable)                                    |
+| `vX.Y`, `vX` | Newest stable release in that series                         | Each stable release that is newest in its series     |
+| `edge`       | Newest commit on `main`                                      | Every merge to `main`                                |
+
+Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. A pre-release pushes only its immutable `vX.Y.Z-rc.N` tag. To run the latest merged code, use `edge`, which follows `main` continuously and carries no version identity. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
+
+```
+docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+  ghcr.io/pvliesdonk/image-generation-mcp:edge
+```
+
 ## Environment variables
 
-| Variable                               | Default                           | Description                                                                                                                                              |
-| -------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_READ_ONLY`       | `true`                            | Disable write tools                                                                                                                                      |
-| `IMAGE_GENERATION_MCP_OPENAI_API_KEY`  | N/A                               | OpenAI API key, enables OpenAI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST`   | N/A                               | SD WebUI URL, enables SD WebUI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SCRATCH_DIR`     | `~/.image-generation-mcp/images/` | Image storage directory                                                                                                                                  |
-| `IMAGE_GENERATION_MCP_EVENT_STORE_URL` | `file:///data/state/events`       | EventStore backend for SSE session resumability. Uses file-backed store by default (events survive container restarts). Set to `memory://` for dev/test. |
-| `IMAGE_GENERATION_MCP_BEARER_TOKEN`    | N/A                               | Enable bearer token auth                                                                                                                                 |
-| `FASTMCP_LOG_LEVEL`                    | `INFO`                            | Log level for FastMCP internals; app loggers use `INFO` unless `-v` is used                                                                              |
-| `IMAGE_GENERATION_MCP_SERVER_NAME`     | `image-generation-mcp`            | Server name shown to clients                                                                                                                             |
-| `IMAGE_GENERATION_MCP_INSTRUCTIONS`    | (computed at startup)             | System instructions for LLM context                                                                                                                      |
-| `IMAGE_GENERATION_MCP_DEBUG_PORT`      | N/A                               | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image)                                            |
-| `IMAGE_GENERATION_MCP_DEBUG_WAIT`      | `false`                           | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                                                             |
+| Variable                            | Default               | Description                                                                                                   |
+| ----------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_BEARER_TOKEN` | n/a                   | Enable bearer token auth                                                                                      |
+| `FASTMCP_LOG_LEVEL`                 | `INFO`                | Log level (`DEBUG` / `INFO` / `WARNING` / `ERROR`)                                                            |
+| `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | System instructions for LLM context                                                                           |
+| `IMAGE_GENERATION_MCP_DEBUG_PORT`   | N/A                   | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
+| `IMAGE_GENERATION_MCP_DEBUG_WAIT`   | `false`               | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                  |
 
 See [Configuration](https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration/index.md) for the full environment variable reference.
 
@@ -4042,34 +4125,33 @@ The server fetches the OIDC discovery document at startup to obtain `jwks_uri` a
 
 ### Required Variables
 
-| Variable                                  | Description                                                                                                                                               |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the server (such as `https://mcp.example.com`; include prefix when mounted under subpath, such as `https://mcp.example.com/myservice`) |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery endpoint (such as `https://auth.example.com/.well-known/openid-configuration`)                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client ID registered with your provider                                                                                                              |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret                                                                                                                                        |
+| Variable                                  | Description                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the deployed server (`https://mcp.example.com`). Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset. |
+| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery document URL (`https://auth.example.com/.well-known/openid-configuration`).                                                                         |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client identifier registered with the provider.                                                                                                               |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret registered with the provider.                                                                                                                   |
 
 ### Optional Variables
 
-| Variable                                        | Default   | Description                                                                                                                                                                                    |
-| ----------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | ephemeral | JWT signing key. **Required on Linux/Docker**: the default is ephemeral and invalidates tokens on restart                                                                                      |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | n/a       | Expected JWT audience claim; leave unset if your provider does not set one                                                                                                                     |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Comma-separated required scopes                                                                                                                                                                |
-| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Set `true` to verify the upstream access token as JWT instead of the id token. Only needed when your provider issues JWT access tokens and you require audience-claim validation on that token |
+| Variable                                        | Default   | Description                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | (none)    | Expected `aud` claim; tokens issued for another audience are rejected.                                                                                                                                                                                                                                                                                                        |
+| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.                                                                                                                                                                                                                                                                             |
+| `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES`   | (none)    | Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default `openid offline_access`; `oidc_required_scopes` is always added on top. Set this when the registered client is not permitted `offline_access`, or to have clients request extra claim scopes (such as `groups`) without also requiring them in every token. |
+| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | `derived` | Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.                                |
+| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Validate the access token instead of the id token.                                                                                                                                                                                                                                                                                                                            |
 
 ## JWT Signing Key
 
-The FastMCP default signing key is ephemeral (regenerated on startup), which forces clients to re-authenticate after every restart. Set a stable random secret to avoid this:
+When `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` is unset, FastMCP derives the signing key from the OIDC client secret using deterministic key derivation, so the key stays the same across restarts and tokens keep validating.
+
+The real reason to set an explicit key is secret rotation: because the default key is derived from the client secret, rotating that secret changes the derived key and invalidates every token issued under the old one. Setting an explicit signing key decouples token validity from client-secret rotation:
 
 ```
 # Generate once, store in your .env file
 openssl rand -hex 32
 ```
-
-Linux / Docker
-
-On Linux (including Docker), the ephemeral key is especially problematic because it does not persist across process restarts. Always set `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` in production.
 
 ## Setup with Authelia
 
@@ -4251,7 +4333,6 @@ networks:
 With the corresponding `.env`:
 
 ```
-IMAGE_GENERATION_MCP_READ_ONLY=true
 IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
 IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
 IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=image-generation-mcp
@@ -4334,3 +4415,10 @@ This works when `image-generation-mcp` is the **only** OAuth service on the host
 
 - **Dedicated hostname** (preferred): give `image-generation-mcp` its own hostname (such as `vault.example.com`) so discovery routes do not collide.
 - **External auth gateway**: use `mcp-auth-proxy` as a sidecar instead of native OIDC. The MCP server runs unauthenticated behind the proxy, and the proxy handles OAuth discovery at its own routes.
+# Release Notes
+
+# Release Notes
+
+Each minor release series gets one page here telling its story: what changed, why it matters, and how to adopt it. Patch releases add a dated section to their series page, so a series stays one linkable document. The commit-level record lives in the repository's `CHANGELOG.md`; each GitHub release links back to its page here.
+
+No release pages yet. The first entry appears with the first stable release cut after this project adopted release-notes pages.

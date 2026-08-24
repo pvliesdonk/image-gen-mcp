@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1377,6 +1396,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#image-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image tags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1513,9 +1543,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1551,6 +1664,17 @@
     <span class="md-ellipsis">
       
         Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#image-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image tags
       
     </span>
   </a>
@@ -1626,6 +1750,42 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
 </code></pre></div>
 <p>The server listens on port 8000 with HTTP transport by default.</p>
+<h2 id="image-tags">Image tags<a class="headerlink" href="#image-tags" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Contents</th>
+<th>Updated by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>latest</code></td>
+<td>Newest stable release</td>
+<td>Each stable release that is newest across all series</td>
+</tr>
+<tr>
+<td><code>vX.Y.Z</code></td>
+<td>That exact release (pre-releases included, as <code>vX.Y.Z-rc.N</code>)</td>
+<td>Never (immutable)</td>
+</tr>
+<tr>
+<td><code>vX.Y</code>, <code>vX</code></td>
+<td>Newest stable release in that series</td>
+<td>Each stable release that is newest in its series</td>
+</tr>
+<tr>
+<td><code>edge</code></td>
+<td>Newest commit on <code>main</code></td>
+<td>Every merge to <code>main</code></td>
+</tr>
+</tbody>
+</table>
+<p>Rolling tags are ordering-aware: a patch release cut from an old <code>release/X.Y</code> branch after a newer stable has shipped updates its own series tags but never <code>latest</code>. A pre-release pushes only its immutable <code>vX.Y.Z-rc.N</code> tag. To run the latest merged code, use <code>edge</code>, which follows <code>main</code> continuously and carries no version identity. To find the commit behind an <code>edge</code> image, read its <code>org.opencontainers.image.revision</code> label:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>inspect<span class="w"> </span>--format<span class="w"> </span><span class="s1">&#39;{{ index .Config.Labels &quot;org.opencontainers.image.revision&quot; }}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>ghcr.io/pvliesdonk/image-generation-mcp:edge
+</code></pre></div>
 <h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1637,44 +1797,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>IMAGE_GENERATION_MCP_READ_ONLY</code></td>
-<td><code>true</code></td>
-<td>Disable write tools</td>
-</tr>
-<tr>
-<td><code>IMAGE_GENERATION_MCP_OPENAI_API_KEY</code></td>
-<td>N/A</td>
-<td>OpenAI API key, enables OpenAI provider</td>
-</tr>
-<tr>
-<td><code>IMAGE_GENERATION_MCP_SD_WEBUI_HOST</code></td>
-<td>N/A</td>
-<td>SD WebUI URL, enables SD WebUI provider</td>
-</tr>
-<tr>
-<td><code>IMAGE_GENERATION_MCP_SCRATCH_DIR</code></td>
-<td><code>~/.image-generation-mcp/images/</code></td>
-<td>Image storage directory</td>
-</tr>
-<tr>
-<td><code>IMAGE_GENERATION_MCP_EVENT_STORE_URL</code></td>
-<td><code>file:///data/state/events</code></td>
-<td>EventStore backend for SSE session resumability. Uses file-backed store by default (events survive container restarts). Set to <code>memory://</code> for dev/test.</td>
-</tr>
-<tr>
 <td><code>IMAGE_GENERATION_MCP_BEARER_TOKEN</code></td>
-<td>N/A</td>
+<td>n/a</td>
 <td>Enable bearer token auth</td>
 </tr>
 <tr>
 <td><code>FASTMCP_LOG_LEVEL</code></td>
 <td><code>INFO</code></td>
-<td>Log level for FastMCP internals; app loggers use <code>INFO</code> unless <code>-v</code> is used</td>
-</tr>
-<tr>
-<td><code>IMAGE_GENERATION_MCP_SERVER_NAME</code></td>
-<td><code>image-generation-mcp</code></td>
-<td>Server name shown to clients</td>
+<td>Log level (<code>DEBUG</code> / <code>INFO</code> / <code>WARNING</code> / <code>ERROR</code>)</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_INSTRUCTIONS</code></td>
@@ -1722,18 +1852,18 @@ directories (default 1000/1000).</p>
 <ol>
 <li>
 <p><strong>Build with the debug extra:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>build<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>-t<span class="w"> </span>image-generation-mcp:debug<span class="w"> </span>.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>build<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>-t<span class="w"> </span>image-generation-mcp:debug<span class="w"> </span>.
 </code></pre></div>
 <p>This installs the <code>[debug]</code> optional-dependency group (which pulls <code>debugpy</code> transitively from <code>fastmcp-pvl-core</code>). Default builds (<code>DEBUG=false</code>) skip it.</p>
 </li>
 <li>
 <p><strong>Run with the debug env vars set and the port mapped:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">IMAGE_GENERATION_MCP_DEBUG_PORT</span><span class="o">=</span><span class="m">5678</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">IMAGE_GENERATION_MCP_DEBUG_WAIT</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:5678:5678<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>image-generation-mcp:debug
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">IMAGE_GENERATION_MCP_DEBUG_PORT</span><span class="o">=</span><span class="m">5678</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">IMAGE_GENERATION_MCP_DEBUG_WAIT</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:5678:5678<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>image-generation-mcp:debug
 </code></pre></div>
 <table>
 <thead>
@@ -1756,12 +1886,12 @@ directories (default 1000/1000).</p>
 </li>
 <li>
 <p><strong>Attach from VS Code</strong>, adding a launch config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to image-generation-mcp&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;debugpy&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;connect&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5678</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to image-generation-mcp&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;debugpy&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;connect&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5678</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
 </code></pre></div>
 <p>PyCharm uses <em>Run → Edit Configurations → Python Debug Server</em> with the same host/port.</p>
 </li>

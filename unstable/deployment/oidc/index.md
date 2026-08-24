@@ -48,34 +48,33 @@ The server fetches the OIDC discovery document at startup to obtain `jwks_uri` a
 
 ### Required Variables
 
-| Variable                                  | Description                                                                                                                                               |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the server (such as `https://mcp.example.com`; include prefix when mounted under subpath, such as `https://mcp.example.com/myservice`) |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery endpoint (such as `https://auth.example.com/.well-known/openid-configuration`)                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client ID registered with your provider                                                                                                              |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret                                                                                                                                        |
+| Variable                                  | Description                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the deployed server (`https://mcp.example.com`). Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset. |
+| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery document URL (`https://auth.example.com/.well-known/openid-configuration`).                                                                         |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client identifier registered with the provider.                                                                                                               |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret registered with the provider.                                                                                                                   |
 
 ### Optional Variables
 
-| Variable                                        | Default   | Description                                                                                                                                                                                    |
-| ----------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | ephemeral | JWT signing key. **Required on Linux/Docker**: the default is ephemeral and invalidates tokens on restart                                                                                      |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | n/a       | Expected JWT audience claim; leave unset if your provider does not set one                                                                                                                     |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Comma-separated required scopes                                                                                                                                                                |
-| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Set `true` to verify the upstream access token as JWT instead of the id token. Only needed when your provider issues JWT access tokens and you require audience-claim validation on that token |
+| Variable                                        | Default   | Description                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | (none)    | Expected `aud` claim; tokens issued for another audience are rejected.                                                                                                                                                                                                                                                                                                        |
+| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.                                                                                                                                                                                                                                                                             |
+| `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES`   | (none)    | Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default `openid offline_access`; `oidc_required_scopes` is always added on top. Set this when the registered client is not permitted `offline_access`, or to have clients request extra claim scopes (such as `groups`) without also requiring them in every token. |
+| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | `derived` | Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.                                |
+| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Validate the access token instead of the id token.                                                                                                                                                                                                                                                                                                                            |
 
 ## JWT Signing Key
 
-The FastMCP default signing key is ephemeral (regenerated on startup), which forces clients to re-authenticate after every restart. Set a stable random secret to avoid this:
+When `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` is unset, FastMCP derives the signing key from the OIDC client secret using deterministic key derivation, so the key stays the same across restarts and tokens keep validating.
+
+The real reason to set an explicit key is secret rotation: because the default key is derived from the client secret, rotating that secret changes the derived key and invalidates every token issued under the old one. Setting an explicit signing key decouples token validity from client-secret rotation:
 
 ```
 # Generate once, store in your .env file
 openssl rand -hex 32
 ```
-
-Linux / Docker
-
-On Linux (including Docker), the ephemeral key is especially problematic because it does not persist across process restarts. Always set `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` in production.
 
 ## Setup with Authelia
 
@@ -257,7 +256,6 @@ networks:
 With the corresponding `.env`:
 
 ```
-IMAGE_GENERATION_MCP_READ_ONLY=true
 IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
 IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
 IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=image-generation-mcp

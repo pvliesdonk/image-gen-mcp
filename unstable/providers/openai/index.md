@@ -52,6 +52,24 @@ The provider registers automatically when this variable is set.
 | `standard`    | `auto` (lets OpenAI choose) | `standard`         |
 | `hd`          | `high`                      | `hd`               |
 
+`quality` does not control output size. Use `resolution` for that (see [Resolution tiers](#resolution-tiers) below).
+
+## Resolution tiers
+
+The `resolution` parameter controls output size, independently of `quality`. Only `gpt-image-2` honors `high`/`max`; every other model (including `gpt-image-1.5`, `gpt-image-1-mini`, `gpt-image-1`, `chatgpt-image-latest`, and both dall-e models) ignores `resolution` and always renders at its standard size.
+
+| Aspect ratio | `standard`  | `high`      | `max`       |
+| ------------ | ----------- | ----------- | ----------- |
+| `1:1`        | `1024x1024` | `1920x1920` | `2880x2880` |
+| `16:9`       | `1536x1024` | `2560x1440` | `3840x2160` |
+| `9:16`       | `1024x1536` | `1440x2560` | `2160x3840` |
+| `3:2`        | `1536x1024` | `2304x1536` | `3504x2336` |
+| `2:3`        | `1024x1536` | `1536x2304` | `2336x3504` |
+
+`max` reaches up to 4K (`3840x2160`) for landscape and portrait ratios; output beyond `2560x1440` total pixels is documented by OpenAI as experimental. Use `high` for a more conservative print-resolution target before reaching for `max`.
+
+**Standard-tier sizing is not aspect-ratio-exact.** The `standard` size table above predates the `resolution` parameter and was chosen for convenient round numbers rather than exact ratio matches: `16:9` at `1536x1024` is actually 1.5:1, not 1.778:1. Raising `resolution` to `high` or `max` on `gpt-image-2` selects a different size table with its own approximation, so the output can reframe slightly when you switch tiers. This is tracked as issue #340.
+
 ## Negative prompts
 
 OpenAI does not have native negative prompt support. When a `negative_prompt` is provided, it is appended to the prompt as:

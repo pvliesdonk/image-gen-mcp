@@ -2,102 +2,114 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration-generator/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/prompts/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/resources/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/claude-desktop/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/docker/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/oidc/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/release-process/</loc>
+         <lastmod>2026-08-24</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/repository-protection/</loc>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/systemd/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/getting-started/claude-code/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/getting-started/claude-desktop/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/getting-started/installation/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/authentication/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/client-compatibility/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/image-assets/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/image-input/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/prompt-writing/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/styles/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/gemini/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/model-catalog/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/openai/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/placeholder/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/providers/sd-webui/</loc>
-         <lastmod>2026-07-10</lastmod>
+         <lastmod>2026-08-24</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/unstable/releases/</loc>
+         <lastmod>2026-08-24</lastmod>
     </url>
 </urlset>

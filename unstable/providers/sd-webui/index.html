@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -996,6 +1015,17 @@
     <span class="md-ellipsis">
       
         Background transparency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution
       
     </span>
   </a>
@@ -1718,9 +1748,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1928,6 +2041,17 @@
     <span class="md-ellipsis">
       
         Background transparency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution
       
     </span>
   </a>
@@ -2327,6 +2451,8 @@
 <p><code>list_providers</code> reports <code>supports_image_input: true</code> and <code>max_input_images: 1</code> for every discovered checkpoint. Pass exactly one reference image; passing more than one returns an error.</p>
 <h2 id="background-transparency">Background transparency<a class="headerlink" href="#background-transparency" title="Permanent link">&para;</a></h2>
 <p>The <code>background</code> parameter is <strong>not supported</strong> by SD WebUI. When <code>background="transparent"</code> is passed, it is silently ignored (a debug log is emitted). Stable Diffusion does not natively support transparent background generation.</p>
+<h2 id="resolution">Resolution<a class="headerlink" href="#resolution" title="Permanent link">&para;</a></h2>
+<p>The <code>resolution</code> parameter is <strong>not supported</strong> by SD WebUI. The provider always renders at the checkpoint/preset size for the requested aspect ratio (see the per-architecture size tables above) and reports "resolution": "standard" in provider metadata, regardless of the requested tier. When a non-standard tier (<code>high</code> or <code>max</code>) is requested, it is clamped to <code>standard</code> and a WARNING-level <code>resolution_clamped</code> log is emitted (matching the Gemini and OpenAI providers).</p>
 <h2 id="capability-discovery">Capability discovery<a class="headerlink" href="#capability-discovery" title="Permanent link">&para;</a></h2>
 <p>At startup, the provider calls:</p>
 <ul>

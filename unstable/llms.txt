@@ -45,3 +45,7 @@ image-generation-mcp is a multi-provider image generation MCP server supporting 
 - [Systemd](https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/systemd/index.md): Systemd service, .deb/.rpm packages, security hardening
 - [OIDC Authentication](https://pvliesdonk.github.io/image-generation-mcp/unstable/deployment/oidc/index.md): OIDC authentication setup
 
+## Release Notes
+
+- [Release Notes](https://pvliesdonk.github.io/image-generation-mcp/unstable/releases/index.md)
+

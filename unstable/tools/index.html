@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -2225,9 +2244,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3046,7 +3148,7 @@
 
 
 <h1 id="mcp-tools">MCP Tools<a class="headerlink" href="#mcp-tools" title="Permanent link">&para;</a></h1>
-<p>image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.</p>
+<p>image-generation-mcp exposes the domain tools documented below, plus two auto-generated resource-bridge tools, to MCP clients.</p>
 <h2 id="generate_image">generate_image<a class="headerlink" href="#generate_image" title="Permanent link">&para;</a></h2>
 <p>Generate an image from a text prompt. Returns immediately with a <code>status: "generating"</code> response while the image is generated in the background (typically 30-90 seconds). Use <code>check_generation_status(image_id)</code> to wait for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the result. Check each model's <code>prompt_style</code> in <code>list_providers</code> to choose CLIP tags vs. natural language prompts.</p>
 <table>
@@ -3114,7 +3216,13 @@
 <td><code>quality</code></td>
 <td>str</td>
 <td><code>"standard"</code></td>
-<td>Quality level: <code>standard</code> (fast, lower cost) or <code>hd</code> (higher quality, enables model reasoning + 2K on Gemini, <code>high</code> tier on OpenAI)</td>
+<td>Quality level: <code>standard</code> (fast, lower cost) or <code>hd</code> (higher quality, enables model reasoning on Gemini, <code>high</code> tier on OpenAI). Independent of <code>resolution</code>, which controls output size.</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Output size tier: <code>standard</code>, <code>high</code>, or <code>max</code>. <code>high</code>/<code>max</code> unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only <code>gemini-3.1-flash-lite-image</code> and <code>gemini-2.5-flash-image</code>, which clamp down to 1K); on OpenAI, only <code>gpt-image-2</code> goes beyond standard (up to 4K). Every other model ignores this. Check <code>supported_resolutions</code> in <code>list_providers</code> before relying on <code>high</code>/<code>max</code> for a specific model.</td>
 </tr>
 <tr>
 <td><code>background</code></td>
@@ -3263,7 +3371,13 @@
 <td><code>quality</code></td>
 <td>str</td>
 <td><code>"standard"</code></td>
-<td>Quality level: <code>standard</code> or <code>hd</code></td>
+<td>Quality level: <code>standard</code> or <code>hd</code>. Independent of <code>resolution</code>, which controls output size.</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>str</td>
+<td><code>"standard"</code></td>
+<td>Output size tier: <code>standard</code>, <code>high</code>, or <code>max</code>. <code>high</code>/<code>max</code> unlock higher resolutions where supported: on Gemini, 2K/4K (except the 1K-only <code>gemini-3.1-flash-lite-image</code> and <code>gemini-2.5-flash-image</code>, which clamp down to 1K); on OpenAI, only <code>gpt-image-2</code> goes beyond standard (up to 4K). Every other model ignores this. Check <code>supported_resolutions</code> in <code>list_providers</code> before relying on <code>high</code>/<code>max</code> for a specific model.</td>
 </tr>
 <tr>
 <td><code>background</code></td>
@@ -4033,52 +4147,54 @@ gallery from a URL, an upload, or inline bytes via <code>fetch_image</code>,
 <a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">            </span><span class="nt">&quot;supports_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">            </span><span class="nt">&quot;supported_aspect_ratios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;16:9&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;9:16&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3:2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2:3&quot;</span><span class="p">],</span>
 <a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="w">            </span><span class="nt">&quot;supported_qualities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
-<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">],</span>
-<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">640</span><span class="p">,</span>
-<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="w">          </span><span class="p">}</span>
-<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="w">        </span><span class="p">],</span>
-<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
-<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a><span class="w">      </span><span class="p">}</span>
-<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a><span class="w">    </span><span class="nt">&quot;openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a><span class="w">      </span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OpenAI (gpt-image-2 / dall-e-3) — best for text, logos, and general-purpose generation&quot;</span><span class="p">,</span>
-<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a><span class="w">      </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a><span class="w">        </span><span class="nt">&quot;provider_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
-<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a><span class="w">        </span><span class="nt">&quot;models&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a><span class="w">          </span><span class="p">{</span>
-<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a><span class="w">            </span><span class="nt">&quot;model_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-image-1&quot;</span><span class="p">,</span>
-<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a><span class="w">            </span><span class="nt">&quot;display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GPT Image 1&quot;</span><span class="p">,</span>
-<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a><span class="w">            </span><span class="nt">&quot;can_generate&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-43" name="__codelineno-17-43" href="#__codelineno-17-43"></a><span class="w">            </span><span class="nt">&quot;can_edit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-44" name="__codelineno-17-44" href="#__codelineno-17-44"></a><span class="w">            </span><span class="nt">&quot;supports_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-45" name="__codelineno-17-45" href="#__codelineno-17-45"></a><span class="w">            </span><span class="nt">&quot;supported_aspect_ratios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;16:9&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;9:16&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3:2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2:3&quot;</span><span class="p">],</span>
-<a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a><span class="w">            </span><span class="nt">&quot;supported_qualities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hd&quot;</span><span class="p">],</span>
-<a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;jpeg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;webp&quot;</span><span class="p">],</span>
-<a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1536</span><span class="p">,</span>
-<a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-17-53" name="__codelineno-17-53" href="#__codelineno-17-53"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-17-54" name="__codelineno-17-54" href="#__codelineno-17-54"></a><span class="w">          </span><span class="p">}</span>
-<a id="__codelineno-17-55" name="__codelineno-17-55" href="#__codelineno-17-55"></a><span class="w">        </span><span class="p">],</span>
-<a id="__codelineno-17-56" name="__codelineno-17-56" href="#__codelineno-17-56"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-17-57" name="__codelineno-17-57" href="#__codelineno-17-57"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-17-58" name="__codelineno-17-58" href="#__codelineno-17-58"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
-<a id="__codelineno-17-59" name="__codelineno-17-59" href="#__codelineno-17-59"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-17-60" name="__codelineno-17-60" href="#__codelineno-17-60"></a><span class="w">      </span><span class="p">}</span>
-<a id="__codelineno-17-61" name="__codelineno-17-61" href="#__codelineno-17-61"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-17-62" name="__codelineno-17-62" href="#__codelineno-17-62"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-17-63" name="__codelineno-17-63" href="#__codelineno-17-63"></a><span class="p">}</span>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="w">            </span><span class="nt">&quot;supported_resolutions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">640</span><span class="p">,</span>
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="w">          </span><span class="p">}</span>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">        </span><span class="p">],</span>
+<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
+<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a><span class="w">    </span><span class="nt">&quot;openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a><span class="w">      </span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OpenAI (gpt-image-2 / dall-e-3) — best for text, logos, and general-purpose generation&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a><span class="w">      </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a><span class="w">        </span><span class="nt">&quot;provider_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a><span class="w">        </span><span class="nt">&quot;models&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a><span class="w">          </span><span class="p">{</span>
+<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a><span class="w">            </span><span class="nt">&quot;model_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-image-1&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a><span class="w">            </span><span class="nt">&quot;display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GPT Image 1&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-43" name="__codelineno-17-43" href="#__codelineno-17-43"></a><span class="w">            </span><span class="nt">&quot;can_generate&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-44" name="__codelineno-17-44" href="#__codelineno-17-44"></a><span class="w">            </span><span class="nt">&quot;can_edit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-45" name="__codelineno-17-45" href="#__codelineno-17-45"></a><span class="w">            </span><span class="nt">&quot;supports_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a><span class="w">            </span><span class="nt">&quot;supported_aspect_ratios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;16:9&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;9:16&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3:2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2:3&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a><span class="w">            </span><span class="nt">&quot;supported_qualities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hd&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a><span class="w">            </span><span class="nt">&quot;supported_resolutions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a><span class="w">            </span><span class="nt">&quot;supported_formats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;jpeg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;webp&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a><span class="w">            </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a><span class="w">            </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a><span class="w">            </span><span class="nt">&quot;max_resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1536</span><span class="p">,</span>
+<a id="__codelineno-17-53" name="__codelineno-17-53" href="#__codelineno-17-53"></a><span class="w">            </span><span class="nt">&quot;default_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-54" name="__codelineno-17-54" href="#__codelineno-17-54"></a><span class="w">            </span><span class="nt">&quot;default_cfg&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-17-55" name="__codelineno-17-55" href="#__codelineno-17-55"></a><span class="w">            </span><span class="nt">&quot;prompt_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-17-56" name="__codelineno-17-56" href="#__codelineno-17-56"></a><span class="w">          </span><span class="p">}</span>
+<a id="__codelineno-17-57" name="__codelineno-17-57" href="#__codelineno-17-57"></a><span class="w">        </span><span class="p">],</span>
+<a id="__codelineno-17-58" name="__codelineno-17-58" href="#__codelineno-17-58"></a><span class="w">        </span><span class="nt">&quot;supports_background&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-17-59" name="__codelineno-17-59" href="#__codelineno-17-59"></a><span class="w">        </span><span class="nt">&quot;supports_negative_prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-17-60" name="__codelineno-17-60" href="#__codelineno-17-60"></a><span class="w">        </span><span class="nt">&quot;discovered_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1710777600.0</span><span class="p">,</span>
+<a id="__codelineno-17-61" name="__codelineno-17-61" href="#__codelineno-17-61"></a><span class="w">        </span><span class="nt">&quot;degraded&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-17-62" name="__codelineno-17-62" href="#__codelineno-17-62"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-17-63" name="__codelineno-17-63" href="#__codelineno-17-63"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-17-64" name="__codelineno-17-64" href="#__codelineno-17-64"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-17-65" name="__codelineno-17-65" href="#__codelineno-17-65"></a><span class="p">}</span>
 </code></pre></div>
 <p>The response is wrapped in an object with <code>refreshed_at</code> (ISO 8601 timestamp of when the data was produced) and <code>providers</code> (the provider map). Only registered (configured) providers appear in the response. The <code>capabilities</code> key is present after startup discovery completes. Degraded providers (where capability discovery failed) show <code>"degraded": true</code> with an empty model list.</p>
 <p>The <code>prompt_style</code> field on each model indicates the recommended prompt format: <code>"clip"</code> for SD 1.5/SDXL checkpoints (tag-based), <code>"natural_language"</code> for Flux checkpoints, and <code>null</code> for providers that do not set a preference (OpenAI, Placeholder).</p>

@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -801,6 +820,17 @@
     <span class="md-ellipsis">
       
         Quality levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution tiers
       
     </span>
   </a>
@@ -1618,9 +1648,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1689,6 +1802,17 @@
     <span class="md-ellipsis">
       
         Quality levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution tiers
       
     </span>
   </a>
@@ -1935,12 +2059,13 @@
 </tbody>
 </table>
 <h2 id="quality-levels">Quality levels<a class="headerlink" href="#quality-levels" title="Permanent link">&para;</a></h2>
-<p>The <code>quality</code> parameter controls resolution, model reasoning, and response modalities:</p>
+<p>The <code>quality</code> parameter controls model reasoning and response modalities. It
+no longer controls output size, that is <code>resolution</code>'s job (see
+<a href="#resolution-tiers">Resolution tiers</a> below).</p>
 <table>
 <thead>
 <tr>
 <th>Quality</th>
-<th>Image size</th>
 <th>Thinking</th>
 <th>Response modalities</th>
 <th>Cost</th>
@@ -1949,14 +2074,12 @@
 <tbody>
 <tr>
 <td><code>standard</code></td>
-<td>1K</td>
 <td>Minimal (default)</td>
 <td>Image only</td>
 <td>Free tier</td>
 </tr>
 <tr>
 <td><code>hd</code></td>
-<td>2K</td>
 <td>High (model reasons about composition before rendering)</td>
 <td>Text + Image</td>
 <td>Thinking tokens billed</td>
@@ -1964,7 +2087,66 @@
 </tbody>
 </table>
 <p><strong>How <code>hd</code> works:</strong> When <code>quality="hd"</code> is set, the provider enables <code>thinking_level="High"</code> on supported models (<code>gemini-3.1-flash-image</code>, <code>gemini-3-pro-image</code>, <code>gemini-3.1-flash-lite-image</code>). The model reasons through the prompt, plans composition, and may generate interim images before producing the final result. Output quality improves measurably for complex prompts with multiple elements, layouts, or text.</p>
-<p><code>gemini-2.5-flash-image</code> does not support thinking. Setting <code>hd</code> still increases resolution to 2K but skips the thinking configuration for this model.</p>
+<p><code>gemini-2.5-flash-image</code> does not support thinking. Setting <code>hd</code> on this model has no effect: it still renders at whatever <code>resolution</code> allows (1K, since it does not support the higher tiers).</p>
+<h2 id="resolution-tiers">Resolution tiers<a class="headerlink" href="#resolution-tiers" title="Permanent link">&para;</a></h2>
+<p>The <code>resolution</code> parameter controls output size, independently of <code>quality</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Resolution</th>
+<th>Image size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>standard</code> (default)</td>
+<td>1K</td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td>2K</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td>4K</td>
+</tr>
+</tbody>
+</table>
+<p>Only the current Gemini 3 image models support the full 1K/2K/4K range:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Supported resolutions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gemini-3.1-flash-image</code></td>
+<td><code>standard</code>, <code>high</code>, <code>max</code></td>
+</tr>
+<tr>
+<td><code>gemini-3-pro-image</code></td>
+<td><code>standard</code>, <code>high</code>, <code>max</code></td>
+</tr>
+<tr>
+<td><code>gemini-3.1-flash-lite-image</code></td>
+<td><code>standard</code> only</td>
+</tr>
+<tr>
+<td><code>gemini-2.5-flash-image</code></td>
+<td><code>standard</code> only</td>
+</tr>
+</tbody>
+</table>
+<p>Requesting <code>high</code> or <code>max</code> on a <code>standard</code>-only model <strong>clamps down</strong> to the
+model's highest supported tier rather than raising an error; the delivered
+tier is reported back in the generated image's metadata. Check
+<code>supported_resolutions</code> on each model entry in <code>list_providers</code> before
+relying on <code>high</code>/<code>max</code> for a specific model.</p>
+<p>Higher resolution tiers may increase generation cost even on the free tier;
+check <a href="https://ai.google.dev/pricing">Google AI pricing</a> for current limits
+before generating at <code>high</code>/<code>max</code> in volume.</p>
 <h2 id="negative-prompts">Negative prompts<a class="headerlink" href="#negative-prompts" title="Permanent link">&para;</a></h2>
 <p>Gemini does not have native negative prompt support. When a <code>negative_prompt</code> is provided, it is appended to the prompt as:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{prompt}
