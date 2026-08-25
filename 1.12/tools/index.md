@@ -1,6 +1,6 @@
 # MCP Tools
 
-image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.
+image-generation-mcp exposes the domain tools documented below, plus two auto-generated resource-bridge tools, to MCP clients.
 
 ## generate_image
 

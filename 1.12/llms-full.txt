@@ -1519,10 +1519,29 @@ All configuration is via environment variables prefixed with `IMAGE_GENERATION_M
 
 ## Server identity
 
-These two are read by the scaffold's `make_server()` (not by `ServerConfig`), so an operator can rename an instance or override its instructions without editing template-owned code:
+These two let an operator rename an instance or override its instructions, with no configuration beyond the variable itself:
 
 - `IMAGE_GENERATION_MCP_SERVER_NAME`: the server name reported to clients and by `get_server_info`. Defaults to `image-generation-mcp`.
 - `IMAGE_GENERATION_MCP_INSTRUCTIONS`: replaces the default MCP instructions text. Unset, the scaffold builds the default (which advertises this override).
+
+## Tool visibility
+
+Operators can trim which tools this instance exposes. Each variable takes a comma-separated list of explicit tool names:
+
+- `IMAGE_GENERATION_MCP_TOOLS_ALLOW`: expose *only* the listed tools.
+- `IMAGE_GENERATION_MCP_TOOLS_DENY`: hide the listed tools.
+
+Hidden tools disappear from `tools/list` and are rejected on `tools/call`; resources and prompts are unaffected. Setting both variables, or setting one to a value with no names in it, is a startup error. A name matching no registered tool is ignored, but an allowlist that matches nothing logs a startup `WARNING` since the instance then exposes zero tools. See `fastmcp-pvl-core`'s README for the full semantics.
+
+## Background tasks
+
+Every Image Generation MCP instance wires a background-task backend at startup, so a tool registered with `task=True` works with no extra setup. One variable picks the backend:
+
+- `IMAGE_GENERATION_MCP_TASKS_URL`: `memory://` runs tasks in-process and loses them on restart; `redis://...` is durable and shared across processes.
+
+Unset, a `redis://` `IMAGE_GENERATION_MCP_KV_STORE_URL` is reused for tasks as well, so a single URL configures every stateful subsystem. With neither set, the backend falls back to `memory://`, which the server logs at startup when running over HTTP. The queue name comes from the `IMAGE_GENERATION_MCP` prefix, so two servers sharing one Redis do not share a queue.
+
+Worker tuning stays on the native `FASTMCP_DOCKET_*` variables (`FASTMCP_DOCKET_CONCURRENCY` and friends, listed in `.env.example`). Set the backend through `IMAGE_GENERATION_MCP_TASKS_URL` rather than `FASTMCP_DOCKET_URL`: the former wins when both are set, and the server warns about the disagreement.
 
 ## Providers
 
@@ -1563,9 +1582,9 @@ Authentication only works with HTTP transport (`--transport http` or `sse`). It 
 
 ## Cost Control
 
-| Variable                              | Type | Default  | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------- | ---- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str  | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. Set to empty string to disable confirmation. Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
+| Variable                              | Type | Default  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------- | ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_PAID_PROVIDERS` | str  | `openai` | Comma-separated list of provider names that cost money. When the MCP client supports [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/elicitation), `generate_image` asks for confirmation before using these providers. An empty value is treated as unset and falls back to the default (`openai`); to disable confirmation entirely, set a value that names no provider (such as `none`). Gemini `quality="hd"` uses thinking tokens which are billed; consider adding `gemini` if you use `hd` quality frequently. |
 
 ## Performance
 
@@ -1685,7 +1704,7 @@ IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY=your-stable-hex-key
 
 # MCP Tools
 
-image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.
+image-generation-mcp exposes the domain tools documented below, plus two auto-generated resource-bridge tools, to MCP clients.
 
 ## generate_image
 
@@ -2899,7 +2918,7 @@ Clients without MCP Apps support receive the raw JSON response from `browse_gall
 
 # MCP Prompts
 
-image-generation-mcp provides three prompts that give LLM clients guidance on provider selection, prompt formatting, and style application.
+MCP prompts are reusable prompt templates exposed to clients; the ones this server provides are listed below.
 
 ## select_provider
 
@@ -3003,7 +3022,7 @@ See the [Style Library Guide](https://pvliesdonk.github.io/image-generation-mcp/
 
 # Authentication
 
-This guide covers how to protect your image-generation-mcp server with authentication. Choose the mode that fits your deployment.
+This guide covers how to protect your MCP server with authentication. Choose the mode that fits your deployment.
 
 Transport requirement
 
@@ -3013,24 +3032,14 @@ Authentication only works with HTTP transport (`--transport http` or `sse`). It 
 
 The server supports four authentication modes:
 
-| Mode                  | When to use                                                                             | Configuration                                                                |
-| --------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Multi-auth**        | Mixed clients: Claude web (OIDC) and Claude Code (bearer token) sharing the same server | Set `IMAGE_GENERATION_MCP_BEARER_TOKEN` + OIDC variables                     |
-| **Bearer token**      | Simple deployments behind a VPN, Docker compose stacks, development                     | Set `IMAGE_GENERATION_MCP_BEARER_TOKEN` only                                 |
-| **OIDC (remote)**     | Production with user identity (recommended)                                             | Set `BASE_URL` + `OIDC_CONFIG_URL`                                           |
-| **OIDC (oidc-proxy)** | Production when IdP lacks DCR support and you need DCR emulation                        | Set `BASE_URL` + `OIDC_CONFIG_URL` + `OIDC_CLIENT_ID` + `OIDC_CLIENT_SECRET` |
-| **No auth**           | Local stdio usage, trusted networks                                                     | Default (nothing to configure)                                               |
+| Mode             | When to use                                                                              | Configuration                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Multi-auth**   | Mixed clients, such as Claude web (OIDC) + Claude Code (bearer token) on the same server | Set both `IMAGE_GENERATION_MCP_BEARER_TOKEN` and all four OIDC variables |
+| **Bearer token** | Simple deployments behind a VPN, Docker compose stacks, development                      | Set `IMAGE_GENERATION_MCP_BEARER_TOKEN` only                             |
+| **OIDC**         | Production with user identity, SSO, multi-user access                                    | Set all four OIDC variables only                                         |
+| **No auth**      | Local stdio usage, trusted networks                                                      | Default (nothing to configure)                                           |
 
-When both bearer token and OIDC are configured, the server accepts **either** credential: a valid bearer token or a valid OIDC session. This is useful when different clients require different authentication flows against the same vault instance.
-
-### OIDC mode selection
-
-Two OIDC modes are available via the `IMAGE_GENERATION_MCP_AUTH_MODE` env var:
-
-- **`remote`** (recommended): The server validates tokens locally via JWKS. The client authenticates directly with the IdP. It requires only `BASE_URL` + `OIDC_CONFIG_URL`, with no client credentials, JWT signing key, or upstream token storage.
-- **`oidc-proxy`**: The server acts as an OAuth intermediary, emulating Dynamic Client Registration (DCR) for IdPs that don't support it natively. Requires `CLIENT_ID`, `CLIENT_SECRET`, and optionally `JWT_SIGNING_KEY`. Subject to the [session lifetime limitation](#known-limitations-oidc-session-lifetime).
-
-When `AUTH_MODE` is not set, it auto-detects: `oidc-proxy` when client credentials are present, `remote` otherwise. See [OIDC deployment guide](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/index.md) for setup details.
+When both bearer token and OIDC are configured, the server accepts **either** credential: a valid bearer token or a valid OIDC session. This is useful when different clients require different authentication flows against the same server instance.
 
 ______________________________________________________________________
 
@@ -3073,7 +3082,18 @@ Authorization: Bearer your-generated-token
 - Development and testing environments
 - Any scenario where full OIDC is overkill
 
-See also: [`examples/bearer-auth.env`](https://github.com/pvliesdonk/image-generation-mcp/blob/main/examples/bearer-auth.env) for a ready-to-use example.
+### Mapped bearer tokens (multi-subject)
+
+The bearer-token mode above shares one subject across every authenticated caller. By default this is the library's `bearer-anon`; override with `IMAGE_GENERATION_MCP_BEARER_DEFAULT_SUBJECT`. For audit logs and authorization that distinguish callers, switch to mapped-token mode by pointing `IMAGE_GENERATION_MCP_BEARER_TOKENS_FILE` at a TOML file:
+
+```
+# tokens.toml
+[tokens]
+"ghp_alice_xxxxxxxx" = "user:alice@example.com"
+"sk_ci_yyyyyyyy"     = "service:ci-bot"
+```
+
+Each token resolves to a distinct subject string for downstream attribution. Subject strings are opaque: the `<kind>:<id>` convention (`user:`, `service:`, `token:`) is documentation only. When `BEARER_TOKENS_FILE` is set it overrides `BEARER_TOKEN` (a `WARNING` is logged if both are present). A missing or malformed file aborts startup with `ConfigurationError` rather than silently denying every request.
 
 ______________________________________________________________________
 
@@ -3097,25 +3117,26 @@ Client → image-generation-mcp → OIDC Provider
 
 ### Required variables
 
-| Variable                                  | Description                                                                                         |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL for OIDC and the capability-link transfer routes, such as `https://mcp.example.com` |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery endpoint                                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | Client ID registered with your provider                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | Client secret                                                                                       |
+| Variable                                  | Description                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the deployed server (`https://mcp.example.com`). Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset. |
+| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery document URL (`https://auth.example.com/.well-known/openid-configuration`).                                                                         |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client identifier registered with the provider.                                                                                                               |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret registered with the provider.                                                                                                                   |
 
 ### Optional variables
 
-| Variable                                        | Default   | Description                                                                                                                       |
-| ----------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | ephemeral | JWT signing key (**required on Linux/Docker**)                                                                                    |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | n/a       | Expected JWT audience claim; leave unset if your provider does not set one                                                        |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Comma-separated required scopes                                                                                                   |
-| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Set `true` to verify the access token as a JWT instead of the id token; useful for audience-claim validation on JWT access tokens |
+| Variable                                        | Default                 | Description                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | (none)                  | Expected `aud` claim; tokens issued for another audience are rejected.                                                                                                                                                                                                                                                                                                        |
+| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`                | Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.                                                                                                                                                                                                                                                                             |
+| `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES`   | `openid offline_access` | Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default `openid offline_access`; `oidc_required_scopes` is always added on top. Set this when the registered client is not permitted `offline_access`, or to have clients request extra claim scopes (such as `groups`) without also requiring them in every token. |
+| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | `derived`               | Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.                                |
+| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`                 | Validate the access token instead of the id token.                                                                                                                                                                                                                                                                                                                            |
 
-JWT signing key on Linux/Docker
+JWT signing key and secret rotation
 
-Without `OIDC_JWT_SIGNING_KEY`, FastMCP generates an ephemeral key that invalidates all tokens on restart. Always set a stable key in production:
+When `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` is unset, FastMCP derives the signing key from the OIDC client secret, so the key stays the same across restarts. Rotating the client secret changes the derived key and invalidates every token issued under the old one. Set an explicit key to decouple token validity from client-secret rotation:
 
 ```
 openssl rand -hex 32
@@ -3123,7 +3144,7 @@ openssl rand -hex 32
 
 Long-running sessions
 
-Current MCP clients do not reliably refresh tokens. See [Known Limitations](#known-limitations-oidc-session-lifetime). Configure **all** token lifetimes (access, id, refresh) on your identity provider to cover a full workday (8 h or more). For simpler deployments, bearer token auth is unaffected by these limitations.
+Current MCP clients do not reliably refresh tokens; see [Known Limitations](#known-limitations-mcp-oauth-token-refresh). Configure **all** token lifetimes (access, id, refresh) on your identity provider to cover a full workday (8 hours or more). For simpler deployments, bearer token auth is unaffected by these limitations.
 
 For the full OIDC reference (env vars, Docker Compose, subpath deployments, architecture):
 
@@ -3137,9 +3158,9 @@ ______________________________________________________________________
 
 The `client_id` and/or `redirect_uris` in your OIDC provider config don't match the values in your `.env` file. Verify both sides match exactly.
 
-### Tokens invalidated after restart
+### Tokens invalidated after a client-secret rotation
 
-You're missing `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`. Without it, FastMCP generates an ephemeral key on each startup. Generate and set a stable key:
+You're missing `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`. Without it, FastMCP derives the signing key from the OIDC client secret, so rotating that secret changes the derived key and invalidates every token issued under the old one. Generate and set a stable key to decouple token validity from secret rotation:
 
 ```
 openssl rand -hex 32
@@ -3169,7 +3190,7 @@ Authentication only works with HTTP transport. If you're using `--transport stdi
 
 1. **id_token lifetime** (most common): When using `verify_id_token` mode (the default for Authelia), the server re-validates the upstream `id_token` on every request. If your provider's `id_token` lifetime is shorter than the `access_token` lifetime, the session dies at the `id_token` expiry, even though the access token is still valid. Authelia defaults `id_token` to 1 hour. **Fix: set `id_token` lifetime to match `access_token`** in your provider config.
 1. **access_token lifetime**: If both `id_token` and `access_token` are set correctly but sessions still drop, check that the provider's `expires_in` response matches your configured lifetime.
-1. **No refresh token**: See [Known Limitations](#known-limitations-oidc-session-lifetime) below. Current MCP clients cannot refresh tokens, so sessions are limited to the token lifetime.
+1. **No refresh token**: See [Known Limitations](#known-limitations-mcp-oauth-token-refresh) below; current MCP clients cannot refresh tokens, so sessions are limited to the token lifetime.
 
 **Workaround:** configure **all** token lifetimes on your identity provider to cover a full workday:
 
@@ -3185,71 +3206,47 @@ lifespans:
 
 ### Opaque access tokens (Authelia)
 
-Authelia issues opaque (non-JWT) access tokens by default. How this affects you depends on the OIDC mode:
-
-- **Remote mode** (recommended): requires JWT access tokens. Add `access_token_signed_response_alg: 'RS256'` to the Authelia client registration. See [Authelia setup](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/#setup-with-authelia) for details.
-- **OIDCProxy mode**: handles opaque tokens automatically by verifying the `id_token` instead. No extra configuration needed.
-
-### Token exchange fails with Authelia
-
-**Symptom:** Authelia logs show a `token_endpoint_auth_method` error during the OAuth token exchange.
-
-**Root cause:** Claude Code (and some other MCP clients) sends `client_id` and `client_secret` in the POST body (`client_secret_post`), but Authelia defaults to `client_secret_basic` (HTTP Basic auth).
-
-**Fix:** Add `token_endpoint_auth_method: 'client_secret_post'` to the Authelia client registration. See [Authelia setup](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/#setup-with-authelia).
+Authelia issues opaque (non-JWT) access tokens. This is handled automatically: the server verifies the `id_token` instead. No extra configuration needed.
 
 ______________________________________________________________________
 
-## Known Limitations: OIDC session lifetime
+## Known Limitations: MCP OAuth token refresh
+
+Ecosystem-wide issue
+
+The limitations below affect **all** OAuth-protected MCP servers, not just this one. They are caused by issues in the MCP client implementations (Claude Code, Claude.ai, Claude Desktop) and the MCP Python SDK. Check the linked tracking issues for current status.
 
 ### The problem
 
-When using FastMCP's `OIDCProxy` (or `OAuthProxy`), sessions die when the upstream IdP access token expires (typically after 1 hour), even though the proxy has issued its own JWT with a longer lifetime.
+MCP clients cannot maintain sessions beyond the token lifetime because token refresh does not work. When tokens expire, the session drops and requires manual re-authentication. This affects every provider: Authelia, Keycloak, Google, and others.
 
-### Root cause: OAuthProxy double-validation
+### Why refresh doesn't work
 
-FastMCP's `OAuthProxy.load_access_token()` performs **two** token validations on every request:
+Three independent issues prevent token refresh:
 
-1. Verify the proxy's own JWT (signature, expiry, scopes): **this succeeds**
-1. Fetch and re-validate the upstream IdP token from the token store: **this fails after upstream expiry**
-
-When the upstream token expires, step 2 returns `None`, causing a 401, even though the proxy JWT is still valid. The client has no way to preemptively refresh because it only sees the proxy JWT's expiry, not the upstream token's shorter expiry.
-
-This is tracked upstream: [PrefectHQ/fastmcp#3581](https://github.com/PrefectHQ/fastmcp/issues/3581)
-
-Not a client bug
-
-Previous versions of this documentation attributed the problem to MCP client refresh bugs. Investigation confirmed the root cause is server-side: deployments using `mcp-auth-proxy` (which validates only its own JWT) do not exhibit the same session death, ruling out client-side refresh as the primary cause.
-
-### Additional client-side limitations
-
-These client issues are real but secondary; fixing them alone would not resolve the OAuthProxy double-validation problem:
-
-| Layer              | Issue                                                                                                                          | Impact                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| **Claude Code**    | Stores refresh tokens but never uses them ([claude-code#21333](https://github.com/anthropics/claude-code/issues/21333))        | Refresh tokens are obtained and saved but never sent back     |
-| **Claude Code**    | Never requests `offline_access` scope ([claude-code#7744](https://github.com/anthropics/claude-code/issues/7744))              | Some providers won't issue a refresh token without this scope |
-| **MCP Python SDK** | Token refresh deadlocks inside SSE streams ([python-sdk#1326](https://github.com/modelcontextprotocol/python-sdk/issues/1326)) | SDK hangs when attempting refresh during an active stream     |
+| Layer              | Issue                                                                                                                          | Impact                                                                                                                                                                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**    | Stores refresh tokens but never uses them ([claude-code#21333](https://github.com/anthropics/claude-code/issues/21333))        | Refresh tokens are obtained and saved but never sent back to refresh expired access tokens                                                                                                                                                                                |
+| **Claude Code**    | Does not ask for `offline_access` on its own ([claude-code#7744](https://github.com/anthropics/claude-code/issues/7744))       | Most OIDC providers issue no refresh token without this scope. The server advertises `openid offline_access` in its protected-resource metadata, so a client that requests the advertised set gets a refresh-capable grant; one that ignores the metadata still does not. |
+| **MCP Python SDK** | Token refresh deadlocks inside SSE streams ([python-sdk#1326](https://github.com/modelcontextprotocol/python-sdk/issues/1326)) | Even with a valid refresh token, the SDK hangs when attempting refresh during an active stream                                                                                                                                                                            |
 
 The server-side refresh architecture (FastMCP's `OAuthProxy.exchange_refresh_token()`) is correctly implemented and would work, but it requires the client to initiate the refresh, which none of the current clients do reliably.
 
-### Workarounds
-
-**Use `remote` auth mode instead of `oidc-proxy`** (recommended). Set `AUTH_MODE=remote`; the server then validates tokens locally via JWKS without storing or re-validating upstream tokens. This requires only `BASE_URL` + `OIDC_CONFIG_URL`. See [OIDC mode selection](#oidc-mode-selection) for setup details.
+### What works today
 
 **Bearer token auth** is unaffected by all of the above. If your deployment allows it (such as Claude Code with env vars, or API clients), bearer tokens are the simplest and most reliable option.
 
-**Long token lifetimes** mitigate the problem for OIDCProxy deployments. Set the upstream IdP's access token lifetime to cover your session duration:
+**Long token lifetimes** are the only viable workaround for OIDC. Set all three lifetimes (access, id, refresh) to cover your typical session duration:
 
-- `access_token: '8h'`: covers a workday (this is the critical one)
-- `id_token: '8h'`: must match access_token when using `verify_id_token` mode
+- `access_token: '8h'`: covers a workday
+- `id_token: '8h'`: **must match access_token** when using `verify_id_token` mode (critical for Authelia)
 - `refresh_token: '30d'`: ready for when clients support refresh
-- Include `offline_access` in provider-side scopes: no effect today, but will enable refresh when clients are fixed
+- Permit `offline_access` for the registered client; the server advertises it by default, so a client that honours the advertised scopes requests it. Where the client may not hold that scope, narrow what the server advertises with `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES` rather than letting the authorization request fail
 
 ### Tracking
 
-- [PrefectHQ/fastmcp#3581](https://github.com/PrefectHQ/fastmcp/issues/3581): OAuthProxy double-validation (root cause)
-- [#99](https://github.com/pvliesdonk/image-generation-mcp/issues/99): auth refactoring to support RemoteAuthProvider
+These upstream issues are actively tracked:
+
 - [anthropics/claude-code#21333](https://github.com/anthropics/claude-code/issues/21333): refresh tokens stored but never used
 - [anthropics/claude-code#7744](https://github.com/anthropics/claude-code/issues/7744): `offline_access` scope never requested
 - [modelcontextprotocol/python-sdk#1326](https://github.com/modelcontextprotocol/python-sdk/issues/1326): SSE refresh deadlock
@@ -3762,25 +3759,40 @@ docker compose up -d
 
 The server listens on port 8000 with HTTP transport by default.
 
+## Image tags
+
+| Tag          | Contents                                                     | Updated by                                           |
+| ------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `latest`     | Newest stable release                                        | Each stable release that is newest across all series |
+| `vX.Y.Z`     | That exact release (pre-releases included, as `vX.Y.Z-rc.N`) | Never (immutable)                                    |
+| `vX.Y`, `vX` | Newest stable release in that series                         | Each stable release that is newest in its series     |
+| `rc`         | Newest release candidate                                     | Each pre-release still ahead of `latest`             |
+| `edge`       | Newest commit on `main`                                      | Every merge to `main`                                |
+
+Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. The same rule governs `rc`: a candidate only moves the tag while its version is still ahead of the newest stable, so a candidate for an already-released version never pulls `rc` behind `latest`.
+
+The three rolling tags answer different questions. Use `latest` to run released code, `rc` to test the candidate for the next release, and `edge` to run the newest merged commit. Note that `rc` is not cleared when its release ships: it keeps pointing at the last candidate until the next one is cut, so `latest` is the tag to follow in production. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
+
+```
+docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+  ghcr.io/pvliesdonk/image-generation-mcp:edge
+```
+
 ## Environment variables
 
-| Variable                               | Default                           | Description                                                                                                                                              |
-| -------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_READ_ONLY`       | `true`                            | Disable write tools                                                                                                                                      |
-| `IMAGE_GENERATION_MCP_OPENAI_API_KEY`  | N/A                               | OpenAI API key, enables OpenAI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST`   | N/A                               | SD WebUI URL, enables SD WebUI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SCRATCH_DIR`     | `~/.image-generation-mcp/images/` | Image storage directory                                                                                                                                  |
-| `IMAGE_GENERATION_MCP_EVENT_STORE_URL` | `file:///data/state/events`       | EventStore backend for SSE session resumability. Uses file-backed store by default (events survive container restarts). Set to `memory://` for dev/test. |
-| `IMAGE_GENERATION_MCP_BEARER_TOKEN`    | N/A                               | Enable bearer token auth                                                                                                                                 |
-| `FASTMCP_LOG_LEVEL`                    | `INFO`                            | Log level for FastMCP internals; app loggers use `INFO` unless `-v` is used                                                                              |
-| `IMAGE_GENERATION_MCP_SERVER_NAME`     | `image-generation-mcp`            | Server name shown to clients                                                                                                                             |
-| `IMAGE_GENERATION_MCP_INSTRUCTIONS`    | (computed at startup)             | System instructions for LLM context                                                                                                                      |
-| `IMAGE_GENERATION_MCP_DEBUG_PORT`      | N/A                               | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image)                                            |
-| `IMAGE_GENERATION_MCP_DEBUG_WAIT`      | `false`                           | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                                                             |
+| Variable                            | Default               | Description                                                                                                   |
+| ----------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_BEARER_TOKEN` | n/a                   | Enable bearer token auth                                                                                      |
+| `FASTMCP_LOG_LEVEL`                 | `INFO`                | Log level (`DEBUG` / `INFO` / `WARNING` / `ERROR`)                                                            |
+| `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | System instructions for LLM context                                                                           |
+| `IMAGE_GENERATION_MCP_DEBUG_PORT`   | N/A                   | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
+| `IMAGE_GENERATION_MCP_DEBUG_WAIT`   | `false`               | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                  |
 
 See [Configuration](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/index.md) for the full environment variable reference.
 
 For OIDC auth variables, see [Authentication](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/index.md).
+
+Running behind a reverse proxy on a path prefix (`https://mcp.example.com/myservice/mcp`) rather than its own hostname needs two routing rules, one of which sits outside the prefix: see [Subpath Deployments](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/#subpath-deployments).
 
 ## Volumes
 
@@ -4047,82 +4059,41 @@ sudo groupdel image-generation-mcp
 
 # OIDC Authentication
 
-Optional token-based authentication for HTTP deployments. Two OIDC modes are available:
-
-| Mode                       | Env var                | Use case                                               | Required vars                                                            |
-| -------------------------- | ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
-| **`remote`** (recommended) | `AUTH_MODE=remote`     | Local JWT validation (no upstream token re-validation) | `BASE_URL` + `OIDC_CONFIG_URL`                                           |
-| **`oidc-proxy`**           | `AUTH_MODE=oidc-proxy` | DCR emulation for non-DCR IdPs                         | `BASE_URL` + `OIDC_CONFIG_URL` + `OIDC_CLIENT_ID` + `OIDC_CLIENT_SECRET` |
-
-The mode is auto-detected when `AUTH_MODE` is not set: `oidc-proxy` when client credentials are present, `remote` otherwise. For an overview of all authentication modes (bearer token, OIDC, no auth), see the [Authentication guide](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/index.md).
+Optional token-based authentication for HTTP deployments. OIDC activates automatically when all four required environment variables are set. For an overview of all authentication modes (bearer token, OIDC, no auth), see the [Authentication guide](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/index.md).
 
 Transport requirement
 
 OIDC requires `--transport http` (or `sse`). It has no effect with `--transport stdio`.
 
-Prefer remote mode
+## Required Variables
 
-`remote` mode avoids the [OIDCProxy session lifetime issue](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/#known-limitations-oidc-session-lifetime) by validating tokens locally via JWKS without storing or re-validating upstream tokens. Use `oidc-proxy` only when your IdP does not support Dynamic Client Registration and you need DCR emulation.
+| Variable                                  | Description                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the deployed server (`https://mcp.example.com`). Required for OIDC. Also the fallback source of the MCP Apps domain when `app_domain` is unset. |
+| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery document URL (`https://auth.example.com/.well-known/openid-configuration`).                                                                         |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client identifier registered with the provider.                                                                                                               |
+| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret registered with the provider.                                                                                                                   |
 
-## Remote Mode (recommended)
+## Optional Variables
 
-### Required Variables
-
-| Variable                               | Description                                                                                   |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`        | Public base URL of the server (such as `https://mcp.example.com`)                             |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL` | OIDC discovery endpoint (such as `https://auth.example.com/.well-known/openid-configuration`) |
-
-### Optional Variables
-
-| Variable                                    | Default | Description                                                                |
-| ------------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`        | n/a     | Expected JWT audience claim; leave unset if your provider does not set one |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES` | n/a     | Comma-separated required scopes                                            |
-
-### Example
-
-```
-IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
-IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
-# Optional:
-# IMAGE_GENERATION_MCP_OIDC_AUDIENCE=image-generation-mcp
-```
-
-The server fetches the OIDC discovery document at startup to obtain `jwks_uri` and `issuer`, then validates incoming JWTs locally. No client credentials, JWT signing key, or upstream token storage needed.
-
-## OIDCProxy Mode
-
-### Required Variables
-
-| Variable                                  | Description                                                                                                                                               |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_BASE_URL`           | Public base URL of the server (such as `https://mcp.example.com`; include prefix when mounted under subpath, such as `https://mcp.example.com/myservice`) |
-| `IMAGE_GENERATION_MCP_OIDC_CONFIG_URL`    | OIDC discovery endpoint (such as `https://auth.example.com/.well-known/openid-configuration`)                                                             |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_ID`     | OIDC client ID registered with your provider                                                                                                              |
-| `IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET` | OIDC client secret                                                                                                                                        |
-
-### Optional Variables
-
-| Variable                                        | Default   | Description                                                                                                                                                                                    |
-| ----------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | ephemeral | JWT signing key. **Required on Linux/Docker**: the default is ephemeral and invalidates tokens on restart                                                                                      |
-| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | n/a       | Expected JWT audience claim; leave unset if your provider does not set one                                                                                                                     |
-| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`  | Comma-separated required scopes                                                                                                                                                                |
-| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`   | Set `true` to verify the upstream access token as JWT instead of the id token. Only needed when your provider issues JWT access tokens and you require audience-claim validation on that token |
+| Variable                                        | Default                 | Description                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_OIDC_AUDIENCE`            | (none)                  | Expected `aud` claim; tokens issued for another audience are rejected.                                                                                                                                                                                                                                                                                                        |
+| `IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES`     | `openid`                | Scopes a caller must present, space- or comma-separated. Defaults to `openid` in oidc-proxy mode.                                                                                                                                                                                                                                                                             |
+| `IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES`   | `openid offline_access` | Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default `openid offline_access`; `oidc_required_scopes` is always added on top. Set this when the registered client is not permitted `offline_access`, or to have clients request extra claim scopes (such as `groups`) without also requiring them in every token. |
+| `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY`     | `derived`               | Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from `oidc_client_secret`, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with `openssl rand -hex 32`.                                |
+| `IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN` | `false`                 | Validate the access token instead of the id token.                                                                                                                                                                                                                                                                                                                            |
 
 ## JWT Signing Key
 
-The FastMCP default signing key is ephemeral (regenerated on startup), which forces clients to re-authenticate after every restart. Set a stable random secret to avoid this:
+When `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` is unset, FastMCP derives the signing key from the OIDC client secret using deterministic key derivation, so the key stays the same across restarts and tokens keep validating.
+
+The real reason to set an explicit key is secret rotation: because the default key is derived from the client secret, rotating that secret changes the derived key and invalidates every token issued under the old one. Setting an explicit signing key decouples token validity from client-secret rotation:
 
 ```
 # Generate once, store in your .env file
 openssl rand -hex 32
 ```
-
-Linux / Docker
-
-On Linux (including Docker), the ephemeral key is especially problematic because it does not persist across process restarts. Always set `IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY` in production.
 
 ## Setup with Authelia
 
@@ -4130,80 +4101,17 @@ Note
 
 Authelia does not support Dynamic Client Registration (RFC 7591). Clients must be registered manually in `configuration.yml`.
 
-Opaque vs JWT access tokens
+Opaque access tokens
 
-Authelia issues **opaque** (non-JWT) access tokens by default. This affects which OIDC mode you can use:
+Authelia issues opaque (non-JWT) access tokens. This is handled automatically: the server verifies the `id_token` (always a standard JWT) instead. No extra configuration is needed.
 
-- **Remote mode** validates tokens locally via JWKS and **requires JWT access tokens**. Set `access_token_signed_response_alg: 'RS256'` on the client registration (see below).
-- **OIDCProxy mode** verifies the `id_token` (always a standard JWT) instead of the access token, so opaque tokens work without extra configuration. However, oidc-proxy is subject to the [session lifetime limitation](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/#known-limitations-oidc-session-lifetime).
-
-### Remote mode (recommended)
-
-Remote mode requires only `BASE_URL` + `OIDC_CONFIG_URL` on the MCP server (no client credentials needed server-side). The client authenticates directly with Authelia; the server validates the resulting JWT access token via JWKS.
-
-Client credentials are IdP-side only
-
-In remote mode, `CLIENT_ID` and `CLIENT_SECRET` are configured in the **Authelia client registration** (so Authelia knows which client is connecting), but they are not set as MCP server environment variables. The MCP server only needs the OIDC discovery URL to fetch JWKS keys for token validation.
-
-#### 1. Register the client in Authelia
+### 1. Register the client in Authelia
 
 ```
 identity_providers:
   oidc:
     clients:
-      - client_id: image-generation-mcp
-        client_secret: '$pbkdf2-sha512$...'   # authelia crypto hash generate
-        redirect_uris:
-          # In remote mode each MCP client handles its own OAuth flow.
-          # List the callback URLs used by your client(s):
-          - https://claude.ai/api/mcp/auth_callback  # Claude.ai web
-        grant_types: [authorization_code]
-        response_types: [code]
-        pkce_challenge_method: S256
-        scopes: [openid, profile, email]
-        # Required for remote mode — enables JWT access tokens (RFC 9068)
-        # Without this, Authelia issues opaque tokens that cannot be
-        # validated locally via JWKS
-        access_token_signed_response_alg: 'RS256'
-        # Claude Code (and some other MCP clients) sends credentials via
-        # POST body rather than HTTP Basic auth during token exchange
-        token_endpoint_auth_method: 'client_secret_post'
-```
-
-Why `access_token_signed_response_alg`?
-
-Remote mode's `JWTVerifier` decodes the access token as a JWT and validates its signature against the IdP's JWKS keys. Authelia's default opaque tokens are random strings with no JWT structure and cannot be validated locally. Setting `access_token_signed_response_alg: 'RS256'` tells Authelia to issue RFC 9068 JWT access tokens for this client.
-
-Why `token_endpoint_auth_method`?
-
-During the OAuth token exchange, the MCP client sends `client_id` and `client_secret` in the POST body (`client_secret_post`). Authelia defaults to `client_secret_basic` (HTTP Basic auth header). If these don't match, the token exchange fails with a `token_endpoint_auth_method` error. Setting `client_secret_post` explicitly ensures compatibility with Claude Code and other MCP clients.
-
-#### 2. Set environment variables
-
-```
-IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
-IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
-```
-
-No `CLIENT_ID`, `CLIENT_SECRET`, or `JWT_SIGNING_KEY` needed: the server validates tokens without participating in the OAuth handshake.
-
-#### 3. Start with HTTP transport
-
-```
-image-generation-mcp serve --transport http --port 8000
-```
-
-### OIDCProxy mode (fallback)
-
-Use oidc-proxy only when remote mode is not viable (such as when your IdP cannot issue JWT access tokens). Be aware of the [session lifetime limitation](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/#known-limitations-oidc-session-lifetime).
-
-#### 1. Register the client in Authelia
-
-```
-identity_providers:
-  oidc:
-    clients:
-      - client_id: image-generation-mcp
+      - client_id: my-mcp-server
         client_secret: '$pbkdf2-sha512$...'   # authelia crypto hash generate
         redirect_uris:
           - https://mcp.example.com/auth/callback
@@ -4211,50 +4119,27 @@ identity_providers:
         response_types: [code]
         pkce_challenge_method: S256
         scopes: [openid, profile, email]
-        # Authelia defaults to client_secret_basic; Claude Code uses client_secret_post
-        token_endpoint_auth_method: 'client_secret_post'
 ```
 
-No `access_token_signed_response_alg` needed. OIDCProxy verifies the `id_token` (always a JWT) instead of the access token.
-
-#### 2. Set environment variables
+### 2. Set environment variables
 
 ```
 IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
 IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
-IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=image-generation-mcp
+IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=my-mcp-server
 IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET=your-client-secret
 IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY=$(openssl rand -hex 32)
 ```
 
-#### 3. Start with HTTP transport
+### 3. Start with HTTP transport
 
 ```
 image-generation-mcp serve --transport http --port 8000
 ```
 
-For subpath deployments (such as public URL `https://mcp.example.com/vault/mcp`), see [Subpath Deployments](#subpath-deployments) below.
-
-See also `examples/oidc.env`.
-
 ## Architecture
 
-### Remote mode
-
-The server acts as a Resource Server (RFC 9728). The client authenticates directly with the IdP; the server validates tokens locally via JWKS.
-
-```
-Client → OIDC Provider (authenticate) → Client → image-generation-mcp (validate JWT)
-```
-
-1. Client authenticates with the OIDC provider independently
-1. Client sends requests to the MCP server with the JWT token
-1. Server validates the token locally using the IdP's JWKS keys
-1. No upstream token storage or re-validation
-
-### OIDCProxy mode
-
-The server uses FastMCP's built-in `OIDCProxy` auth provider to act as an OAuth intermediary with DCR emulation.
+The server uses FastMCP's built-in `OIDCProxy` auth provider (not the external `mcp-auth-proxy` sidecar). The authentication flow:
 
 ```
 Client → image-generation-mcp (with OIDCProxy) → OIDC Provider (Authelia/Keycloak)
@@ -4263,12 +4148,8 @@ Client → image-generation-mcp (with OIDCProxy) → OIDC Provider (Authelia/Key
 1. Client connects to the MCP server
 1. Server redirects to the OIDC provider for authentication
 1. Provider authenticates the user and returns a code
-1. Server exchanges the code for tokens and issues its own proxy JWT
-1. Subsequent requests include the proxy JWT
-
-Session lifetime
-
-OIDCProxy re-validates upstream tokens on every request. When the upstream token expires (typically 1 h), sessions die even though the proxy JWT is still valid. See [Known Limitations](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/#known-limitations-oidc-session-lifetime).
+1. Server exchanges the code for tokens
+1. Subsequent requests include the JWT token
 
 ## Docker Compose with OIDC
 
@@ -4278,10 +4159,8 @@ services:
     image: ghcr.io/pvliesdonk/image-generation-mcp:latest
     env_file: .env
     volumes:
-      - images-data:/data/service
       - state-data:/data/state
     environment:
-      IMAGE_GENERATION_MCP_SCRATCH_DIR: /data/service
       FASTMCP_HOME: /data/state/fastmcp
     restart: unless-stopped
     labels:
@@ -4293,7 +4172,6 @@ services:
       - traefik
 
 volumes:
-  images-data:
   state-data:
 
 networks:
@@ -4304,86 +4182,194 @@ networks:
 With the corresponding `.env`:
 
 ```
-IMAGE_GENERATION_MCP_READ_ONLY=true
 IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com
 IMAGE_GENERATION_MCP_OIDC_CONFIG_URL=https://auth.example.com/.well-known/openid-configuration
-IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=image-generation-mcp
+IMAGE_GENERATION_MCP_OIDC_CLIENT_ID=my-mcp-server
 IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET=your-client-secret
 IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY=your-stable-hex-key
 ```
 
-For a prefixed deployment (such as `https://mcp.example.com/vault/mcp`), see [Subpath Deployments](#subpath-deployments) below.
+For a prefixed deployment (such as `https://mcp.example.com/myservice/mcp`), see [Subpath Deployments](#subpath-deployments) below.
 
 ## Subpath Deployments
 
 When OIDC is enabled behind a reverse-proxy subpath, `BASE_URL` and `HTTP_PATH` serve different roles:
 
-| Variable    | Purpose                                                    | Example                         |
-| ----------- | ---------------------------------------------------------- | ------------------------------- |
-| `BASE_URL`  | Public URL of the server, **including the subpath prefix** | `https://mcp.example.com/vault` |
-| `HTTP_PATH` | Internal MCP endpoint mount point (**no subpath prefix**)  | `/mcp`                          |
+| Variable    | Purpose                                                    | Example                             |
+| ----------- | ---------------------------------------------------------- | ----------------------------------- |
+| `BASE_URL`  | Public URL of the server, **including the subpath prefix** | `https://mcp.example.com/myservice` |
+| `HTTP_PATH` | Internal MCP endpoint mount point (**no subpath prefix**)  | `/mcp`                              |
 
 The reverse proxy strips the subpath prefix before forwarding to the application. FastMCP concatenates `BASE_URL + HTTP_PATH` to build the public resource URL, so including the prefix in both produces broken URLs with duplicated path segments.
 
 Do not duplicate the subpath
 
-Setting `BASE_URL=https://mcp.example.com/vault` together with `HTTP_PATH=/vault/mcp` produces a duplicated resource URL: `https://mcp.example.com/vault/vault/mcp`. The subpath belongs in `BASE_URL` only.
+Setting `BASE_URL=https://mcp.example.com/myservice` together with `HTTP_PATH=/myservice/mcp` produces a duplicated resource URL: `https://mcp.example.com/myservice/myservice/mcp`. The subpath belongs in `BASE_URL` only.
 
 ### Configuration
 
 Environment variables:
 
 ```
-IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com/vault
+IMAGE_GENERATION_MCP_BASE_URL=https://mcp.example.com/myservice
 IMAGE_GENERATION_MCP_HTTP_PATH=/mcp
 ```
 
 Register this callback URI in your OIDC provider:
 
 ```
-https://mcp.example.com/vault/auth/callback
+https://mcp.example.com/myservice/auth/callback
 ```
+
+### What the server serves, and where
+
+The MCP endpoint and the OAuth discovery documents sit on opposite sides of the prefix, which is what makes subpath routing more than one strip rule. With `BASE_URL=https://mcp.example.com/myservice` and `HTTP_PATH=/mcp`:
+
+| Public URL                                                                  | Path the container listens on        | Served when                                         |
+| --------------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------- |
+| `/myservice/mcp`                                                            | `/mcp`                               | always                                              |
+| `/myservice/authorize`, `/token`, `/register`, `/auth/callback`, `/consent` | the same path without the prefix     | the server proxies OAuth (client ID and secret set) |
+| `/.well-known/oauth-protected-resource/myservice/mcp`                       | the identical path, prefix included  | OIDC is enabled, in every mode                      |
+| `/.well-known/oauth-authorization-server`                                   | the identical path, at the host root | the server proxies OAuth (client ID and secret set) |
+
+Two properties of that table drive every routing rule below:
+
+1. The MCP endpoint and the OAuth endpoints listen **without** the prefix, so the proxy has to strip it.
+1. The protected-resource document's path **contains** the prefix, because RFC 9728 §3.1 appends the resource path after the well-known segment. The server registers that full path verbatim, so stripping the prefix from this request returns 404.
+
+A server holding no client ID and secret verifies tokens the provider issued directly. It serves protected-resource metadata only and answers `/.well-known/oauth-authorization-server` with 404. That is the correct answer, because the provider is the authorization server, so do not route that path to a server configured this way.
 
 ### Reverse proxy routing
 
-The reverse proxy must:
+The reverse proxy needs two routers pointing at the same service, because a prefix rule cannot express both halves:
 
-1. **Strip the prefix** (`/vault`) from operational routes before forwarding to the app
-1. **Forward OAuth discovery routes** to this service (without stripping prefixes):
-   - `/.well-known/oauth-authorization-server` (authorization server metadata)
-   - `/.well-known/oauth-protected-resource/vault/mcp` (protected resource metadata)
-
-Example Traefik configuration:
+1. **Operational routes** match the prefix and strip it: `/myservice/mcp` and, in proxy mode, the OAuth endpoints.
+1. **Discovery routes** match their own well-known paths and pass through untouched. Their URLs do not begin with `/myservice`, so a `PathPrefix(/myservice)` rule never sees them.
 
 ```
 labels:
-  # Operational routes: strip /vault prefix before forwarding
-  - "traefik.http.routers.vault-app.rule=Host(`mcp.example.com`) && PathPrefix(`/vault`)"
-  - "traefik.http.middlewares.strip-vault.stripprefix.prefixes=/vault"
-  - "traefik.http.routers.vault-app.middlewares=strip-vault"
-  - "traefik.http.services.vault-app.loadbalancer.server.port=8000"
-  # OAuth discovery routes: forward without stripping
-  - "traefik.http.routers.vault-wellknown.rule=Host(`mcp.example.com`) && (PathPrefix(`/.well-known/oauth-authorization-server`) || PathPrefix(`/.well-known/oauth-protected-resource/vault/mcp`))"
-  - "traefik.http.routers.vault-wellknown.service=vault-app"
+  # Operational routes: strip the /myservice prefix before forwarding
+  - "traefik.http.routers.mcp-app.rule=Host(`mcp.example.com`) && PathPrefix(`/myservice`)"
+  - "traefik.http.middlewares.strip-myservice.stripprefix.prefixes=/myservice"
+  - "traefik.http.routers.mcp-app.middlewares=strip-myservice"
+  - "traefik.http.services.mcp-app.loadbalancer.server.port=8000"
+  # Discovery routes: same service, no strip middleware
+  - "traefik.http.routers.mcp-wellknown.rule=Host(`mcp.example.com`) && (PathPrefix(`/.well-known/oauth-protected-resource/myservice/mcp`) || PathPrefix(`/.well-known/oauth-authorization-server`))"
+  - "traefik.http.routers.mcp-wellknown.service=mcp-app"
 ```
 
-Note
+Drop the `oauth-authorization-server` clause when the server holds no client ID and secret. That path returns 404 in such a configuration, and claiming it on a shared hostname takes the document away from whichever service does answer.
 
-This configuration requires that no other OAuth service claims `/.well-known/oauth-authorization-server` on this hostname. See [Shared-hostname limitation](#shared-hostname-limitation) below.
+Two routers rather than one is deliberate. A single router carrying the strip rule would apply it to the discovery request as well. Nothing here relies on how a given proxy treats a strip prefix that fails to match: separate routers state the untouched route outright, in any proxy that has the concept.
 
-### Shared-hostname limitation
+### Sharing a hostname
 
-Shared-hostname subpath with native OIDC is not supported
+The failure that follows from point 2 above is worth spelling out, because its symptom points somewhere else entirely.
 
-When multiple OAuth-capable services share a hostname (such as `mcp-auth-proxy` at the root and `image-generation-mcp` at `/vault`), native OIDC on a subpath does not work.
+The discovery URL sits outside the prefix, so on a hostname shared with other services, prefix-based routing cannot claim it. Without a router that matches it explicitly, the request falls through to whatever else holds the host: an OAuth gateway, an SSO portal, or another MCP server at the root. That service answers with **its** metadata, the client builds an authorization URL from another service's endpoints, and the visible symptom is an authorization URL 404ing at a path nobody configured. It reads as a client bug or an auth bug; it is a routing rule one path too narrow.
 
-**Why:** FastMCP serves the OAuth authorization-server metadata at `/.well-known/oauth-authorization-server` (host root), regardless of the subpath in `BASE_URL`. The FastMCP codebase contains an RFC 8414 path-aware override (`OIDCProxy.get_well_known_routes()`) that would serve it at `/.well-known/oauth-authorization-server/vault`. However, this method is not wired into the route mounting flow and is effectively dead code.
+The `mcp-wellknown` router above is the fix. In Traefik it also wins by default: routers sort by rule length, so a rule naming the full well-known path outranks a bare `Host(...)` catch-all. Where the competing service sets an explicit `priority`, set a higher one here, because Traefik ignores its rule-length default for any router that carries one.
 
-The protected-resource metadata (`/.well-known/oauth-protected-resource/vault/mcp`) is correctly path-namespaced and does not collide. Only the authorization-server discovery route is the problem.
+One document still collides: `oauth-authorization-server`
 
-This works when `image-generation-mcp` is the **only** OAuth service on the hostname — the host-root `/.well-known/oauth-authorization-server` does not collide with anything. It breaks when another service already owns that route.
+In proxy mode the server serves authorization-server metadata at `/.well-known/oauth-authorization-server`, at the **host root**, whatever prefix `BASE_URL` carries. FastMCP does contain an RFC 8414 path-aware override, `OAuthProvider.get_well_known_routes()`, which would serve it at `/.well-known/oauth-authorization-server/myservice`. Nothing reaches it: the HTTP app mounts `get_routes()` instead, leaving the path-aware form unreachable. (Verified against FastMCP 3.4.7.)
 
-**Recommendations for shared-hostname scenarios:**
+Only this one document collides. Protected-resource metadata is path-namespaced, so several servers can share a hostname without contending for it.
 
-- **Dedicated hostname** (preferred): give `image-generation-mcp` its own hostname (such as `vault.example.com`) so discovery routes do not collide.
-- **External auth gateway**: use `mcp-auth-proxy` as a sidecar instead of native OIDC. The MCP server runs unauthenticated behind the proxy, and the proxy handles OAuth discovery at its own routes.
+Where another OAuth service already owns the root path, either give this server its own hostname, or run it without client ID and secret so it never serves the document. An authorization-server metadata request then belongs to the provider, where the `authorization_servers` entry in this server's protected-resource metadata sends the client anyway.
+
+### Verifying the routing
+
+Probe the container first, to separate what the server serves from what the proxy does with it. The image ships no HTTP client, so borrow one. Passing `--network container:` puts the throwaway container inside the server's network namespace, which makes `localhost:8000` the server itself:
+
+```
+NS="container:$(docker compose ps -q image-generation-mcp)"
+docker run --rm --network "$NS" curlimages/curl -s -o /dev/null \
+  -w '%{http_code}\n' localhost:8000/mcp
+docker run --rm --network "$NS" curlimages/curl -s \
+  localhost:8000/.well-known/oauth-protected-resource/myservice/mcp
+```
+
+Expect `401` for the first, meaning the endpoint is there and authentication is on, and the metadata JSON for the second. A `404` instead of the `401` means `HTTP_PATH` carries the prefix it should not. Then repeat from outside, through the proxy:
+
+```
+curl -s -o /dev/null -w '%{http_code}\n' https://mcp.example.com/myservice/mcp
+curl -s https://mcp.example.com/.well-known/oauth-protected-resource/myservice/mcp
+```
+
+Both must reach this server, and the `resource` field in the JSON must read `https://mcp.example.com/myservice/mcp`. A `resource` naming a different service is the shared-hostname problem above, not an incorrect `BASE_URL`.
+# Release Notes
+
+# Release Notes
+
+Each minor release series gets one page here telling its story: what changed, why it matters, and how to adopt it. Patch releases add a dated section to their series page, so a series stays one linkable document. The commit-level record lives in the repository's `CHANGELOG.md`; each GitHub release links back to its page here.
+
+- [1.12](https://pvliesdonk.github.io/image-generation-mcp/1.12/releases/1.12/index.md): external-image ingestion, gallery origin filter, print-resolution output
+
+# 1.12
+
+1.12 gives external images a way into the gallery: `fetch_image` pulls one from a URL, `ingest_base64_image` accepts inline base64 bytes, and `create_upload_link` mints an HTTP upload link, each landing the result as a first-class gallery entry that `transform_image` can reference like any generated image. The gallery viewer gained an origin filter (Generated / Imported / All) with full keyboard and screen-reader support, plus a real error state with retry. Separately, `generate_image` and `transform_image` gained a `resolution` tier so callers who need print-quality output (Gemini up to 4K, `gpt-image-2` up to 4K) can ask for it explicitly instead of being capped well below what the provider APIs support.
+
+## Getting external images into the gallery
+
+Until now, every image in the gallery had to come from a provider, with no way to bring in something the caller already had. [Epic #300](https://github.com/pvliesdonk/image-generation-mcp/issues/300) closes that gap with three ingestion paths, all landing on the same data model:
+
+- **[`fetch_image(url)`](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/#fetch_image)**: pulls an image from a caller-supplied `http`/`https` URL through `fastmcp-pvl-core`'s SSRF-hardened fetch primitive (private, loopback, link-local, and cloud-metadata targets are refused).
+- **[`ingest_base64_image(data)`](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/#ingest_base64_image)**: decodes inline base64 bytes (raw, `data:...;base64,...`, or line-wrapped) under a size cap.
+- **[`create_upload_link`](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/#create_upload_link)**: mints a one-time HTTP upload URL, using the shared transfer routes' `create_upload_link` / `create_download_link` tools, for callers that would rather POST bytes than pass a URL or inline payload.
+
+Every path records the result as a gallery entry with `origin: "imported"` (as opposed to `"generated"` for provider output) and an `origin_source` noting how it arrived: a redacted URL, `"base64"`, or `"upload"`. Once imported, the image is indistinguishable from a generated one to the rest of the system, so `transform_image` references its `image_id` exactly as it would a generated image, with no provider-specific handling. See the [image-input guide](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/image-input/index.md) for the full walkthrough, and the [`origin` field reference](https://pvliesdonk.github.io/image-generation-mcp/1.12/resources/#origin) for the resource shape.
+
+Adopting the shared transfer routes also **retired the project's own download infrastructure**. `artifacts.py`, the `/artifacts/{token}` route, and `show_image`'s eager `download_url` field are gone, replaced by `create_download_link` / `create_upload_link` and the `file_ref` field in `show_image`'s metadata. See [Upgrading](#upgrading) below if anything in your setup depended on the old route or field.
+
+The gallery viewer's origin filter (Generated, Imported, All) is presentational only, since storage stays flat, and ships as a fully accessible segmented control: a `role="radiogroup"` with `aria-checked` state, roving-tabindex keyboard navigation (arrow keys, Home/End), and a distinct load-error state with a retry button in place of the previous behavior of silently rendering a load failure as an empty gallery.
+
+## Reachable print-resolution output
+
+A downstream consumer needing print-resolution covers hit a ceiling. [Per the tracking issue](https://github.com/pvliesdonk/image-generation-mcp/issues/337), "a 2:3 cover at 1024×1536 lands at ≈186dpi on an A5 full-bleed page, below the 300dpi print floor," even though both providers' APIs now support noticeably larger output than this server could request.
+
+`generate_image` and `transform_image` gain a `resolution` parameter, `"standard"` / `"high"` / `"max"`, independent of the existing `quality` parameter (which now controls only model reasoning on Gemini, not output size):
+
+- **Gemini**: the three tiers map to `1K`/`2K`/`4K`, on the models that support it (`gemini-3.1-flash-image`, `gemini-3-pro-image`); every other model falls back to `standard` only.
+- **OpenAI**: `gpt-image-2` gets verified `high`/`max` size tables up to 4K; every other model renders at its existing standard size.
+
+A tier the resolved model cannot honor is clamped down to the highest tier it does support rather than rejected outright. Every provider also reports back the tier it actually delivered, which is what gets persisted onto the image record, so the gallery never claims a resolution the generation didn't reach. Check a model's `supported_resolutions` in [`list_providers`](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/#list_providers) before relying on `high`/`max`.
+
+## Upgrading
+
+Migrating from a version before 1.12.0, two behaviors from the old download infrastructure are gone rather than replaced in place:
+
+- The `/artifacts/{token}` route and `show_image`'s `download_url` field no longer exist. Use `file_ref` from `show_image`'s metadata with [`create_download_link`](https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/#create_download_link) instead.
+- The old download route accepted `?format`/`width`/`height`/`quality` query parameters to transform the image on the way out; the shared transfer route serves the original bytes only, with no equivalent yet.
+- A download whose backing file has vanished (deleted after the link was minted, before it was fetched) now surfaces as a `500`, where the old route returned `404`.
+
+No environment variable was removed or renamed in this series; everything below is additive.
+
+## v1.12.1
+
+A maintenance release: `fetch_image` now follows redirects safely instead of refusing them outright, four runtime dependencies with known CVEs are bumped, every registered tool carries a proper display title, and a documentation error about disabling the paid-provider cost gate is corrected. Riding along from the underlying template/library upgrade: operators can now allow- or deny-list exposed tools by name, and background generation tasks can be pointed at a durable Redis-backed queue instead of the in-memory default.
+
+### `fetch_image` now follows redirects safely
+
+`fetch_image` is built on `fastmcp-pvl-core`'s SSRF-hardened `fetch_url`, which used to refuse every redirect outright, so an ordinary `http` to `https` upgrade or an apex-to-`www` canonicalization made an otherwise-valid image URL fail. The underlying library ([`fastmcp-pvl-core` v4.11.2](https://github.com/pvliesdonk/fastmcp-pvl-core/releases/tag/v4.11.2)) now follows redirects while re-validating every hop against the same private/loopback/ link-local/metadata blocklist a direct request gets, so a redirect can't reach a target the direct URL couldn't. `docs/tools.md` and the tool's own docstring still say redirects are refused, which is now stale; flagged for the maintainer rather than corrected here.
+
+### Dependency security bumps
+
+Four runtime dependencies carried known vulnerabilities that had piled up as separately insufficient Dependabot PRs. `pip-audit --strict` stayed red because each PR bumped only one package: `cryptography` 49.0.0 to 50.0.0, `mcp` 1.28.0 to 1.29.0, `pillow` 12.2.0 to 12.3.0, and `pyasn1` 0.6.3 to 0.6.4. Bumping all four together clears `pip-audit --strict` with no known vulnerabilities remaining.
+
+### Every tool now has a display title
+
+Client applications that render a tool's `annotations.title` (VS Code among them) previously showed the raw machine name for all but four tools in the registry. Every registered tool, including the app-only and transfer tools, now carries a human-readable title.
+
+### Documentation fix: `PAID_PROVIDERS` empty-value semantics
+
+The configuration reference and generated help text both claimed that setting `IMAGE_GENERATION_MCP_PAID_PROVIDERS` to an empty value disables the cost-confirmation gate. That was never true: an empty value falls back to the default (`{"openai"}`), so the gate stays on. Disabling it requires a value that names no real provider, such as `none`. `README.md`, `docs/configuration.md`, and the config wizard are corrected.
+
+### From the underlying library/template upgrade
+
+This release also brings `fastmcp-pvl-core` from 4.4.0 to 4.11.3 (via a chain of `copier update` runs). Most of that range is internal to the generated config surface, but two changes reach this server's operators directly:
+
+- **Operator tool allow/deny lists**: [`IMAGE_GENERATION_MCP_TOOLS_ALLOW` / `IMAGE_GENERATION_MCP_TOOLS_DENY`](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/index.md) restrict which tools an instance exposes, independent of read-only mode.
+- **Durable background-task backend**: `generate_image` and `transform_image` already ran generation in the background. [`IMAGE_GENERATION_MCP_TASKS_URL`](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/index.md) now lets an operator point that queue at Redis instead of the in-process default, which loses pending work on restart.
+
+Two smaller fixes ride along: the shared KV store backing transfer-link tokens and other persistent state now degrades to an in-memory store with a warning, instead of failing to start, when `/data` isn't writable; and an OIDC deployment's advertised scopes now correctly default to `openid offline_access` rather than echoing the server's required-scopes configuration. An incorrect config-wizard warning claiming an OIDC JWT signing key must be set to survive a restart (it doesn't) was also removed.

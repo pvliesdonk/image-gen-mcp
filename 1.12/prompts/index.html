@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1608,9 +1627,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1812,7 +1914,9 @@
 
 
 <h1 id="mcp-prompts">MCP Prompts<a class="headerlink" href="#mcp-prompts" title="Permanent link">&para;</a></h1>
-<p>image-generation-mcp provides three prompts that give LLM clients guidance on provider selection, prompt formatting, and style application.</p>
+<p>MCP prompts are reusable prompt templates exposed to clients; the ones this
+server provides are listed below.</p>
+<!-- DOMAIN-PROMPTS-LIST-START -->
 <h2 id="select_provider">select_provider<a class="headerlink" href="#select_provider" title="Permanent link">&para;</a></h2>
 <p>Guidelines for selecting the best image generation provider based on the user's request.</p>
 <h3 id="when-to-use">When to use<a class="headerlink" href="#when-to-use" title="Permanent link">&para;</a></h3>
@@ -1908,6 +2012,7 @@
 </code></pre></div>
 <p>If the style is not found, returns an error message suggesting <code>style://list</code> to browse available styles.</p>
 <p>See the <a href="../guides/styles/">Style Library Guide</a> for more details on creating and managing styles.</p>
+<!-- DOMAIN-PROMPTS-LIST-END -->
 
 
 

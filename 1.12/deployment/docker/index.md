@@ -8,25 +8,40 @@ docker compose up -d
 
 The server listens on port 8000 with HTTP transport by default.
 
+## Image tags
+
+| Tag          | Contents                                                     | Updated by                                           |
+| ------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `latest`     | Newest stable release                                        | Each stable release that is newest across all series |
+| `vX.Y.Z`     | That exact release (pre-releases included, as `vX.Y.Z-rc.N`) | Never (immutable)                                    |
+| `vX.Y`, `vX` | Newest stable release in that series                         | Each stable release that is newest in its series     |
+| `rc`         | Newest release candidate                                     | Each pre-release still ahead of `latest`             |
+| `edge`       | Newest commit on `main`                                      | Every merge to `main`                                |
+
+Rolling tags are ordering-aware: a patch release cut from an old `release/X.Y` branch after a newer stable has shipped updates its own series tags but never `latest`. The same rule governs `rc`: a candidate only moves the tag while its version is still ahead of the newest stable, so a candidate for an already-released version never pulls `rc` behind `latest`.
+
+The three rolling tags answer different questions. Use `latest` to run released code, `rc` to test the candidate for the next release, and `edge` to run the newest merged commit. Note that `rc` is not cleared when its release ships: it keeps pointing at the last candidate until the next one is cut, so `latest` is the tag to follow in production. To find the commit behind an `edge` image, read its `org.opencontainers.image.revision` label:
+
+```
+docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+  ghcr.io/pvliesdonk/image-generation-mcp:edge
+```
+
 ## Environment variables
 
-| Variable                               | Default                           | Description                                                                                                                                              |
-| -------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IMAGE_GENERATION_MCP_READ_ONLY`       | `true`                            | Disable write tools                                                                                                                                      |
-| `IMAGE_GENERATION_MCP_OPENAI_API_KEY`  | N/A                               | OpenAI API key, enables OpenAI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SD_WEBUI_HOST`   | N/A                               | SD WebUI URL, enables SD WebUI provider                                                                                                                  |
-| `IMAGE_GENERATION_MCP_SCRATCH_DIR`     | `~/.image-generation-mcp/images/` | Image storage directory                                                                                                                                  |
-| `IMAGE_GENERATION_MCP_EVENT_STORE_URL` | `file:///data/state/events`       | EventStore backend for SSE session resumability. Uses file-backed store by default (events survive container restarts). Set to `memory://` for dev/test. |
-| `IMAGE_GENERATION_MCP_BEARER_TOKEN`    | N/A                               | Enable bearer token auth                                                                                                                                 |
-| `FASTMCP_LOG_LEVEL`                    | `INFO`                            | Log level for FastMCP internals; app loggers use `INFO` unless `-v` is used                                                                              |
-| `IMAGE_GENERATION_MCP_SERVER_NAME`     | `image-generation-mcp`            | Server name shown to clients                                                                                                                             |
-| `IMAGE_GENERATION_MCP_INSTRUCTIONS`    | (computed at startup)             | System instructions for LLM context                                                                                                                      |
-| `IMAGE_GENERATION_MCP_DEBUG_PORT`      | N/A                               | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image)                                            |
-| `IMAGE_GENERATION_MCP_DEBUG_WAIT`      | `false`                           | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                                                             |
+| Variable                            | Default               | Description                                                                                                   |
+| ----------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `IMAGE_GENERATION_MCP_BEARER_TOKEN` | n/a                   | Enable bearer token auth                                                                                      |
+| `FASTMCP_LOG_LEVEL`                 | `INFO`                | Log level (`DEBUG` / `INFO` / `WARNING` / `ERROR`)                                                            |
+| `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | System instructions for LLM context                                                                           |
+| `IMAGE_GENERATION_MCP_DEBUG_PORT`   | N/A                   | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
+| `IMAGE_GENERATION_MCP_DEBUG_WAIT`   | `false`               | Block startup until IDE attaches (see [Remote debugging](#remote-debugging))                                  |
 
 See [Configuration](https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/index.md) for the full environment variable reference.
 
 For OIDC auth variables, see [Authentication](https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/index.md).
+
+Running behind a reverse proxy on a path prefix (`https://mcp.example.com/myservice/mcp`) rather than its own hostname needs two routing rules, one of which sits outside the prefix: see [Subpath Deployments](https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/#subpath-deployments).
 
 ## Volumes
 

@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -2225,9 +2244,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3046,7 +3148,7 @@
 
 
 <h1 id="mcp-tools">MCP Tools<a class="headerlink" href="#mcp-tools" title="Permanent link">&para;</a></h1>
-<p>image-generation-mcp exposes four domain tools plus two auto-generated resource-bridge tools to MCP clients.</p>
+<p>image-generation-mcp exposes the domain tools documented below, plus two auto-generated resource-bridge tools, to MCP clients.</p>
 <h2 id="generate_image">generate_image<a class="headerlink" href="#generate_image" title="Permanent link">&para;</a></h2>
 <p>Generate an image from a text prompt. Returns immediately with a <code>status: "generating"</code> response while the image is generated in the background (typically 30-90 seconds). Use <code>check_generation_status(image_id)</code> to wait for completion, then call <code>show_image(uri=original_uri)</code> <strong>once</strong> to display the result. Check each model's <code>prompt_style</code> in <code>list_providers</code> to choose CLIP tags vs. natural language prompts.</p>
 <table>

@@ -367,6 +367,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1145,23 +1164,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Auth modes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#oidc-mode-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OIDC mode selection
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -1203,6 +1205,17 @@
     <span class="md-ellipsis">
       
         When to use bearer token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mapped-bearer-tokens-multi-subject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapped bearer tokens (multi-subject)
       
     </span>
   </a>
@@ -1288,10 +1301,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tokens-invalidated-after-restart" class="md-nav__link">
+  <a href="#tokens-invalidated-after-a-client-secret-rotation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tokens invalidated after restart
+        Tokens invalidated after a client-secret rotation
       
     </span>
   </a>
@@ -1353,32 +1366,21 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#token-exchange-fails-with-authelia" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token exchange fails with Authelia
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#known-limitations-oidc-session-lifetime" class="md-nav__link">
+  <a href="#known-limitations-mcp-oauth-token-refresh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Known Limitations: OIDC session lifetime
+        Known Limitations: MCP OAuth token refresh
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Known Limitations: OIDC session lifetime">
+    <nav class="md-nav" aria-label="Known Limitations: MCP OAuth token refresh">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1393,10 +1395,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#root-cause-oauthproxy-double-validation" class="md-nav__link">
+  <a href="#why-refresh-doesnt-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root cause: OAuthProxy double-validation
+        Why refresh doesn't work
       
     </span>
   </a>
@@ -1404,21 +1406,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#additional-client-side-limitations" class="md-nav__link">
+  <a href="#what-works-today" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Additional client-side limitations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#workarounds" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Workarounds
+        What works today
       
     </span>
   </a>
@@ -1763,9 +1754,92 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/release-process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/repository-protection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1804,23 +1878,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Auth modes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#oidc-mode-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OIDC mode selection
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1863,6 +1920,17 @@
     <span class="md-ellipsis">
       
         When to use bearer token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mapped-bearer-tokens-multi-subject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapped bearer tokens (multi-subject)
       
     </span>
   </a>
@@ -1948,10 +2016,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tokens-invalidated-after-restart" class="md-nav__link">
+  <a href="#tokens-invalidated-after-a-client-secret-rotation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tokens invalidated after restart
+        Tokens invalidated after a client-secret rotation
       
     </span>
   </a>
@@ -2013,32 +2081,21 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#token-exchange-fails-with-authelia" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token exchange fails with Authelia
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#known-limitations-oidc-session-lifetime" class="md-nav__link">
+  <a href="#known-limitations-mcp-oauth-token-refresh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Known Limitations: OIDC session lifetime
+        Known Limitations: MCP OAuth token refresh
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Known Limitations: OIDC session lifetime">
+    <nav class="md-nav" aria-label="Known Limitations: MCP OAuth token refresh">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2053,10 +2110,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#root-cause-oauthproxy-double-validation" class="md-nav__link">
+  <a href="#why-refresh-doesnt-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root cause: OAuthProxy double-validation
+        Why refresh doesn't work
       
     </span>
   </a>
@@ -2064,21 +2121,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#additional-client-side-limitations" class="md-nav__link">
+  <a href="#what-works-today" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Additional client-side limitations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#workarounds" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Workarounds
+        What works today
       
     </span>
   </a>
@@ -2122,7 +2168,7 @@
 
 
 <h1 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h1>
-<p>This guide covers how to protect your image-generation-mcp server with authentication. Choose the mode that fits your deployment.</p>
+<p>This guide covers how to protect your MCP server with authentication. Choose the mode that fits your deployment.</p>
 <div class="admonition warning">
 <p class="admonition-title">Transport requirement</p>
 <p>Authentication only works with HTTP transport (<code>--transport http</code> or <code>sse</code>). It has no effect with <code>--transport stdio</code>.</p>
@@ -2140,8 +2186,8 @@
 <tbody>
 <tr>
 <td><strong>Multi-auth</strong></td>
-<td>Mixed clients: Claude web (OIDC) and Claude Code (bearer token) sharing the same server</td>
-<td>Set <code>IMAGE_GENERATION_MCP_BEARER_TOKEN</code> + OIDC variables</td>
+<td>Mixed clients, such as Claude web (OIDC) + Claude Code (bearer token) on the same server</td>
+<td>Set both <code>IMAGE_GENERATION_MCP_BEARER_TOKEN</code> and all four OIDC variables</td>
 </tr>
 <tr>
 <td><strong>Bearer token</strong></td>
@@ -2149,14 +2195,9 @@
 <td>Set <code>IMAGE_GENERATION_MCP_BEARER_TOKEN</code> only</td>
 </tr>
 <tr>
-<td><strong>OIDC (remote)</strong></td>
-<td>Production with user identity (recommended)</td>
-<td>Set <code>BASE_URL</code> + <code>OIDC_CONFIG_URL</code></td>
-</tr>
-<tr>
-<td><strong>OIDC (oidc-proxy)</strong></td>
-<td>Production when IdP lacks DCR support and you need DCR emulation</td>
-<td>Set <code>BASE_URL</code> + <code>OIDC_CONFIG_URL</code> + <code>OIDC_CLIENT_ID</code> + <code>OIDC_CLIENT_SECRET</code></td>
+<td><strong>OIDC</strong></td>
+<td>Production with user identity, SSO, multi-user access</td>
+<td>Set all four OIDC variables only</td>
 </tr>
 <tr>
 <td><strong>No auth</strong></td>
@@ -2165,18 +2206,7 @@
 </tr>
 </tbody>
 </table>
-<p>When both bearer token and OIDC are configured, the server accepts <strong>either</strong> credential: a valid bearer token or a valid OIDC session. This is useful when different clients require different authentication flows against the same vault instance.</p>
-<h3 id="oidc-mode-selection">OIDC mode selection<a class="headerlink" href="#oidc-mode-selection" title="Permanent link">&para;</a></h3>
-<p>Two OIDC modes are available via the <code>IMAGE_GENERATION_MCP_AUTH_MODE</code> env var:</p>
-<ul>
-<li>
-<p><strong><code>remote</code></strong> (recommended): The server validates tokens locally via JWKS. The client authenticates directly with the IdP. It requires only <code>BASE_URL</code> + <code>OIDC_CONFIG_URL</code>, with no client credentials, JWT signing key, or upstream token storage.</p>
-</li>
-<li>
-<p><strong><code>oidc-proxy</code></strong>: The server acts as an OAuth intermediary, emulating Dynamic Client Registration (DCR) for IdPs that don't support it natively. Requires <code>CLIENT_ID</code>, <code>CLIENT_SECRET</code>, and optionally <code>JWT_SIGNING_KEY</code>. Subject to the <a href="#known-limitations-oidc-session-lifetime">session lifetime limitation</a>.</p>
-</li>
-</ul>
-<p>When <code>AUTH_MODE</code> is not set, it auto-detects: <code>oidc-proxy</code> when client credentials are present, <code>remote</code> otherwise. See <a href="../../deployment/oidc/">OIDC deployment guide</a> for setup details.</p>
+<p>When both bearer token and OIDC are configured, the server accepts <strong>either</strong> credential: a valid bearer token or a valid OIDC session. This is useful when different clients require different authentication flows against the same server instance.</p>
 <hr />
 <h2 id="bearer-token">Bearer token<a class="headerlink" href="#bearer-token" title="Permanent link">&para;</a></h2>
 <p>The simplest way to protect your server. A single static token shared between server and clients.</p>
@@ -2209,13 +2239,20 @@
 <li>Development and testing environments</li>
 <li>Any scenario where full OIDC is overkill</li>
 </ul>
-<p>See also: <a href="https://github.com/pvliesdonk/image-generation-mcp/blob/main/examples/bearer-auth.env"><code>examples/bearer-auth.env</code></a> for a ready-to-use example.</p>
+<h3 id="mapped-bearer-tokens-multi-subject">Mapped bearer tokens (multi-subject)<a class="headerlink" href="#mapped-bearer-tokens-multi-subject" title="Permanent link">&para;</a></h3>
+<p>The bearer-token mode above shares one subject across every authenticated caller. By default this is the library's <code>bearer-anon</code>; override with <code>IMAGE_GENERATION_MCP_BEARER_DEFAULT_SUBJECT</code>. For audit logs and authorization that distinguish callers, switch to mapped-token mode by pointing <code>IMAGE_GENERATION_MCP_BEARER_TOKENS_FILE</code> at a TOML file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># tokens.toml</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">[tokens]</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s2">&quot;ghp_alice_xxxxxxxx&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;user:alice@example.com&quot;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s2">&quot;sk_ci_yyyyyyyy&quot;</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;service:ci-bot&quot;</span>
+</code></pre></div>
+<p>Each token resolves to a distinct subject string for downstream attribution. Subject strings are opaque: the <code>&lt;kind&gt;:&lt;id&gt;</code> convention (<code>user:</code>, <code>service:</code>, <code>token:</code>) is documentation only. When <code>BEARER_TOKENS_FILE</code> is set it overrides <code>BEARER_TOKEN</code> (a <code>WARNING</code> is logged if both are present). A missing or malformed file aborts startup with <code>ConfigurationError</code> rather than silently denying every request.</p>
 <hr />
 <h2 id="oidc">OIDC<a class="headerlink" href="#oidc" title="Permanent link">&para;</a></h2>
 <p>Full OAuth 2.1 authentication using an external identity provider. Supports user login flows, SSO, and multi-user access control.</p>
 <h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
 <p>The server proxies OIDC itself, with no external auth sidecar to deploy:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Client → image-generation-mcp → OIDC Provider
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Client → image-generation-mcp → OIDC Provider
 </code></pre></div>
 <ol>
 <li>Client connects to the server</li>
@@ -2225,6 +2262,7 @@
 <li>Subsequent requests include the JWT</li>
 </ol>
 <h3 id="required-variables">Required variables<a class="headerlink" href="#required-variables" title="Permanent link">&para;</a></h3>
+<!-- GENERATED-ENV-TABLE-OIDC-REQUIRED-START — generated by scripts/gen_config_surface.py; do not edit -->
 <table>
 <thead>
 <tr>
@@ -2235,23 +2273,26 @@
 <tbody>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_BASE_URL</code></td>
-<td>Public base URL for OIDC and the capability-link transfer routes, such as <code>https://mcp.example.com</code></td>
+<td>Public base URL of the deployed server (<code>https://mcp.example.com</code>). Required for OIDC. Also the fallback source of the MCP Apps domain when <code>app_domain</code> is unset.</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_CONFIG_URL</code></td>
-<td>OIDC discovery endpoint</td>
+<td>OIDC discovery document URL (<code>https://auth.example.com/.well-known/openid-configuration</code>).</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_CLIENT_ID</code></td>
-<td>Client ID registered with your provider</td>
+<td>OIDC client identifier registered with the provider.</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_CLIENT_SECRET</code></td>
-<td>Client secret</td>
+<td>OIDC client secret registered with the provider.</td>
 </tr>
 </tbody>
 </table>
+<!-- GENERATED-ENV-TABLE-OIDC-REQUIRED-END -->
+
 <h3 id="optional-variables">Optional variables<a class="headerlink" href="#optional-variables" title="Permanent link">&para;</a></h3>
+<!-- GENERATED-ENV-TABLE-OIDC-OPTIONAL-START — generated by scripts/gen_config_surface.py; do not edit -->
 <table>
 <thead>
 <tr>
@@ -2262,36 +2303,43 @@
 </thead>
 <tbody>
 <tr>
-<td><code>IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY</code></td>
-<td>ephemeral</td>
-<td>JWT signing key (<strong>required on Linux/Docker</strong>)</td>
-</tr>
-<tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_AUDIENCE</code></td>
-<td>n/a</td>
-<td>Expected JWT audience claim; leave unset if your provider does not set one</td>
+<td>(none)</td>
+<td>Expected <code>aud</code> claim; tokens issued for another audience are rejected.</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_REQUIRED_SCOPES</code></td>
 <td><code>openid</code></td>
-<td>Comma-separated required scopes</td>
+<td>Scopes a caller must present, space- or comma-separated. Defaults to <code>openid</code> in oidc-proxy mode.</td>
+</tr>
+<tr>
+<td><code>IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES</code></td>
+<td><code>openid offline_access</code></td>
+<td>Scopes advertised to MCP clients in protected-resource metadata, space- or comma-separated. Overrides the default <code>openid offline_access</code>; <code>oidc_required_scopes</code> is always added on top. Set this when the registered client is not permitted <code>offline_access</code>, or to have clients request extra claim scopes (such as <code>groups</code>) without also requiring them in every token.</td>
+</tr>
+<tr>
+<td><code>IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY</code></td>
+<td><code>derived</code></td>
+<td>Signing key for issued JSON Web Tokens; used in oidc-proxy mode only. When unset, the key is derived deterministically from <code>oidc_client_secret</code>, so tokens survive a restart. Rotating that secret invalidates every issued token. Set this explicitly to decouple token validity from secret rotation. Generate with <code>openssl rand -hex 32</code>.</td>
 </tr>
 <tr>
 <td><code>IMAGE_GENERATION_MCP_OIDC_VERIFY_ACCESS_TOKEN</code></td>
 <td><code>false</code></td>
-<td>Set <code>true</code> to verify the access token as a JWT instead of the id token; useful for audience-claim validation on JWT access tokens</td>
+<td>Validate the access token instead of the id token.</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition danger">
-<p class="admonition-title">JWT signing key on Linux/Docker</p>
-<p>Without <code>OIDC_JWT_SIGNING_KEY</code>, FastMCP generates an ephemeral key that invalidates all tokens on restart. Always set a stable key in production:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span>
+<!-- GENERATED-ENV-TABLE-OIDC-OPTIONAL-END -->
+
+<div class="admonition tip">
+<p class="admonition-title">JWT signing key and secret rotation</p>
+<p>When <code>IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY</code> is unset, FastMCP derives the signing key from the OIDC client secret, so the key stays the same across restarts. Rotating the client secret changes the derived key and invalidates every token issued under the old one. Set an explicit key to decouple token validity from client-secret rotation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span>
 </code></pre></div>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Long-running sessions</p>
-<p>Current MCP clients do not reliably refresh tokens. See <a href="#known-limitations-oidc-session-lifetime">Known Limitations</a>. Configure <strong>all</strong> token lifetimes (access, id, refresh) on your identity provider to cover a full workday (8 h or more). For simpler deployments, bearer token auth is unaffected by these limitations.</p>
+<p>Current MCP clients do not reliably refresh tokens; see <a href="#known-limitations-mcp-oauth-token-refresh">Known Limitations</a>. Configure <strong>all</strong> token lifetimes (access, id, refresh) on your identity provider to cover a full workday (8 hours or more). For simpler deployments, bearer token auth is unaffected by these limitations.</p>
 </div>
 <p>For the full OIDC reference (env vars, Docker Compose, subpath deployments, architecture):</p>
 <ul>
@@ -2301,9 +2349,9 @@
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="invalid-client-error">"invalid client" error<a class="headerlink" href="#invalid-client-error" title="Permanent link">&para;</a></h3>
 <p>The <code>client_id</code> and/or <code>redirect_uris</code> in your OIDC provider config don't match the values in your <code>.env</code> file. Verify both sides match exactly.</p>
-<h3 id="tokens-invalidated-after-restart">Tokens invalidated after restart<a class="headerlink" href="#tokens-invalidated-after-restart" title="Permanent link">&para;</a></h3>
-<p>You're missing <code>IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY</code>. Without it, FastMCP generates an ephemeral key on each startup. Generate and set a stable key:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span>
+<h3 id="tokens-invalidated-after-a-client-secret-rotation">Tokens invalidated after a client-secret rotation<a class="headerlink" href="#tokens-invalidated-after-a-client-secret-rotation" title="Permanent link">&para;</a></h3>
+<p>You're missing <code>IMAGE_GENERATION_MCP_OIDC_JWT_SIGNING_KEY</code>. Without it, FastMCP derives the signing key from the OIDC client secret, so rotating that secret changes the derived key and invalidates every token issued under the old one. Generate and set a stable key to decouple token validity from secret rotation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span>
 </code></pre></div>
 <h3 id="auth-has-no-effect">Auth has no effect<a class="headerlink" href="#auth-has-no-effect" title="Permanent link">&para;</a></h3>
 <p>Authentication only works with HTTP transport. If you're using <code>--transport stdio</code>, auth is silently ignored. Switch to <code>--transport http</code>.</p>
@@ -2330,46 +2378,30 @@
 <p><strong>access_token lifetime</strong>: If both <code>id_token</code> and <code>access_token</code> are set correctly but sessions still drop, check that the provider's <code>expires_in</code> response matches your configured lifetime.</p>
 </li>
 <li>
-<p><strong>No refresh token</strong>: See <a href="#known-limitations-oidc-session-lifetime">Known Limitations</a> below. Current MCP clients cannot refresh tokens, so sessions are limited to the token lifetime.</p>
+<p><strong>No refresh token</strong>: See <a href="#known-limitations-mcp-oauth-token-refresh">Known Limitations</a> below; current MCP clients cannot refresh tokens, so sessions are limited to the token lifetime.</p>
 </li>
 </ol>
 <p><strong>Workaround:</strong> configure <strong>all</strong> token lifetimes on your identity provider to cover a full workday:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Authelia example</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">lifespans</span><span class="p">:</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">custom</span><span class="p">:</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">mcp_long_lived</span><span class="p">:</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">access_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8h&#39;</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">id_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8h&#39;</span><span class="w">        </span><span class="c1"># must match access_token for verify_id_token mode</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">      </span><span class="nt">refresh_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;30d&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Authelia example</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">lifespans</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">custom</span><span class="p">:</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">mcp_long_lived</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">      </span><span class="nt">access_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8h&#39;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">      </span><span class="nt">id_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8h&#39;</span><span class="w">        </span><span class="c1"># must match access_token for verify_id_token mode</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">      </span><span class="nt">refresh_token</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;30d&#39;</span>
 </code></pre></div>
 <h3 id="opaque-access-tokens-authelia">Opaque access tokens (Authelia)<a class="headerlink" href="#opaque-access-tokens-authelia" title="Permanent link">&para;</a></h3>
-<p>Authelia issues opaque (non-JWT) access tokens by default. How this affects you depends on the OIDC mode:</p>
-<ul>
-<li><strong>Remote mode</strong> (recommended): requires JWT access tokens. Add <code>access_token_signed_response_alg: 'RS256'</code> to the Authelia client registration. See <a href="../../deployment/oidc/#setup-with-authelia">Authelia setup</a> for details.</li>
-<li><strong>OIDCProxy mode</strong>: handles opaque tokens automatically by verifying the <code>id_token</code> instead. No extra configuration needed.</li>
-</ul>
-<h3 id="token-exchange-fails-with-authelia">Token exchange fails with Authelia<a class="headerlink" href="#token-exchange-fails-with-authelia" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> Authelia logs show a <code>token_endpoint_auth_method</code> error during the OAuth token exchange.</p>
-<p><strong>Root cause:</strong> Claude Code (and some other MCP clients) sends <code>client_id</code> and <code>client_secret</code> in the POST body (<code>client_secret_post</code>), but Authelia defaults to <code>client_secret_basic</code> (HTTP Basic auth).</p>
-<p><strong>Fix:</strong> Add <code>token_endpoint_auth_method: 'client_secret_post'</code> to the Authelia client registration. See <a href="../../deployment/oidc/#setup-with-authelia">Authelia setup</a>.</p>
+<p>Authelia issues opaque (non-JWT) access tokens. This is handled automatically: the server verifies the <code>id_token</code> instead. No extra configuration needed.</p>
 <hr />
-<h2 id="known-limitations-oidc-session-lifetime">Known Limitations: OIDC session lifetime<a class="headerlink" href="#known-limitations-oidc-session-lifetime" title="Permanent link">&para;</a></h2>
-<h3 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
-<p>When using FastMCP's <code>OIDCProxy</code> (or <code>OAuthProxy</code>), sessions die when the upstream IdP access token expires (typically after 1 hour), even though the proxy has issued its own JWT with a longer lifetime.</p>
-<h3 id="root-cause-oauthproxy-double-validation">Root cause: OAuthProxy double-validation<a class="headerlink" href="#root-cause-oauthproxy-double-validation" title="Permanent link">&para;</a></h3>
-<p>FastMCP's <code>OAuthProxy.load_access_token()</code> performs <strong>two</strong> token validations on every request:</p>
-<ol>
-<li>Verify the proxy's own JWT (signature, expiry, scopes): <strong>this succeeds</strong></li>
-<li>Fetch and re-validate the upstream IdP token from the token store: <strong>this fails after upstream expiry</strong></li>
-</ol>
-<p>When the upstream token expires, step 2 returns <code>None</code>, causing a 401, even though the proxy JWT is still valid. The client has no way to preemptively refresh because it only sees the proxy JWT's expiry, not the upstream token's shorter expiry.</p>
-<p>This is tracked upstream: <a href="https://github.com/PrefectHQ/fastmcp/issues/3581">PrefectHQ/fastmcp#3581</a></p>
-<div class="admonition note">
-<p class="admonition-title">Not a client bug</p>
-<p>Previous versions of this documentation attributed the problem to MCP client refresh bugs. Investigation confirmed the root cause is server-side: deployments using <code>mcp-auth-proxy</code> (which validates only its own JWT) do not exhibit the same session death, ruling out client-side refresh as the primary cause.</p>
+<h2 id="known-limitations-mcp-oauth-token-refresh">Known Limitations: MCP OAuth token refresh<a class="headerlink" href="#known-limitations-mcp-oauth-token-refresh" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Ecosystem-wide issue</p>
+<p>The limitations below affect <strong>all</strong> OAuth-protected MCP servers, not just this one. They are caused by issues in the MCP client implementations (Claude Code, Claude.ai, Claude Desktop) and the MCP Python SDK. Check the linked tracking issues for current status.</p>
 </div>
-<h3 id="additional-client-side-limitations">Additional client-side limitations<a class="headerlink" href="#additional-client-side-limitations" title="Permanent link">&para;</a></h3>
-<p>These client issues are real but secondary; fixing them alone would not resolve the OAuthProxy double-validation problem:</p>
+<h3 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
+<p>MCP clients cannot maintain sessions beyond the token lifetime because token refresh does not work. When tokens expire, the session drops and requires manual re-authentication. This affects every provider: Authelia, Keycloak, Google, and others.</p>
+<h3 id="why-refresh-doesnt-work">Why refresh doesn't work<a class="headerlink" href="#why-refresh-doesnt-work" title="Permanent link">&para;</a></h3>
+<p>Three independent issues prevent token refresh:</p>
 <table>
 <thead>
 <tr>
@@ -2382,35 +2414,33 @@
 <tr>
 <td><strong>Claude Code</strong></td>
 <td>Stores refresh tokens but never uses them (<a href="https://github.com/anthropics/claude-code/issues/21333">claude-code#21333</a>)</td>
-<td>Refresh tokens are obtained and saved but never sent back</td>
+<td>Refresh tokens are obtained and saved but never sent back to refresh expired access tokens</td>
 </tr>
 <tr>
 <td><strong>Claude Code</strong></td>
-<td>Never requests <code>offline_access</code> scope (<a href="https://github.com/anthropics/claude-code/issues/7744">claude-code#7744</a>)</td>
-<td>Some providers won't issue a refresh token without this scope</td>
+<td>Does not ask for <code>offline_access</code> on its own (<a href="https://github.com/anthropics/claude-code/issues/7744">claude-code#7744</a>)</td>
+<td>Most OIDC providers issue no refresh token without this scope. The server advertises <code>openid offline_access</code> in its protected-resource metadata, so a client that requests the advertised set gets a refresh-capable grant; one that ignores the metadata still does not.</td>
 </tr>
 <tr>
 <td><strong>MCP Python SDK</strong></td>
 <td>Token refresh deadlocks inside SSE streams (<a href="https://github.com/modelcontextprotocol/python-sdk/issues/1326">python-sdk#1326</a>)</td>
-<td>SDK hangs when attempting refresh during an active stream</td>
+<td>Even with a valid refresh token, the SDK hangs when attempting refresh during an active stream</td>
 </tr>
 </tbody>
 </table>
 <p>The server-side refresh architecture (FastMCP's <code>OAuthProxy.exchange_refresh_token()</code>) is correctly implemented and would work, but it requires the client to initiate the refresh, which none of the current clients do reliably.</p>
-<h3 id="workarounds">Workarounds<a class="headerlink" href="#workarounds" title="Permanent link">&para;</a></h3>
-<p><strong>Use <code>remote</code> auth mode instead of <code>oidc-proxy</code></strong> (recommended). Set <code>AUTH_MODE=remote</code>; the server then validates tokens locally via JWKS without storing or re-validating upstream tokens. This requires only <code>BASE_URL</code> + <code>OIDC_CONFIG_URL</code>. See <a href="#oidc-mode-selection">OIDC mode selection</a> for setup details.</p>
+<h3 id="what-works-today">What works today<a class="headerlink" href="#what-works-today" title="Permanent link">&para;</a></h3>
 <p><strong>Bearer token auth</strong> is unaffected by all of the above. If your deployment allows it (such as Claude Code with env vars, or API clients), bearer tokens are the simplest and most reliable option.</p>
-<p><strong>Long token lifetimes</strong> mitigate the problem for OIDCProxy deployments. Set the upstream IdP's access token lifetime to cover your session duration:</p>
+<p><strong>Long token lifetimes</strong> are the only viable workaround for OIDC. Set all three lifetimes (access, id, refresh) to cover your typical session duration:</p>
 <ul>
-<li><code>access_token: '8h'</code>: covers a workday (this is the critical one)</li>
-<li><code>id_token: '8h'</code>: must match access_token when using <code>verify_id_token</code> mode</li>
+<li><code>access_token: '8h'</code>: covers a workday</li>
+<li><code>id_token: '8h'</code>: <strong>must match access_token</strong> when using <code>verify_id_token</code> mode (critical for Authelia)</li>
 <li><code>refresh_token: '30d'</code>: ready for when clients support refresh</li>
-<li>Include <code>offline_access</code> in provider-side scopes: no effect today, but will enable refresh when clients are fixed</li>
+<li>Permit <code>offline_access</code> for the registered client; the server advertises it by default, so a client that honours the advertised scopes requests it. Where the client may not hold that scope, narrow what the server advertises with <code>IMAGE_GENERATION_MCP_OIDC_ADVERTISED_SCOPES</code> rather than letting the authorization request fail</li>
 </ul>
 <h3 id="tracking">Tracking<a class="headerlink" href="#tracking" title="Permanent link">&para;</a></h3>
+<p>These upstream issues are actively tracked:</p>
 <ul>
-<li><a href="https://github.com/PrefectHQ/fastmcp/issues/3581">PrefectHQ/fastmcp#3581</a>: OAuthProxy double-validation (root cause)</li>
-<li><a href="https://github.com/pvliesdonk/image-generation-mcp/issues/99">#99</a>: auth refactoring to support RemoteAuthProvider</li>
 <li><a href="https://github.com/anthropics/claude-code/issues/21333">anthropics/claude-code#21333</a>: refresh tokens stored but never used</li>
 <li><a href="https://github.com/anthropics/claude-code/issues/7744">anthropics/claude-code#7744</a>: <code>offline_access</code> scope never requested</li>
 <li><a href="https://github.com/modelcontextprotocol/python-sdk/issues/1326">modelcontextprotocol/python-sdk#1326</a>: SSE refresh deadlock</li>

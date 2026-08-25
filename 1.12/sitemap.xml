@@ -2,102 +2,118 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration-generator/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/configuration/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/prompts/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/resources/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/tools/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/claude-desktop/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/docker/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/oidc/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/release-process/</loc>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/repository-protection/</loc>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/deployment/systemd/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/claude-code/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/claude-desktop/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/getting-started/installation/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/authentication/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/client-compatibility/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/image-assets/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/image-input/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/prompt-writing/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/guides/styles/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/gemini/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/model-catalog/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/openai/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/placeholder/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
     </url>
     <url>
          <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/providers/sd-webui/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/releases/</loc>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://pvliesdonk.github.io/image-generation-mcp/1.12/releases/1.12/</loc>
+         <lastmod>2026-08-25</lastmod>
     </url>
 </urlset>
