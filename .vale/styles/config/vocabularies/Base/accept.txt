@@ -210,3 +210,11 @@ lockfile
 scaffolded
 venv
 venv's
+
+# --- Release-notes vocab (1.12) ---
+canonicalization
+create_upload_link
+CVEs
+Dependabot
+ingest_base64_image
+walkthrough
