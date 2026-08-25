@@ -1080,7 +1080,7 @@ wheels = [
 
 [[package]]
 name = "image-generation-mcp"
-version = "1.12.1rc0"
+version = "1.12.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp-pvl-core" },

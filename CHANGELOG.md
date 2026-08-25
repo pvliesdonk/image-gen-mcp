@@ -2,6 +2,13 @@
 
 <!-- version list -->
 
+## 1.12.1 (2026-08-25)
+
+### Bug Fixes
+
+- title every registered tool and enforce it registry-wide (#353)
+- restore tracked contributor skills (#372)
+
 ## 1.12.1-rc.0 (2026-08-25)
 
 ### Bug Fixes
