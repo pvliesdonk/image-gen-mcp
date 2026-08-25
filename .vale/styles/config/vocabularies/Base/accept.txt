@@ -33,18 +33,24 @@ ruff
 stdio
 
 # --- Operational / config jargon ---
+ADRs
 allowlist
 backports
 config
+denylist
 deployer
+dev
 env
 hotfix
+repo
 ruleset
 rulesets
+systemd
 truthy
 uncommented
 uncommenting
 unprefixed
+upsert
 upserts
 validators
 

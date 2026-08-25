@@ -40,7 +40,9 @@ site/
 # --- Development / ecosystem ignores (don't ship)
 .mcpregistry_*
 .worktrees/
-.claude/
+# Claude Code local settings; contributor skills are template-owned and tracked.
+.claude/*
+!.claude/skills/
 .mcp.json
 .repowise/
 docs/superpowers/
