@@ -48,4 +48,5 @@ image-generation-mcp is a multi-provider image generation MCP server supporting 
 ## Release Notes
 
 - [Release Notes](https://pvliesdonk.github.io/image-generation-mcp/unstable/releases/index.md)
+- [1.12](https://pvliesdonk.github.io/image-generation-mcp/unstable/releases/1.12/index.md)
 

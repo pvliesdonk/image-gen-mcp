@@ -4304,4 +4304,72 @@ Both must reach this server, and the `resource` field in the JSON must read `htt
 
 Each minor release series gets one page here telling its story: what changed, why it matters, and how to adopt it. Patch releases add a dated section to their series page, so a series stays one linkable document. The commit-level record lives in the repository's `CHANGELOG.md`; each GitHub release links back to its page here.
 
-No release pages yet. The first entry appears with the first stable release cut after this project adopted release-notes pages.
+- [1.12](https://pvliesdonk.github.io/image-generation-mcp/unstable/releases/1.12/index.md): external-image ingestion, gallery origin filter, print-resolution output
+
+# 1.12
+
+1.12 gives external images a way into the gallery: `fetch_image` pulls one from a URL, `ingest_base64_image` accepts inline base64 bytes, and `create_upload_link` mints an HTTP upload link, each landing the result as a first-class gallery entry that `transform_image` can reference like any generated image. The gallery viewer gained an origin filter (Generated / Imported / All) with full keyboard and screen-reader support, plus a real error state with retry. Separately, `generate_image` and `transform_image` gained a `resolution` tier so callers who need print-quality output (Gemini up to 4K, `gpt-image-2` up to 4K) can ask for it explicitly instead of being capped well below what the provider APIs support.
+
+## Getting external images into the gallery
+
+Until now, every image in the gallery had to come from a provider, with no way to bring in something the caller already had. [Epic #300](https://github.com/pvliesdonk/image-generation-mcp/issues/300) closes that gap with three ingestion paths, all landing on the same data model:
+
+- **[`fetch_image(url)`](https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/#fetch_image)**: pulls an image from a caller-supplied `http`/`https` URL through `fastmcp-pvl-core`'s SSRF-hardened fetch primitive (private, loopback, link-local, and cloud-metadata targets are refused).
+- **[`ingest_base64_image(data)`](https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/#ingest_base64_image)**: decodes inline base64 bytes (raw, `data:...;base64,...`, or line-wrapped) under a size cap.
+- **[`create_upload_link`](https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/#create_upload_link)**: mints a one-time HTTP upload URL, using the shared transfer routes' `create_upload_link` / `create_download_link` tools, for callers that would rather POST bytes than pass a URL or inline payload.
+
+Every path records the result as a gallery entry with `origin: "imported"` (as opposed to `"generated"` for provider output) and an `origin_source` noting how it arrived: a redacted URL, `"base64"`, or `"upload"`. Once imported, the image is indistinguishable from a generated one to the rest of the system, so `transform_image` references its `image_id` exactly as it would a generated image, with no provider-specific handling. See the [image-input guide](https://pvliesdonk.github.io/image-generation-mcp/unstable/guides/image-input/index.md) for the full walkthrough, and the [`origin` field reference](https://pvliesdonk.github.io/image-generation-mcp/unstable/resources/#origin) for the resource shape.
+
+Adopting the shared transfer routes also **retired the project's own download infrastructure**. `artifacts.py`, the `/artifacts/{token}` route, and `show_image`'s eager `download_url` field are gone, replaced by `create_download_link` / `create_upload_link` and the `file_ref` field in `show_image`'s metadata. See [Upgrading](#upgrading) below if anything in your setup depended on the old route or field.
+
+The gallery viewer's origin filter (Generated, Imported, All) is presentational only, since storage stays flat, and ships as a fully accessible segmented control: a `role="radiogroup"` with `aria-checked` state, roving-tabindex keyboard navigation (arrow keys, Home/End), and a distinct load-error state with a retry button in place of the previous behavior of silently rendering a load failure as an empty gallery.
+
+## Reachable print-resolution output
+
+A downstream consumer needing print-resolution covers hit a ceiling. [Per the tracking issue](https://github.com/pvliesdonk/image-generation-mcp/issues/337), "a 2:3 cover at 1024×1536 lands at ≈186dpi on an A5 full-bleed page, below the 300dpi print floor," even though both providers' APIs now support noticeably larger output than this server could request.
+
+`generate_image` and `transform_image` gain a `resolution` parameter, `"standard"` / `"high"` / `"max"`, independent of the existing `quality` parameter (which now controls only model reasoning on Gemini, not output size):
+
+- **Gemini**: the three tiers map to `1K`/`2K`/`4K`, on the models that support it (`gemini-3.1-flash-image`, `gemini-3-pro-image`); every other model falls back to `standard` only.
+- **OpenAI**: `gpt-image-2` gets verified `high`/`max` size tables up to 4K; every other model renders at its existing standard size.
+
+A tier the resolved model cannot honor is clamped down to the highest tier it does support rather than rejected outright. Every provider also reports back the tier it actually delivered, which is what gets persisted onto the image record, so the gallery never claims a resolution the generation didn't reach. Check a model's `supported_resolutions` in [`list_providers`](https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/#list_providers) before relying on `high`/`max`.
+
+## Upgrading
+
+Migrating from a version before 1.12.0, two behaviors from the old download infrastructure are gone rather than replaced in place:
+
+- The `/artifacts/{token}` route and `show_image`'s `download_url` field no longer exist. Use `file_ref` from `show_image`'s metadata with [`create_download_link`](https://pvliesdonk.github.io/image-generation-mcp/unstable/tools/#create_download_link) instead.
+- The old download route accepted `?format`/`width`/`height`/`quality` query parameters to transform the image on the way out; the shared transfer route serves the original bytes only, with no equivalent yet.
+- A download whose backing file has vanished (deleted after the link was minted, before it was fetched) now surfaces as a `500`, where the old route returned `404`.
+
+No environment variable was removed or renamed in this series; everything below is additive.
+
+## v1.12.1
+
+A maintenance release: `fetch_image` now follows redirects safely instead of refusing them outright, four runtime dependencies with known CVEs are bumped, every registered tool carries a proper display title, and a documentation error about disabling the paid-provider cost gate is corrected. Riding along from the underlying template/library upgrade: operators can now allow- or deny-list exposed tools by name, and background generation tasks can be pointed at a durable Redis-backed queue instead of the in-memory default.
+
+### `fetch_image` now follows redirects safely
+
+`fetch_image` is built on `fastmcp-pvl-core`'s SSRF-hardened `fetch_url`, which used to refuse every redirect outright, so an ordinary `http` to `https` upgrade or an apex-to-`www` canonicalization made an otherwise-valid image URL fail. The underlying library ([`fastmcp-pvl-core` v4.11.2](https://github.com/pvliesdonk/fastmcp-pvl-core/releases/tag/v4.11.2)) now follows redirects while re-validating every hop against the same private/loopback/ link-local/metadata blocklist a direct request gets, so a redirect can't reach a target the direct URL couldn't. `docs/tools.md` and the tool's own docstring still say redirects are refused, which is now stale; flagged for the maintainer rather than corrected here.
+
+### Dependency security bumps
+
+Four runtime dependencies carried known vulnerabilities that had piled up as separately insufficient Dependabot PRs. `pip-audit --strict` stayed red because each PR bumped only one package: `cryptography` 49.0.0 to 50.0.0, `mcp` 1.28.0 to 1.29.0, `pillow` 12.2.0 to 12.3.0, and `pyasn1` 0.6.3 to 0.6.4. Bumping all four together clears `pip-audit --strict` with no known vulnerabilities remaining.
+
+### Every tool now has a display title
+
+Client applications that render a tool's `annotations.title` (VS Code among them) previously showed the raw machine name for all but four tools in the registry. Every registered tool, including the app-only and transfer tools, now carries a human-readable title.
+
+### Documentation fix: `PAID_PROVIDERS` empty-value semantics
+
+The configuration reference and generated help text both claimed that setting `IMAGE_GENERATION_MCP_PAID_PROVIDERS` to an empty value disables the cost-confirmation gate. That was never true: an empty value falls back to the default (`{"openai"}`), so the gate stays on. Disabling it requires a value that names no real provider, such as `none`. `README.md`, `docs/configuration.md`, and the config wizard are corrected.
+
+### From the underlying library/template upgrade
+
+This release also brings `fastmcp-pvl-core` from 4.4.0 to 4.11.3 (via a chain of `copier update` runs). Most of that range is internal to the generated config surface, but two changes reach this server's operators directly:
+
+- **Operator tool allow/deny lists**: [`IMAGE_GENERATION_MCP_TOOLS_ALLOW` / `IMAGE_GENERATION_MCP_TOOLS_DENY`](https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration/index.md) restrict which tools an instance exposes, independent of read-only mode.
+- **Durable background-task backend**: `generate_image` and `transform_image` already ran generation in the background. [`IMAGE_GENERATION_MCP_TASKS_URL`](https://pvliesdonk.github.io/image-generation-mcp/unstable/configuration/index.md) now lets an operator point that queue at Redis instead of the in-process default, which loses pending work on restart.
+
+Two smaller fixes ride along: the shared KV store backing transfer-link tokens and other persistent state now degrades to an in-memory store with a warning, instead of failing to start, when `/data` isn't writable; and an OIDC deployment's advertised scopes now correctly default to `openid offline_access` rather than echoing the server's required-scopes configuration. An incorrect config-wizard warning claiming an OIDC JWT signing key must be set to survive a restart (it doesn't) was also removed.
