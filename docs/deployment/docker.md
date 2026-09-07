@@ -33,8 +33,14 @@ docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revis
 |----------|---------|-------------|
 | `IMAGE_GENERATION_MCP_BEARER_TOKEN` | n/a | Enable bearer token auth |
 | `FASTMCP_LOG_LEVEL` | `INFO` | Log level (`DEBUG` / `INFO` / `WARNING` / `ERROR`) |
+<<<<<<< before updating
 | `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | System instructions for LLM context |
 | `IMAGE_GENERATION_MCP_DEBUG_PORT` | N/A | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
+=======
+| `IMAGE_GENERATION_MCP_INSTRUCTIONS_EXTRA` | n/a | Operator context appended to the generated MCP instructions |
+| `IMAGE_GENERATION_MCP_INSTRUCTIONS` | (computed at startup) | Legacy full replacement of the generated instructions (deprecated) |
+| `IMAGE_GENERATION_MCP_DEBUG_PORT` | n/a | Remote-debugger TCP port (see [Remote debugging](#remote-debugging); requires `--build-arg DEBUG=true` image) |
+>>>>>>> after updating
 | `IMAGE_GENERATION_MCP_DEBUG_WAIT` | `false` | Block startup until IDE attaches (see [Remote debugging](#remote-debugging)) |
 
 See [Configuration](../configuration.md) for the full environment variable reference.
