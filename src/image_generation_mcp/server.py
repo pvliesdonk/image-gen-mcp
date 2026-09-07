@@ -19,11 +19,17 @@ from fastmcp_pvl_core import (
     ServerConfig,
     apply_tool_visibility,
     build_auth,
+<<<<<<< before updating
     build_instructions,
+=======
+    build_event_store,  # noqa: F401  — re-exported for downstream projects' convenience
+>>>>>>> after updating
     build_kv_store,  # noqa: F401  — re-exported for downstream projects' convenience
     configure_logging_from_env,
     configure_task_backend,
     env,
+    finalize_instructions,
+    instructions_for,
     register_server_info_tool,
     resolve_auth_mode,
     wire_middleware_stack,
@@ -216,10 +222,11 @@ def make_server(
     # prefix, so two servers sharing one Redis do not share a queue.
     configure_task_backend(_ENV_PREFIX, config.server)
 
-    # Operator overrides: SERVER_NAME renames this instance; INSTRUCTIONS
-    # replaces the default instructions text (the latter is the override that
-    # build_instructions' hint advertises). Both fall back when unset/empty.
+    # Operator override: SERVER_NAME renames this instance (falls back when
+    # unset/empty).  Instructions are composed by pvl-core's InstructionsBuilder
+    # below and finalised last; see finalize_instructions() at the end.
     server_name = env(_ENV_PREFIX, "SERVER_NAME", "image-generation-mcp")
+<<<<<<< before updating
     instructions = env(_ENV_PREFIX, "INSTRUCTIONS") or build_instructions(
         env_prefix=_ENV_PREFIX,
         domain_line=(
@@ -229,6 +236,8 @@ def make_server(
             "Start by calling list_providers to see configured providers."
         ),
     )
+=======
+>>>>>>> after updating
 
     auth = build_auth(config.server)
     auth_mode = resolve_auth_mode(config.server) if auth is not None else "none"
@@ -265,13 +274,32 @@ def make_server(
 
     mcp = FastMCP(
         name=server_name,
+<<<<<<< before updating
         instructions=instructions,
         icons=[Icon(src=_LUCIDE.format("palette"), mimeType="image/svg+xml")],
         lifespan=_lifespan,
+=======
+        lifespan=server_lifespan,
+>>>>>>> after updating
         auth=auth,
     )
 
     wire_middleware_stack(mcp)
+
+    # Server instructions are composed, not templated: every contributor adds
+    # a snippet to the builder (identity here; core register_* helpers add
+    # their workflow prose; domain code adds its own via
+    # ``instructions_for(mcp).add(text, priority=WORKFLOWS, tools=(...))`` in
+    # the DOMAIN-WIRING block, using the ``IDENTITY < DOCS < CAPABILITIES <
+    # WORKFLOWS < INSTANCE < OPERATOR`` anchors pvl-core exports — never
+    # ``priority=0``, which is ``IDENTITY`` and must stay unique), and
+    # ``finalize_instructions`` renders them once, after tool visibility.
+    instructions_for(mcp).identity("MCP server for AI image generation via OpenAI, Google GenAI, or Stable Diffusion WebUI")
+    # The docs site publishes llms.txt per version (mkdocs-llmstxt, mike);
+    # `/latest/` resolves once the first release has published the site.
+    instructions_for(mcp).documentation(
+        "https://pvliesdonk.github.io/image-generation-mcp/latest/llms.txt"
+    )
 
     register_tools(mcp)
     register_resources(mcp)
@@ -299,6 +327,7 @@ def make_server(
     # transforms, mode toggles, alternative middleware, additional registrations);
     # kept across copier update. Leave empty for projects that don't customise
     # make_server() beyond the standard scaffold.
+<<<<<<< before updating
     # Capability-link transfer (upload + download) via pvl-core's shared
     # framework. Registered only on an HTTP transport with base_url set: the
     # /transfer/{token} route needs an HTTP server, and register_transfer_routes
@@ -338,6 +367,62 @@ def make_server(
 
     if config.read_only:
         mcp.disable(tags={"write"})
+=======
+    #
+    # -- Transfer subsystem (capability-link upload + download) ----------------
+    #
+    # Wiring the /transfer/{token} route needs HTTP transport (the route cannot
+    # be served under stdio) and, at build time, base_url — pvl-core raises
+    # ConfigurationError when it is unset, so gate only on the transport and let
+    # that error surface a misconfigured deployment rather than silently
+    # dropping the feature. Requires fastmcp-pvl-core >= 4.8.0.
+    #
+    # First compose a TransferConfig into ProjectConfig (config.py): add
+    # ``TransferConfig`` to its ``from fastmcp_pvl_core import (...)`` block, then
+    # a ``transfer: TransferConfig = field(default_factory=TransferConfig)`` field
+    # in CONFIG-FIELDS and ``transfer=TransferConfig.from_env(_ENV_PREFIX),`` in
+    # CONFIG-FROM-ENV. The second line is required — without it the
+    # IMAGE_GENERATION_MCP_TRANSFER_* env vars are ignored and the defaults always win.
+    #
+    # Path 1 — the generic tools, the common case. Registers create_download_link
+    # and create_upload_link with pvl-core's shared metadata (names, icons, tags):
+    #
+    # if transport != "stdio":
+    #     from fastmcp_pvl_core import register_transfer_routes
+    #
+    #     register_transfer_routes(
+    #         mcp,
+    #         config.server,
+    #         config.transfer,          # TransferConfig composed into ProjectConfig
+    #         sink=_my_transfer_sink,   # implements TransferSink (read/write)
+    #         validate=_my_validator,   # TransferValidator: (ref, kind) -> handle
+    #         # download_note/upload_note (optional) append a domain sentence to
+    #         # the generic tool descriptions — context only, no shape change.
+    #     )
+    #
+    # Path 2 — your own tool over the same capability-link machinery, when the
+    # generic pair cannot express it (a different name, a domain-accurate
+    # description, domain-specific parameters). build_transfer_links mounts the
+    # route and returns a minter, registering no tools; your tool validates the
+    # caller ref itself, then mints over the already-validated sink handle:
+    #
+    # if transport != "stdio":
+    #     from fastmcp_pvl_core import add_transfer_workflow, build_transfer_links
+    #
+    #     links = build_transfer_links(
+    #         mcp, config.server, config.transfer, sink=_my_transfer_sink
+    #     )
+    #
+    #     @mcp.tool
+    #     async def share_document(doc_id: str) -> dict[str, object]:
+    #         """Mint a one-shot download link for a document."""
+    #         handle = _resolve_and_check(doc_id)  # your validation -> sink handle
+    #         return await links.mint_download(handle)
+    #
+    #     # Contribute the core's capability-link workflow prose for your tool
+    #     # (dropped automatically if the tool is hidden by TOOLS_DENY):
+    #     add_transfer_workflow(mcp, download_tool="share_document")
+>>>>>>> after updating
     # DOMAIN-WIRING-END
 
     # Operator tool visibility (IMAGE_GENERATION_MCP_TOOLS_ALLOW /
@@ -346,5 +431,12 @@ def make_server(
     # visibility calls in the wiring above, and pvl-core's zero-tools-exposed
     # diagnostic judges the full registered tool set.
     apply_tool_visibility(mcp, config.server)
+
+    # Render the composed instructions exactly once, after visibility: a
+    # snippet whose tools are hidden is dropped, IMAGE_GENERATION_MCP_INSTRUCTIONS_EXTRA
+    # is appended, and the legacy IMAGE_GENERATION_MCP_INSTRUCTIONS full-replace
+    # still wins (with a deprecation warning).  Must stay the last call that
+    # touches tools or instructions.
+    finalize_instructions(mcp, config.server, env_prefix=_ENV_PREFIX)
 
     return mcp
